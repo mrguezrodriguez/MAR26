@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Práctica Obligatoria NumPy II — Guía del Alumno</title>
+  <style>
+    :root {
+      --azul:      #2563eb;
+      --azul-claro:#eff6ff;
+      --verde:     #16a34a;
+      --verde-claro:#f0fdf4;
+      --naranja:   #ea580c;
+      --naranja-claro:#fff7ed;
+      --rojo:      #dc2626;
+      --rojo-claro:#fef2f2;
+      --gris:      #f8fafc;
+      --borde:     #e2e8f0;
+      --texto:     #1e293b;
+      --subtexto:  #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f1f5f9;
+      color: var(--texto);
+      line-height: 1.7;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #1e40af, #2563eb);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 800; margin-bottom: .5rem; }
+    header p  { font-size: 1.1rem; opacity: .85; max-width: 650px; margin: auto; }
+    .badge {
+      display: inline-block;
+      background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 999px;
+      padding: .2rem .9rem;
+      font-size: .8rem;
+      margin-bottom: 1rem;
+      letter-spacing: .05em;
+    }
+
+    /* ── LAYOUT ── */
+    main { max-width: 960px; margin: 2.5rem auto; padding: 0 1.5rem; }
+
+    section { margin-bottom: 2.5rem; }
+
+    /* ── CARDS ── */
+    .card {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 1.8rem 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 2px solid var(--borde);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    h2 .icon { font-size: 1.4rem; }
+
+    h3 { font-size: 1.05rem; font-weight: 700; margin: 1.2rem 0 .5rem; color: var(--azul); }
+
+    p { margin-bottom: .8rem; }
+
+    /* ── CALLOUTS ── */
+    .callout {
+      border-left: 4px solid;
+      border-radius: 0 8px 8px 0;
+      padding: .9rem 1.2rem;
+      margin: 1rem 0;
+      font-size: .95rem;
+    }
+    .callout.info    { border-color: var(--azul);   background: var(--azul-claro);   }
+    .callout.success { border-color: var(--verde);  background: var(--verde-claro);  }
+    .callout.warn    { border-color: var(--naranja);background: var(--naranja-claro);}
+    .callout.danger  { border-color: var(--rojo);   background: var(--rojo-claro);   }
+    .callout strong  { display: block; margin-bottom: .2rem; }
+
+    /* ── CODE ── */
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      overflow-x: auto;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: .88rem;
+      line-height: 1.6;
+      margin: .8rem 0;
+    }
+    code { font-family: inherit; }
+
+    .kw   { color: #93c5fd; }   /* keywords */
+    .fn   { color: #86efac; }   /* functions */
+    .str  { color: #fcd34d; }   /* strings */
+    .num  { color: #f9a8d4; }   /* numbers */
+    .cm   { color: #64748b; font-style: italic; } /* comments */
+    .hl   { background: rgba(251,191,36,.15); border-radius: 3px; padding: 0 2px; } /* highlight */
+
+    /* ── COMPARE ── */
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    @media(max-width:680px){ .compare { grid-template-columns: 1fr; } }
+    .compare-box { border-radius: 8px; overflow: hidden; }
+    .compare-box .label {
+      padding: .5rem 1rem;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .compare-box.antes .label { background: #fef2f2; color: var(--rojo); }
+    .compare-box.despues .label { background: #f0fdf4; color: var(--verde); }
+    .compare-box pre { border-radius: 0; margin: 0; }
+
+    /* ── TABLE ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+      margin: 1rem 0;
+    }
+    th {
+      background: var(--gris);
+      text-align: left;
+      padding: .7rem 1rem;
+      border: 1px solid var(--borde);
+      font-weight: 700;
+    }
+    td {
+      padding: .65rem 1rem;
+      border: 1px solid var(--borde);
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: var(--gris); }
+
+    /* ── STEPS ── */
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 2rem; height: 2rem;
+      background: var(--azul);
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .9rem;
+    }
+
+    /* ── PLOT ── */
+    .plot-wrap {
+      background: var(--gris);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      padding: 1.2rem;
+      margin: 1rem 0;
+      text-align: center;
+    }
+    svg text { font-family: 'Segoe UI', sans-serif; }
+
+    /* ── GRID CARDS ── */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .mini-card {
+      background: var(--gris);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+    .mini-card .fn-name {
+      font-family: monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--azul);
+      margin-bottom: .4rem;
+    }
+    .mini-card .fn-desc { font-size: .88rem; color: var(--subtexto); margin-bottom: .6rem; }
+    .mini-card .fn-ex {
+      background: #0f172a;
+      color: #86efac;
+      border-radius: 6px;
+      padding: .4rem .7rem;
+      font-size: .82rem;
+      font-family: monospace;
+    }
+
+    /* ── BATTLESHIP GRID ── */
+    .bship-grid {
+      display: inline-grid;
+      grid-template-columns: repeat(10, 2rem);
+      gap: 2px;
+      background: #334155;
+      border: 2px solid #334155;
+      border-radius: 6px;
+      padding: 2px;
+      margin: .5rem auto;
+    }
+    .cell {
+      width: 2rem; height: 2rem;
+      background: #0ea5e9;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 700; border-radius: 3px;
+      color: white;
+    }
+    .cell.ship  { background: #475569; }
+    .cell.hit   { background: #dc2626; }
+    .cell.miss  { background: #64748b; color: #cbd5e1; }
+    .cell.water { background: #0ea5e9; }
+
+    /* ── ERRORES COMUNES ── */
+    .error-list { list-style: none; padding: 0; }
+    .error-list li {
+      display: flex;
+      gap: .8rem;
+      padding: .8rem;
+      margin-bottom: .6rem;
+      background: var(--rojo-claro);
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      font-size: .93rem;
+      align-items: flex-start;
+    }
+    .error-list li .icon { font-size: 1.2rem; flex-shrink: 0; margin-top: .1rem; }
+    .fix {
+      margin-top: .3rem;
+      padding: .4rem .8rem;
+      background: var(--verde-claro);
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      font-size: .88rem;
+    }
+
+    /* ── DATAFRAME ── */
+    .df-wrap {
+      overflow-x: auto;
+      margin: .8rem 0 1.2rem;
+    }
+    .df-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: .88rem;
+      min-width: 480px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--borde);
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .df-table thead tr { background: #1e293b; color: white; }
+    .df-table th {
+      padding: .55rem 1rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      font-size: .8rem;
+      border: none;
+      text-transform: uppercase;
+    }
+    .df-col { text-align: center; }
+    .df-idx {
+      background: #334155;
+      color: #94a3b8;
+      font-family: monospace;
+      text-align: center;
+      min-width: 2rem;
+      padding: .5rem .7rem;
+      border-right: 1px solid #475569;
+    }
+    .df-table thead .df-idx { background: #0f172a; color: #64748b; }
+    .df-table tbody tr { background: white; transition: background .15s; }
+    .df-table tbody tr:hover { background: #f0f9ff; }
+    .df-table tbody tr:nth-child(even) { background: var(--gris); }
+    .df-table tbody tr:nth-child(even):hover { background: #f0f9ff; }
+    .df-table td {
+      padding: .48rem 1rem;
+      border-bottom: 1px solid var(--borde);
+      border-right: none;
+      text-align: center;
+    }
+    .df-table td:nth-child(2) { text-align: left; }
+
+    /* filas especiales */
+    .df-ref { background: #eff6ff !important; }
+    .df-ref:hover { background: #dbeafe !important; }
+    .df-ref .df-idx { background: #bfdbfe; color: #1d4ed8; }
+    .df-new { background: #fefce8 !important; }
+    .df-new:hover { background: #fef9c3 !important; }
+    .df-new .df-idx { background: #fef08a; color: #713f12; }
+
+    /* números con color */
+    .df-num { font-family: monospace; font-size: .95rem; font-weight: 700; }
+    .df-num.pos  { color: #16a34a; }
+    .df-num.neg  { color: #dc2626; }
+    .df-num.zero { color: #64748b; }
+
+    /* badges */
+    .ref-badge {
+      display: inline-block;
+      background: #bfdbfe;
+      color: #1d4ed8;
+      border-radius: 4px;
+      font-size: .7rem;
+      padding: .1rem .4rem;
+      margin-left: .4rem;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+    .new-badge {
+      display: inline-block;
+      background: #fde68a;
+      color: #92400e;
+      border-radius: 4px;
+      font-size: .7rem;
+      padding: .1rem .4rem;
+      margin-left: .4rem;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+
+    /* tags de clase */
+    .tag {
+      display: inline-block;
+      border-radius: 4px;
+      padding: .15rem .6rem;
+      font-size: .78rem;
+      font-weight: 700;
+    }
+    .tag-cai  { background: #dbeafe; color: #1d4ed8; }
+    .tag-er   { background: #dcfce7; color: #15803d; }
+    .tag-nmpc { background: #f3e8ff; color: #7e22ce; }
+
+    .df-note {
+      font-size: .83rem;
+      color: var(--subtexto);
+      margin-top: .5rem;
+      padding: .4rem .8rem;
+      background: var(--gris);
+      border-radius: 6px;
+      border-left: 3px solid var(--borde);
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--subtexto);
+      font-size: .85rem;
+      border-top: 1px solid var(--borde);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">The Bridge · DS Online · Sprint 03</div>
+  <h1>Práctica Obligatoria NumPy II</h1>
+  <p>Guía de estudio — cómo entender el algoritmo de asignación de clases y el mini Hundir la Flota</p>
+</header>
+
+<main>
+
+  <!-- ── CONTEXTO ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">🎯</span> ¿Qué vamos a construir?</h2>
+      <p>
+        Esta práctica tiene <strong>dos partes independientes</strong>. En la Parte I refactorizamos un algoritmo
+        que ya conocéis (lo hicisteis con diccionarios), pero ahora usando las herramientas de NumPy.
+        En la Parte II construimos un mini Hundir la Flota sobre un array 2D.
+      </p>
+      <div class="grid-3">
+        <div class="mini-card">
+          <div class="fn-name">Parte I</div>
+          <div class="fn-desc">Algoritmo de asignación de clases extraescolares usando distancias euclídeas y NumPy.</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">Parte II</div>
+          <div class="fn-desc">Tablero de juego 10×10 con barcos, disparos y posicionamiento aleatorio.</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">Objetivo real</div>
+          <div class="fn-desc">Entender que NumPy reemplaza bucles manuales con funciones vectorizadas más claras y rápidas.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PARTE I ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">📐</span> Parte I — El algoritmo de asignación</h2>
+
+      <h3>La idea en una frase</h3>
+      <p>
+        Cada alumno tiene un vector de dos coordenadas <code>[volar, comer]</code>.
+        Queremos asignarle la clase extraescolar del alumno de referencia al que esté
+        <strong>más cerca en ese espacio 2D</strong>.
+      </p>
+
+      <div class="callout info">
+        <strong>Analogía</strong>
+        Imagina que cada alumno es un punto en un plano. Los 3 alumnos de referencia (Rodrigo, Gabriela, Mateo)
+        son como «capitales». Cada alumno nuevo va a la capital más cercana.
+        Eso es, conceptualmente, lo que hace el algoritmo k-NN.
+      </div>
+
+      <!-- DATAFRAME VISUAL -->
+      <h3>Los datos — alumnos_aidone</h3>
+      <p>Así queda el array una vez añadidos Teresa y Udo. Las filas en <strong style="color:var(--azul)">azul</strong> son los alumnos de referencia.</p>
+      <div class="df-wrap">
+        <table class="df-table">
+          <thead>
+            <tr>
+              <th class="df-idx">#</th>
+              <th class="df-col">nombre</th>
+              <th class="df-col">volar</th>
+              <th class="df-col">comer</th>
+              <th class="df-col">clase asignada</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="df-ref">
+              <td class="df-idx">0</td><td>Rodrigo <span class="ref-badge">ref CAI</span></td>
+              <td class="df-num pos">5</td><td class="df-num pos">4</td>
+              <td><span class="tag tag-cai">CAI</span></td>
+            </tr>
+            <tr>
+              <td class="df-idx">1</td><td>Lucia</td>
+              <td class="df-num pos">2</td><td class="df-num neg">−3</td>
+              <td><span class="tag tag-er">ER</span></td>
+            </tr>
+            <tr>
+              <td class="df-idx">2</td><td>Alejandro</td>
+              <td class="df-num pos">3</td><td class="df-num pos">5</td>
+              <td><span class="tag tag-cai">CAI</span></td>
+            </tr>
+            <tr>
+              <td class="df-idx">3</td><td>Valeria</td>
+              <td class="df-num neg">−5</td><td class="df-num pos">4</td>
+              <td><span class="tag tag-nmpc">NMPC</span></td>
+            </tr>
+            <tr>
+              <td class="df-idx">4</td><td>Javier</td>
+              <td class="df-num zero">0</td><td class="df-num neg">−1</td>
+              <td><span class="tag tag-er">ER</span></td>
+            </tr>
+            <tr>
+              <td class="df-idx">5</td><td>Camila</td>
+              <td class="df-num pos">3</td><td class="df-num pos">2</td>
+              <td><span class="tag tag-cai">CAI</span></td>
+            </tr>
+            <tr>
+              <td class="df-idx">6</td><td>Diego</td>
+              <td class="df-num neg">−1</td><td class="df-num pos">1</td>
+              <td><span class="tag tag-nmpc">NMPC</span></td>
+            </tr>
+            <tr class="df-ref">
+              <td class="df-idx">7</td><td>Gabriela <span class="ref-badge">ref ER</span></td>
+              <td class="df-num pos">5</td><td class="df-num neg">−2</td>
+              <td><span class="tag tag-er">ER</span></td>
+            </tr>
+            <tr class="df-ref">
+              <td class="df-idx">8</td><td>Mateo <span class="ref-badge">ref NMPC</span></td>
+              <td class="df-num neg">−5</td><td class="df-num pos">3</td>
+              <td><span class="tag tag-nmpc">NMPC</span></td>
+            </tr>
+            <tr>
+              <td class="df-idx">9</td><td>Sofía</td>
+              <td class="df-num neg">−5</td><td class="df-num pos">1</td>
+              <td><span class="tag tag-nmpc">NMPC</span></td>
+            </tr>
+            <tr class="df-new">
+              <td class="df-idx">10</td><td>Teresa <span class="new-badge">nuevo</span></td>
+              <td class="df-num neg">−5</td><td class="df-num neg">−2</td>
+              <td><span class="tag tag-nmpc">NMPC</span></td>
+            </tr>
+            <tr class="df-new">
+              <td class="df-idx">11</td><td>Udo <span class="new-badge">nuevo</span></td>
+              <td class="df-num pos">4</td><td class="df-num zero">0</td>
+              <td><span class="tag tag-er">ER</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="df-note">
+          💡 En código: <code>alumnos_aidone[i]</code> devuelve la fila i →
+          <code>alumnos_aidone[5]</code> = <code>[3, 2]</code> (Camila)
+        </p>
+      </div>
+
+      <!-- SVG PLOT -->
+      <div class="plot-wrap">
+        <svg width="420" height="340" viewBox="-220 -170 440 340" style="overflow:visible">
+          <!-- ejes -->
+          <line x1="-180" y1="0" x2="180" y2="0" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="0" y1="-150" x2="0" y2="150" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="185" y="5" fill="#64748b" font-size="13">Comer</text>
+          <text x="5" y="-155" fill="#64748b" font-size="13">Volar</text>
+
+          <!-- grid lines -->
+          <g stroke="#e2e8f0" stroke-width="1">
+            <line x1="-180" y1="-100" x2="180" y2="-100"/>
+            <line x1="-180" y1="100" x2="180" y2="100"/>
+            <line x1="-100" y1="-150" x2="-100" y2="150"/>
+            <line x1="100" y1="-150" x2="100" y2="150"/>
+          </g>
+
+          <!-- Referencias (grandes) — posiciones reales a escala=20 -->
+          <!-- Rodrigo [volar=5, comer=4]  → SVG x=4*20=80,  y=-5*20=-100 -->
+          <circle cx="80" cy="-100" r="10" fill="#2563eb"/>
+          <text x="92" y="-95" fill="#2563eb" font-size="12" font-weight="700">Rodrigo (ref)</text>
+
+          <!-- Gabriela [volar=5, comer=-2] → SVG x=-2*20=-40, y=-5*20=-100 -->
+          <circle cx="-40" cy="-100" r="10" fill="#16a34a"/>
+          <text x="-120" y="-95" fill="#16a34a" font-size="12" font-weight="700">Gabriela (ref)</text>
+
+          <!-- Mateo [volar=-5, comer=3]  → SVG x=3*20=60,  y=5*20=100 -->
+          <circle cx="60" cy="100" r="10" fill="#9333ea"/>
+          <text x="72" y="105" fill="#9333ea" font-size="12" font-weight="700">Mateo (ref)</text>
+
+          <!-- Alumno nuevo: Camila [volar=3, comer=2] → SVG x=2*20=40, y=-3*20=-60 -->
+          <circle cx="40" cy="-60" r="7" fill="#f59e0b"/>
+          <text x="50" y="-55" fill="#f59e0b" font-size="12">Camila</text>
+
+          <!-- Distancias -->
+          <line x1="40" y1="-60" x2="80"  y2="-100" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <line x1="40" y1="-60" x2="-40" y2="-100" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <line x1="40" y1="-60" x2="60"  y2="100"  stroke="#9333ea" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+          <!-- etiquetas distancia en el punto medio de cada línea -->
+          <text x="68"  y="-86"  fill="#2563eb" font-size="10">d=2.83 ✓</text>
+          <text x="-10" y="-86"  fill="#16a34a" font-size="10">d=4.47</text>
+          <text x="52"  y="22"   fill="#9333ea" font-size="10">d=8.06</text>
+        </svg>
+        <p style="color:var(--subtexto);font-size:.88rem;margin-top:.3rem">
+          Camila se asigna a <strong>CAI</strong> (clase de Rodrigo) porque su distancia es la mínima (2.83).
+        </p>
+      </div>
+
+      <!-- LA DISTANCIA EUCLIDEA -->
+      <h3>¿Qué es np.linalg.norm?</h3>
+      <p>
+        La distancia euclidea entre dos puntos es una generalización del teorema de Pitágoras
+        que funciona para <strong>cualquier número de dimensiones</strong>:
+      </p>
+      <div style="text-align:center;background:var(--gris);border:1px solid var(--borde);border-radius:8px;padding:1rem;margin:.8rem 0">
+        <div style="font-size:1rem;margin-bottom:.5rem;color:var(--subtexto)">2D (volar + comer)</div>
+        <div style="font-size:1.05rem;margin-bottom:.8rem">d = √ ( (v₂−v₁)² + (c₂−c₁)² )</div>
+        <div style="font-size:1rem;margin-bottom:.5rem;color:var(--subtexto)">nD — funciona igual para vectores de tamaño 5, 100, 1000…</div>
+        <div style="font-size:1.05rem">d = √ ( (x₁₂−x₁₁)² + (x₂₂−x₂₁)² + … + (xₙ₂−xₙ₁)² )</div>
+      </div>
+      <p>
+        <code>np.linalg.norm(v1 - v2)</code> suma los cuadrados de todas las diferencias y aplica la raíz,
+        sin importar el tamaño del vector. El código <strong>no cambia nada</strong> si mañana los
+        alumnos tienen 5 características en vez de 2.
+      </p>
+      <pre><code><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Vectores de tamaño 2 — distancia euclidea 2D</span>
+v1 = np.array([<span class="num">3</span>, <span class="num">2</span>])
+v2 = np.array([<span class="num">0</span>, <span class="num">0</span>])
+np.<span class="fn">linalg</span>.<span class="fn">norm</span>(v1 - v2)   <span class="cm"># √(3²+2²) = √13 ≈ 3.60</span>
+
+<span class="cm"># Vectores de tamaño 5 — exactamente el mismo código</span>
+v1 = np.array([<span class="num">3</span>, <span class="num">2</span>, <span class="num">-1</span>, <span class="num">4</span>, <span class="num">0</span>])
+v2 = np.array([<span class="num">0</span>, <span class="num">0</span>, <span class="num"> 0</span>, <span class="num">0</span>, <span class="num">0</span>])
+np.<span class="fn">linalg</span>.<span class="fn">norm</span>(v1 - v2)   <span class="cm"># √(3²+2²+1²+4²+0²) = √30 ≈ 5.47</span></code></pre>
+
+      <!-- ANTES vs DESPUÉS -->
+      <h3>Algoritmo antiguo vs. algoritmo con NumPy</h3>
+      <p>La única misión del ejercicio es reemplazar el patrón manual de centinela por dos funciones de NumPy:</p>
+      <div class="callout warn" style="margin-bottom:1rem">
+        <strong>⚠️ distancia_2d no existe en Python</strong>
+        En el notebook de la práctica aparece <code>distancia_2d(vector, vec_ref, 1)</code>.
+        Eso <strong>no es una función real</strong> — es pseudocódigo puesto ahí como marcador para indicarte
+        exactamente qué línea tienes que sustituir por <code>np.linalg.norm</code>.
+        Si intentas ejecutarla tal cual obtendrás un <code>NameError</code>.
+      </div>
+      <div class="compare">
+        <div class="compare-box antes">
+          <div class="label">❌ Antes — pseudocódigo del enunciado</div>
+          <pre><code><span class="cm"># Centinela: valor imposiblemente alto</span>
+distancia_minima = <span class="num">99999999</span>
+indice_min = <span class="num">-1</span>
+
+<span class="kw">for</span> i, ref <span class="kw">in</span> <span class="fn">enumerate</span>(alumnos_ref):
+    <span class="cm"># ← distancia_2d NO existe, es un marcador</span>
+    d = distancia_2d(vec, ref)
+    <span class="kw">if</span> d &lt; distancia_minima:
+        distancia_minima = d
+        indice_min = i
+
+<span class="cm"># El índice ganador está en indice_min</span></code></pre>
+        </div>
+        <div class="compare-box despues">
+          <div class="label">✅ Ahora — con NumPy</div>
+          <pre><code><span class="cm"># Guardamos las 3 distancias en un array</span>
+dists = np.<span class="fn">zeros</span>(<span class="num">3</span>)
+
+<span class="kw">for</span> i, ref <span class="kw">in</span> <span class="fn">enumerate</span>(alumnos_ref):
+    d = np.<span class="fn">linalg</span>.<span class="fn">norm</span>(vec - ref)
+    dists[i] = d
+
+<span class="cm"># np.argmin encuentra el índice mínimo solo</span>
+indice_min = np.<span class="fn">argmin</span>(dists)  <span class="hl">← clave</span></code></pre>
+        </div>
+      </div>
+
+      <div class="callout success">
+        <strong>¿Por qué 99999999 y -1?</strong>
+        Son valores <em>centinela</em>: el 99999999 garantiza que la primera distancia real siempre
+        sea menor, y el -1 indica «todavía no tenemos ganador». Con <code>np.argmin</code> ya no
+        necesitamos esa trampa: NumPy recorre el array y nos da el índice directamente.
+      </div>
+
+      <!-- FUNCIONES CLAVE -->
+      <h3>Las 3 funciones que necesitáis</h3>
+      <div class="grid-3">
+        <div class="mini-card">
+          <div class="fn-name">np.zeros(n)</div>
+          <div class="fn-desc">Crea un array de n ceros. Sirve para inicializar el vector de distancias.</div>
+          <div class="fn-ex">np.zeros(3) → [0., 0., 0.]</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">np.linalg.norm(v)</div>
+          <div class="fn-desc">Devuelve la longitud (módulo) del vector v. Distancia euclídea.</div>
+          <div class="fn-ex">norm([3,4]) → 5.0</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">np.argmin(arr)</div>
+          <div class="fn-desc">Devuelve el ÍNDICE del valor mínimo. No confundir con np.min().</div>
+          <div class="fn-ex">argmin([8,2,5]) → 1</div>
+        </div>
+      </div>
+
+      <!-- CÓDIGO COMPLETO -->
+      <h3>Código completo del bucle (solución)</h3>
+      <pre><code>alumnos_ref  = [<span class="str">"Rodrigo"</span>, <span class="str">"Gabriela"</span>, <span class="str">"Mateo"</span>]
+curso_asignado = [<span class="str">"CAI"</span>, <span class="str">"ER"</span>, <span class="str">"NMPC"</span>]
+matriz_zero = np.<span class="fn">zeros</span>((<span class="num">12</span>, <span class="num">3</span>))   <span class="cm"># 12 alumnos × 3 referencias</span>
+
+<span class="kw">for</span> i_vector <span class="kw">in</span> <span class="fn">range</span>(num_alumnos):
+
+    alumno       = lista_alumnos[i_vector]
+    vector_alumno = alumnos_aidone[i_vector]   <span class="cm"># array NumPy, necesario para restar</span>
+
+    dists = np.<span class="fn">zeros</span>(<span class="num">3</span>)                       <span class="cm"># 1. inicializar</span>
+
+    <span class="kw">for</span> idx_ref, alumno_ref <span class="kw">in</span> <span class="fn">enumerate</span>(alumnos_ref):
+        idx_en_lista = lista_alumnos.<span class="fn">index</span>(alumno_ref)
+        vec_ref      = alumnos_aidone[idx_en_lista]
+
+        distancia    = np.<span class="fn">linalg</span>.<span class="fn">norm</span>(vector_alumno - vec_ref)  <span class="cm"># 2. calcular</span>
+        dists[idx_ref] = <span class="fn">round</span>(distancia, <span class="num">2</span>)
+
+    matriz_zero[i_vector] = dists
+
+    elegido = np.<span class="fn">argmin</span>(dists)                               <span class="cm"># 3. mínimo</span>
+    <span class="fn">print</span>(<span class="str">f"</span>{alumno}<span class="str"> → </span>{curso_asignado[elegido]}<span class="str">"</span>)</code></pre>
+
+      <div class="callout warn">
+        <strong>Importante</strong>
+        <code>alumnos_aidone</code> debe ser un array de NumPy (no una lista de listas) para que
+        <code>vector_alumno - vec_ref</code> funcione elemento a elemento.
+        Convertidlo con <code>np.array(alumnos_aidone)</code> antes del bucle.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PARTE II ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">🚢</span> Parte II — Mini Hundir la Flota</h2>
+
+      <h3>La idea</h3>
+      <p>
+        Un tablero 10×10 es un array NumPy de strings. Cada celda puede tener uno de cuatro valores:
+        espacio (agua), <code>O</code> (barco), <code>X</code> (tocado) o <code>-</code> (fallo).
+      </p>
+
+      <!-- TABLERO VISUAL -->
+      <div style="overflow-x:auto;text-align:center;margin:1rem 0">
+        <div class="bship-grid">
+          <!-- fila 0 -->
+          <div class="cell water"></div>
+          <div class="cell ship">O</div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <!-- fila 1 -->
+          <div class="cell water"></div>
+          <div class="cell hit">X</div>
+          <div class="cell water"></div>
+          <div class="cell ship">O</div>
+          <div class="cell ship">O</div>
+          <div class="cell ship">O</div>
+          <div class="cell ship">O</div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <!-- filas 2-8 vacías -->
+          <div class="cell miss">-</div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div>
+          <div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div>
+          <div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div>
+          <div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div>
+          <div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div>
+          <div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div><div class="cell water"></div>
+          <!-- fila 9: barco aleatorio -->
+          <div class="cell water"></div>
+          <div class="cell ship">O</div>
+          <div class="cell ship">O</div>
+          <div class="cell ship">O</div>
+          <div class="cell ship">O</div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+          <div class="cell water"></div>
+        </div>
+        <p style="color:var(--subtexto);font-size:.85rem;margin-top:.5rem">
+          Azul=agua · Gris=barco · Rojo=tocado · Oscuro=fallo
+        </p>
+      </div>
+
+      <h3>Los pasos del ejercicio</h3>
+      <ol class="steps">
+        <li>
+          <div>
+            <strong>Crear el tablero</strong><br>
+            <code>np.full((10, 10), " ")</code> — array 10×10 relleno de espacios.
+            Buena práctica: convertirlo en función con parámetro <code>lado</code>.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Posicionar barcos</strong><br>
+            Un barco es una lista de tuplas <code>[(fila, col), ...]</code>.
+            Iterar sobre esas tuplas y asignar <code>tablero[pieza] = "O"</code>.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Disparar</strong><br>
+            Comprobar el valor de la celda: si es <code>"O"</code> → <code>"X"</code> (tocado);
+            si es <code>" "</code> → <code>"-"</code> (agua). Usar un <code>if/elif</code> o <code>match/case</code>.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Barco aleatorio</strong><br>
+            Elegir posición inicial con <code>random.randint</code> y orientación con
+            <code>random.choice(["N","S","E","O"])</code>. Calcular las celdas del barco,
+            verificar que no se salen del tablero ni chocan con otro barco. Repetir si falla.
+          </div>
+        </li>
+      </ol>
+
+      <!-- CÓDIGO BARCO ALEATORIO -->
+      <h3>Lógica del barco aleatorio (lo más difícil)</h3>
+      <pre><code><span class="kw">def</span> <span class="fn">crea_barco_aleatorio</span>(tablero, eslora=<span class="num">4</span>):
+    max_f = tablero.shape[<span class="num">0</span>] - <span class="num">1</span>
+    max_c = tablero.shape[<span class="num">1</span>] - <span class="num">1</span>
+
+    <span class="kw">while True</span>:                                     <span class="cm"># intentar hasta conseguirlo</span>
+        barco = []
+        fila    = random.<span class="fn">randint</span>(<span class="num">0</span>, max_f)
+        columna = random.<span class="fn">randint</span>(<span class="num">0</span>, max_c)
+        orient  = random.<span class="fn">choice</span>([<span class="str">"N"</span>,<span class="str">"S"</span>,<span class="str">"E"</span>,<span class="str">"O"</span>])
+
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(eslora):
+            barco.<span class="fn">append</span>((fila, columna))
+            <span class="kw">if</span>   orient == <span class="str">"N"</span>: fila -= <span class="num">1</span>
+            <span class="kw">elif</span> orient == <span class="str">"S"</span>: fila += <span class="num">1</span>
+            <span class="kw">elif</span> orient == <span class="str">"E"</span>: columna += <span class="num">1</span>
+            <span class="kw">elif</span> orient == <span class="str">"O"</span>: columna -= <span class="num">1</span>
+
+        <span class="cm"># Verificar validez</span>
+        valido = <span class="kw">True</span>
+        <span class="kw">for</span> (f, c) <span class="kw">in</span> barco:
+            <span class="kw">if not</span> (<span class="num">0</span> &lt;= f &lt;= max_f <span class="kw">and</span> <span class="num">0</span> &lt;= c &lt;= max_c):
+                valido = <span class="kw">False</span>; <span class="kw">break</span>
+            <span class="kw">if</span> tablero[(f,c)] == <span class="str">"O"</span>:
+                valido = <span class="kw">False</span>; <span class="kw">break</span>
+
+        <span class="kw">if</span> valido:
+            <span class="kw">for</span> pieza <span class="kw">in</span> barco:
+                tablero[pieza] = <span class="str">"O"</span>
+            <span class="kw">return</span> tablero</code></pre>
+    </div>
+  </section>
+
+  <!-- ── ERRORES COMUNES ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">⚠️</span> Errores más comunes</h2>
+      <ul class="error-list">
+        <li>
+          <div class="icon">🔴</div>
+          <div>
+            <strong>Olvidar convertir alumnos_aidone a array NumPy</strong><br>
+            Si <code>alumnos_aidone</code> sigue siendo una lista de listas, la resta
+            <code>vector_alumno - vec_ref</code> falla porque Python no sabe restar listas elemento a elemento.
+            <div class="fix">✅ Añadir <code>alumnos_aidone = np.array(alumnos_aidone)</code> antes del bucle.</div>
+          </div>
+        </li>
+        <li>
+          <div class="icon">🔴</div>
+          <div>
+            <strong>Confundir np.argmin con np.min</strong><br>
+            <code>np.min([8,2,5])</code> devuelve <strong>2</strong> (el valor mínimo).<br>
+            <code>np.argmin([8,2,5])</code> devuelve <strong>1</strong> (el índice del mínimo).
+            Necesitamos el índice para acceder a <code>curso_asignado[indice]</code>.
+            <div class="fix">✅ Usar siempre <code>np.argmin</code> en este algoritmo.</div>
+          </div>
+        </li>
+        <li>
+          <div class="icon">🔴</div>
+          <div>
+            <strong>No importar numpy antes del bucle principal</strong><br>
+            Si la celda con <code>import numpy as np</code> no se ha ejecutado,
+            todas las llamadas a <code>np.*</code> fallan con <code>NameError</code>.
+            <div class="fix">✅ Ejecutar las celdas en orden de arriba a abajo (o usar «Run All»).</div>
+          </div>
+        </li>
+        <li>
+          <div class="icon">🔴</div>
+          <div>
+            <strong>En el barco aleatorio, salirse del tablero sin validar</strong><br>
+            Si la posición inicial es (9,0) con orientación Norte, las piezas llegan a fila -1,
+            lo cual en NumPy no da error pero accede a la última fila, silenciosamente incorrecto.
+            <div class="fix">✅ Validar explícitamente que <code>0 &lt;= fila &lt;= max_fila</code> para cada pieza.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── PREGUNTAS DE REFLEXIÓN ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">💬</span> Preguntas para reflexionar</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Pregunta</th>
+            <th>Pista / respuesta clave</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>¿Por qué el algoritmo original usa 99999999 y -1?</td>
+            <td>Son centinelas. NumPy los elimina con <code>np.argmin</code>.</td>
+          </tr>
+          <tr>
+            <td>¿Qué diferencia hay entre <code>np.min</code> y <code>np.argmin</code>?</td>
+            <td>Uno devuelve el valor, el otro el índice. Aquí necesitamos el índice.</td>
+          </tr>
+          <tr>
+            <td>¿Por qué no podemos restar listas de Python directamente?</td>
+            <td>Las listas no tienen operaciones matemáticas definidas. Los arrays NumPy sí.</td>
+          </tr>
+          <tr>
+            <td>¿Qué pasa si el barco aleatorio se sale siempre del tablero?</td>
+            <td>El bucle <code>while True</code> seguiría indefinidamente. Por eso conviene un límite de intentos.</td>
+          </tr>
+          <tr>
+            <td>¿Para qué sirve <code>tablero.copy()</code> antes de validar el barco?</td>
+            <td>Para no modificar el tablero original si el barco resulta ser inválido.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  The Bridge · DS Online · Sprint 03 — NumPy II
+</footer>
+
+</body>
+</html>

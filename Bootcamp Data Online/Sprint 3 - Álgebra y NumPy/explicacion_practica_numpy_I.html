@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Práctica Obligatoria NumPy I — Guía del Alumno</title>
+  <style>
+    :root {
+      --azul:       #2563eb;
+      --azul-claro: #eff6ff;
+      --verde:      #16a34a;
+      --verde-claro:#f0fdf4;
+      --naranja:    #ea580c;
+      --naranja-claro:#fff7ed;
+      --rojo:       #dc2626;
+      --rojo-claro: #fef2f2;
+      --violeta:    #7c3aed;
+      --violeta-claro:#f5f3ff;
+      --gris:       #f8fafc;
+      --borde:      #e2e8f0;
+      --texto:      #1e293b;
+      --subtexto:   #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f1f5f9;
+      color: var(--texto);
+      line-height: 1.7;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #1e40af, #2563eb);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 800; margin-bottom: .5rem; }
+    header p  { font-size: 1.1rem; opacity: .85; max-width: 650px; margin: auto; }
+    .badge {
+      display: inline-block;
+      background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 999px;
+      padding: .2rem .9rem;
+      font-size: .8rem;
+      margin-bottom: 1rem;
+      letter-spacing: .05em;
+    }
+
+    /* ── LAYOUT ── */
+    main { max-width: 960px; margin: 2.5rem auto; padding: 0 1.5rem; }
+    section { margin-bottom: 2.5rem; }
+
+    /* ── CARDS ── */
+    .card {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 1.8rem 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 2px solid var(--borde);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    h2 .icon { font-size: 1.4rem; }
+    h3 { font-size: 1.05rem; font-weight: 700; margin: 1.2rem 0 .5rem; color: var(--azul); }
+    p { margin-bottom: .8rem; }
+
+    /* ── CALLOUTS ── */
+    .callout {
+      border-left: 4px solid;
+      border-radius: 0 8px 8px 0;
+      padding: .9rem 1.2rem;
+      margin: 1rem 0;
+      font-size: .95rem;
+    }
+    .callout.info    { border-color: var(--azul);    background: var(--azul-claro);    }
+    .callout.success { border-color: var(--verde);   background: var(--verde-claro);   }
+    .callout.warn    { border-color: var(--naranja); background: var(--naranja-claro); }
+    .callout.danger  { border-color: var(--rojo);    background: var(--rojo-claro);    }
+    .callout.violet  { border-color: var(--violeta); background: var(--violeta-claro); }
+    .callout strong  { display: block; margin-bottom: .2rem; }
+
+    /* ── CODE ── */
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      overflow-x: auto;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: .88rem;
+      line-height: 1.6;
+      margin: .8rem 0;
+    }
+    code { font-family: 'Cascadia Code', 'Fira Code', monospace; }
+    .kw  { color: #93c5fd; }
+    .fn  { color: #86efac; }
+    .str { color: #fcd34d; }
+    .num { color: #f9a8d4; }
+    .cm  { color: #64748b; font-style: italic; }
+    .hl  { background: rgba(251,191,36,.15); border-radius: 3px; padding: 0 2px; }
+
+    /* ── COMPARE ── */
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    @media(max-width:680px){ .compare { grid-template-columns: 1fr; } }
+    .compare-box { border-radius: 8px; overflow: hidden; }
+    .compare-box .label {
+      padding: .5rem 1rem;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .compare-box.antes .label  { background: #fef2f2; color: var(--rojo); }
+    .compare-box.despues .label{ background: #f0fdf4; color: var(--verde); }
+    .compare-box pre { border-radius: 0; margin: 0; }
+
+    /* ── TABLE ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+      margin: 1rem 0;
+    }
+    th {
+      background: var(--gris);
+      text-align: left;
+      padding: .7rem 1rem;
+      border: 1px solid var(--borde);
+      font-weight: 700;
+    }
+    td {
+      padding: .65rem 1rem;
+      border: 1px solid var(--borde);
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: var(--gris); }
+
+    /* ── STEPS ── */
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 2rem; height: 2rem;
+      background: var(--azul);
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .9rem;
+    }
+
+    /* ── GRID CARDS ── */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .mini-card {
+      background: var(--gris);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+    .mini-card .fn-name {
+      font-family: monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--azul);
+      margin-bottom: .4rem;
+    }
+    .mini-card .fn-desc { font-size: .88rem; color: var(--subtexto); margin-bottom: .6rem; }
+    .mini-card .fn-ex {
+      background: #0f172a;
+      color: #86efac;
+      border-radius: 6px;
+      padding: .4rem .7rem;
+      font-size: .82rem;
+      font-family: monospace;
+    }
+
+    /* ── APP CARD (casos de uso) ── */
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin: 1.2rem 0;
+    }
+    .app-card {
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .app-card .app-header {
+      padding: .7rem 1rem;
+      font-weight: 700;
+      font-size: .95rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .app-card .app-body {
+      padding: .8rem 1rem;
+      font-size: .88rem;
+      color: var(--subtexto);
+      background: white;
+    }
+    .app-card .app-body p { margin-bottom: .5rem; }
+    .app-card .app-body p:last-child { margin-bottom: 0; }
+    .app-card.nlp    .app-header { background: #dbeafe; color: #1d4ed8; }
+    .app-card.rec    .app-header { background: #dcfce7; color: #15803d; }
+    .app-card.cv     .app-header { background: #fef3c7; color: #92400e; }
+    .app-card.fraud  .app-header { background: #fce7f3; color: #9d174d; }
+
+    /* ── MATH BOX ── */
+    .math-box {
+      text-align: center;
+      background: var(--gris);
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      padding: 1.2rem;
+      margin: .8rem 0;
+      font-size: 1.05rem;
+    }
+    .math-box .label { font-size: .85rem; color: var(--subtexto); margin-bottom: .4rem; }
+
+    /* ── MATRIX VISUAL ── */
+    .matrix-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      margin: 1.2rem 0;
+      font-family: monospace;
+    }
+    .matrix {
+      display: inline-grid;
+      gap: 4px 12px;
+      padding: .8rem 1.2rem;
+      background: var(--gris);
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      font-size: .92rem;
+    }
+    .matrix .m-label {
+      grid-column: 1 / -1;
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--subtexto);
+      text-align: center;
+      margin-bottom: .3rem;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .op-sym { font-size: 1.5rem; color: var(--azul); font-weight: 700; }
+    .result-matrix {
+      background: var(--azul-claro);
+      border-color: #bfdbfe;
+    }
+
+    /* ── COSINE CIRCLE ── */
+    .plot-wrap {
+      background: var(--gris);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      padding: 1.2rem;
+      margin: 1rem 0;
+      text-align: center;
+    }
+
+    /* ── SIMILARITY TABLE ── */
+    .sim-val { font-weight: 700; font-family: monospace; }
+    .sim-high { color: var(--verde); }
+    .sim-mid  { color: var(--naranja); }
+    .sim-low  { color: var(--rojo); }
+
+    /* ── SENTINEL BOX ── */
+    .sentinel-box {
+      display: flex;
+      gap: 1rem;
+      align-items: stretch;
+      margin: 1rem 0;
+      flex-wrap: wrap;
+    }
+    .sentinel-item {
+      flex: 1;
+      min-width: 200px;
+      border-radius: 8px;
+      padding: 1rem;
+      border: 1px solid var(--borde);
+    }
+    .sentinel-item .s-title {
+      font-weight: 700;
+      font-size: .9rem;
+      margin-bottom: .5rem;
+    }
+    .sentinel-item .s-val {
+      font-family: monospace;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: .3rem;
+    }
+    .sentinel-item .s-why { font-size: .83rem; color: var(--subtexto); }
+    .sentinel-item.bad  { background: #fef2f2; border-color: #fecaca; }
+    .sentinel-item.bad  .s-val { color: var(--rojo); }
+    .sentinel-item.good { background: var(--verde-claro); border-color: #bbf7d0; }
+    .sentinel-item.good .s-val { color: var(--verde); }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--subtexto);
+      font-size: .85rem;
+      border-top: 1px solid var(--borde);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">The Bridge · DS Online · Sprint 03</div>
+  <h1>Práctica Obligatoria NumPy I</h1>
+  <p>Guía de estudio — producto matricial para optimizar compras y similitud coseno para recomendar películas</p>
+</header>
+
+<main>
+
+  <!-- ── VISIÓN GENERAL ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">🎯</span> ¿Qué vamos a construir?</h2>
+      <p>
+        Esta práctica tiene <strong>dos partes independientes</strong>. En la Parte I usamos el
+        <strong>producto matricial</strong> para calcular cuánto gastaría cada persona en cada tienda.
+        En la Parte II implementamos un <strong>clasificador de películas</strong> basado en similitud coseno.
+      </p>
+      <div class="grid-3">
+        <div class="mini-card">
+          <div class="fn-name">Parte I</div>
+          <div class="fn-desc">Producto matricial: cantidades × precios = coste total por persona y tienda.</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">Parte II</div>
+          <div class="fn-desc">Similitud coseno entre vectores de géneros cinematográficos.</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">Objetivo real</div>
+          <div class="fn-desc">Entender que muchos problemas reales son operaciones con vectores y matrices.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PARTE I ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">🥐</span> Parte I — El problema de las pastelerías</h2>
+
+      <h3>La idea en una frase</h3>
+      <p>
+        Tenemos una <strong>matriz de cantidades</strong> (3 personas × 4 productos) y una
+        <strong>matriz de precios</strong> (4 productos × 2 tiendas). Multiplicarlas da directamente
+        el coste de cada persona en cada tienda — sin un solo bucle.
+      </p>
+
+      <div class="callout info">
+        <strong>La magia del producto matricial</strong>
+        Lo que a mano es una suma de 4 multiplicaciones por cada par (persona, tienda) — 3×2 = 6 cálculos en total —
+        NumPy lo resuelve en una sola línea: <code>cantidad @ precios</code>.
+      </div>
+
+      <!-- MATRICES VISUALES -->
+      <h3>Las matrices del problema</h3>
+      <div class="matrix-wrap">
+        <div>
+          <div class="matrix" style="grid-template-columns: repeat(4, auto)">
+            <div class="m-label" style="grid-column:1/5">Cantidades (3×4)</div>
+            <span>6</span><span>5</span><span>3</span><span>1</span>
+            <span>3</span><span>6</span><span>2</span><span>2</span>
+            <span>3</span><span>4</span><span>3</span><span>1</span>
+          </div>
+          <div style="text-align:center;font-size:.78rem;color:var(--subtexto);margin-top:.3rem">Rafa / Nacho / Clara</div>
+        </div>
+        <div class="op-sym">×</div>
+        <div>
+          <div class="matrix" style="grid-template-columns: repeat(2, auto)">
+            <div class="m-label" style="grid-column:1/3">Precios (4×2)</div>
+            <span>1.5</span><span>1.0</span>
+            <span>2.0</span><span>2.5</span>
+            <span>5.0</span><span>4.5</span>
+            <span>16.0</span><span>17.0</span>
+          </div>
+          <div style="text-align:center;font-size:.78rem;color:var(--subtexto);margin-top:.3rem">Manolo / Starbucks</div>
+        </div>
+        <div class="op-sym">=</div>
+        <div>
+          <div class="matrix result-matrix" style="grid-template-columns: repeat(2, auto)">
+            <div class="m-label" style="grid-column:1/3">Coste (3×2)</div>
+            <span><strong>50.0</strong></span><span>49.0</span>
+            <span>58.5</span><span><strong>61.0</strong></span>
+            <span>43.5</span><span>43.5</span>
+          </div>
+          <div style="text-align:center;font-size:.78rem;color:var(--subtexto);margin-top:.3rem">Manolo / Starbucks</div>
+        </div>
+      </div>
+
+      <h3>¿Por qué hay que trasponer los precios?</h3>
+      <p>
+        Para multiplicar dos matrices, las dimensiones internas deben coincidir:
+        <strong>(A × B)</strong> requiere que las <em>columnas de A</em> = <em>filas de B</em>.
+      </p>
+      <div class="math-box">
+        <div class="label">Cantidades (3 × <strong style="color:var(--azul)">4</strong>)  ×  Precios (<strong style="color:var(--azul)">4</strong> × 2)  =  Coste (3 × 2)</div>
+        <div>Si no traspusiéramos, Precios sería (2 × 4) → incompatible</div>
+      </div>
+
+      <pre><code>precios_completo = np.<span class="fn">array</span>([precios_manolo, precios_starbucks])
+<span class="cm"># Forma: (2, 4) — dos filas, cada fila es una tienda</span>
+
+precios_completo = precios_completo.<span class="fn">T</span>
+<span class="cm"># Forma: (4, 2) — cuatro filas (productos), dos columnas (tiendas)</span>
+
+matriz_coste = cantidad_necesaria.<span class="fn">dot</span>(precios_completo)
+<span class="cm"># (3,4) @ (4,2)  →  (3,2) ✓</span></code></pre>
+
+      <h3>Equivalencias: tres formas de hacer lo mismo</h3>
+      <pre><code><span class="cm"># Las tres líneas producen exactamente el mismo resultado</span>
+resultado = cantidad_necesaria <span class="kw">@</span> precios_completo
+resultado = np.<span class="fn">dot</span>(cantidad_necesaria, precios_completo)
+resultado = cantidad_necesaria.<span class="fn">dot</span>(precios_completo)</code></pre>
+
+      <h3>Leer el resultado — ¿a quién recomendamos qué?</h3>
+      <table>
+        <thead>
+          <tr><th>Persona</th><th>Manolo Bakes</th><th>Starbucks</th><th>Recomendación</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Rafa</td><td>50.0 €</td><td><strong>49.0 €</strong></td><td>Starbucks</td></tr>
+          <tr><td>Nacho</td><td><strong>58.5 €</strong></td><td>61.0 €</td><td>Manolo Bakes</td></tr>
+          <tr><td>Clara</td><td>43.5 €</td><td>43.5 €</td><td>Da igual</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout success">
+        <strong>np.argmin — el truco para automatizarlo</strong>
+        <code>np.argmin(matriz_coste[i])</code> devuelve el índice de la tienda más barata para la persona <code>i</code>.
+        El índice 0 es Manolo Bakes, el 1 es Starbucks. Sin bucles, sin comparaciones manuales.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PARTE II ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">🎬</span> Parte II — Similitud Coseno</h2>
+
+      <h3>¿Qué mide el coseno?</h3>
+      <p>
+        La similitud coseno mide el <strong>ángulo entre dos vectores</strong>, ignorando su longitud.
+        Si dos vectores apuntan en la misma dirección, coseno = 1 (idénticos).
+        Si son perpendiculares, coseno = 0 (sin relación). Si son opuestos, coseno = −1.
+      </p>
+
+      <div class="math-box">
+        <div class="label">Fórmula de similitud coseno</div>
+        <div style="font-size:1.1rem">cos(θ) = (A · B) / (‖A‖ × ‖B‖)</div>
+        <div style="font-size:.85rem;color:var(--subtexto);margin-top:.4rem">
+          A · B = producto escalar &nbsp;|&nbsp; ‖A‖ = módulo (norma) de A
+        </div>
+      </div>
+
+      <!-- DIAGRAMA SVG -->
+      <div class="plot-wrap">
+        <svg width="380" height="240" viewBox="-10 -10 380 240">
+          <!-- ejes -->
+          <line x1="30" y1="210" x2="360" y2="210" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="30" y1="210" x2="30"  y2="10"  stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="362" y="214" fill="#64748b" font-size="12">→</text>
+          <text x="14"  y="8"   fill="#64748b" font-size="12">↑</text>
+
+          <!-- Vector A — Toy Story [0,1,1,1,0] representado en 2D -->
+          <line x1="30" y1="210" x2="200" y2="70" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arr-blue)"/>
+          <text x="205" y="65" fill="#2563eb" font-size="12" font-weight="700">Toy Story</text>
+
+          <!-- Vector B — Jumanji [0,1,0,0,0] -->
+          <line x1="30" y1="210" x2="260" y2="100" stroke="#16a34a" stroke-width="2.5" marker-end="url(#arr-green)"/>
+          <text x="265" y="96" fill="#16a34a" font-size="12" font-weight="700">Jumanji</text>
+
+          <!-- Vector C — Pocahontas [0,0,1,0,1] (dirección muy distinta) -->
+          <line x1="30" y1="210" x2="80" y2="40" stroke="#dc2626" stroke-width="2.5" marker-end="url(#arr-red)"/>
+          <text x="84" y="36" fill="#dc2626" font-size="12" font-weight="700">Pocahontas</text>
+
+          <!-- Arco ángulo A-B (pequeño) -->
+          <path d="M 80 168 A 55 55 0 0 0 65 153" fill="none" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,2"/>
+          <text x="85" y="155" fill="#7c3aed" font-size="11">θ pequeño → cos≈0.58</text>
+
+          <!-- Arco ángulo A-C (grande) -->
+          <path d="M 64 172 A 55 55 0 0 0 47 125" fill="none" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="4,2"/>
+          <text x="20" y="115" fill="#ea580c" font-size="11" transform="rotate(-15,20,115)">θ grande → cos≈0.41</text>
+
+          <!-- markers -->
+          <defs>
+            <marker id="arr-blue"  markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#2563eb"/>
+            </marker>
+            <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#16a34a"/>
+            </marker>
+            <marker id="arr-red"   markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#dc2626"/>
+            </marker>
+          </defs>
+        </svg>
+        <p style="color:var(--subtexto);font-size:.88rem;margin-top:.3rem">
+          Menor ángulo → mayor similitud. Toy Story y Jumanji comparten "Aventura" → están más cerca.
+        </p>
+      </div>
+
+      <h3>Los vectores de películas</h3>
+      <p>Cada película se codifica como un vector binario: 1 si tiene ese género, 0 si no.</p>
+      <table>
+        <thead>
+          <tr><th>Película</th><th>Acción</th><th>Aventura</th><th>Animación</th><th>Comedia</th><th>Romance</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Toy Story</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+          <tr><td>Jumanji</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td>Mortal Kombat</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td>Pocahontas</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+        </tbody>
+      </table>
+
+      <h3>El código paso a paso</h3>
+      <pre><code><span class="kw">for</span> pelicula1, vector <span class="kw">in</span> peliculas.<span class="fn">items</span>():
+    coseno_maximo = <span class="num">-1</span>                <span class="cm"># ← centinela: mínimo absoluto posible</span>
+    <span class="kw">for</span> pelicula2, vector2 <span class="kw">in</span> peliculas.<span class="fn">items</span>():
+        <span class="kw">if</span> pelicula1 != pelicula2:      <span class="cm"># no comparamos una película consigo misma</span>
+            coseno = np.<span class="fn">dot</span>(vector, vector2) / (
+                np.<span class="fn">linalg</span>.<span class="fn">norm</span>(vector) * np.<span class="fn">linalg</span>.<span class="fn">norm</span>(vector2)
+            )
+            <span class="kw">if</span> coseno &gt; coseno_maximo:  <span class="cm"># buscamos el máximo</span>
+                pelicula_similar = pelicula2
+                coseno_maximo    = coseno
+
+    <span class="fn">print</span>(<span class="str">f"Para {pelicula1} la más parecida es {pelicula_similar}"</span>)</code></pre>
+
+      <!-- CENTINELA -1 -->
+      <h3>¿Por qué coseno_maximo = −1?</h3>
+      <p>Es un <strong>valor centinela</strong>: un punto de partida tan bajo que cualquier resultado real lo supera.</p>
+      <div class="sentinel-box">
+        <div class="sentinel-item bad">
+          <div class="s-title">¿Qué pasaría con 0?</div>
+          <div class="s-val">coseno_maximo = 0</div>
+          <div class="s-why">Si todas las películas comparadas tuvieran coseno negativo (sin géneros en común),
+          ninguna superaría el 0 y el resultado quedaría sin actualizar. Bug silencioso.</div>
+        </div>
+        <div class="sentinel-item good">
+          <div class="s-title">Con −1 (mínimo absoluto)</div>
+          <div class="s-val">coseno_maximo = −1</div>
+          <div class="s-why">El coseno siempre está en [−1, 1]. Inicializando en −1 garantizamos que
+          el primer valor real siempre gane y <code>pelicula_similar</code> siempre se actualice.</div>
+        </div>
+      </div>
+
+      <!-- RESULTADOS -->
+      <h3>Resultados de la práctica</h3>
+      <table>
+        <thead>
+          <tr><th>Película</th><th>Más parecida</th><th>Similitud coseno</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Toy Story</td><td>Jumanji</td>
+            <td><span class="sim-val sim-mid">0.5774</span></td>
+          </tr>
+          <tr>
+            <td>Jumanji</td><td>Mortal Kombat</td>
+            <td><span class="sim-val sim-high">0.7071</span></td>
+          </tr>
+          <tr>
+            <td>Mortal Kombat</td><td>Jumanji</td>
+            <td><span class="sim-val sim-high">0.7071</span></td>
+          </tr>
+          <tr>
+            <td>Pocahontas</td><td>Toy Story</td>
+            <td><span class="sim-val sim-low">0.4082</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <strong>Interpretación de 0.7071</strong>
+        Jumanji y Mortal Kombat comparten exactamente el género "Aventura". El coseno de 45° es √2/2 ≈ 0.7071.
+        No es casualidad: sus vectores forman un ángulo de 45° en el espacio de 5 dimensiones.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── APLICACIONES REALES ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">🌍</span> Similitud coseno en el mundo real</h2>
+      <p>
+        Este algoritmo de película es exactamente el mismo mecanismo que usan sistemas de producción reales.
+        Cambia el dominio, no la matemática.
+      </p>
+
+      <div class="app-grid">
+
+        <div class="app-card nlp">
+          <div class="app-header">📝 NLP — Comparación de textos</div>
+          <div class="app-body">
+            <p>
+              Cada texto se convierte en un vector numérico (TF-IDF, embeddings de OpenAI, BERT…).
+              Luego mides similitud coseno entre ellos.
+            </p>
+            <pre style="font-size:.8rem"><code><span class="cm"># "El perro corre" vs "El can corre"</span>
+<span class="cm"># → similitud alta (~0.95) misma idea</span>
+
+<span class="cm"># "El perro corre" vs "La bolsa sube"</span>
+<span class="cm"># → similitud baja (~0.12) sin relación</span></code></pre>
+            <p>
+              Lo usan <strong>motores de búsqueda semántica</strong>, detección de plagio
+              y clustering de noticias.
+            </p>
+            <p style="margin-top:.6rem;padding:.5rem .7rem;background:var(--azul-claro);border-radius:6px;font-size:.83rem">
+              <strong>De hecho en IO Lab</strong> — cuando analizas reseñas de Google Maps,
+              los embeddings de esas reseñas se comparan con similitud coseno para agrupar
+              opiniones similares. Exactamente esto, a escala.
+            </p>
+          </div>
+        </div>
+
+        <div class="app-card rec">
+          <div class="app-header">🎵 Sistemas de recomendación</div>
+          <div class="app-body">
+            <p>
+              Cada usuario o producto es un vector de preferencias (puntuaciones, clics, tiempo).
+              Netflix, Spotify y Amazon usan esto constantemente.
+            </p>
+            <pre style="font-size:.8rem"><code>usuario_a = np.<span class="fn">array</span>([<span class="num">5</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">5</span>])
+usuario_b = np.<span class="fn">array</span>([<span class="num">4</span>, <span class="num">5</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">4</span>])
+
+<span class="cm"># Similitud alta → recomendar a B</span>
+<span class="cm"># lo que le gustó a A</span></code></pre>
+            <p>
+              Las películas del enunciado son una versión mínima de esto:
+              Toy Story y Jumanji son "usuarios" con gustos similares.
+            </p>
+          </div>
+        </div>
+
+        <div class="app-card cv">
+          <div class="app-header">👁 Computer Vision</div>
+          <div class="app-body">
+            <p>
+              Una imagen se convierte en un vector de features (CNN, ViT…).
+              La similitud coseno dice si dos imágenes representan la misma cara,
+              el mismo objeto o la misma escena.
+            </p>
+            <p>
+              Los sistemas de <strong>verificación facial</strong> (Face ID, control de acceso)
+              comparan el vector de tu cara con el almacenado. Si el coseno supera un umbral
+              (~0.95), eres tú.
+            </p>
+          </div>
+        </div>
+
+        <div class="app-card fraud">
+          <div class="app-header">🚨 Detección de anomalías</div>
+          <div class="app-body">
+            <p>
+              El vector de comportamiento de un usuario (páginas visitadas, horarios, geolocalización)
+              se compara con su comportamiento habitual.
+            </p>
+            <p>
+              Si la similitud coseno entre "hoy" y "historial" es muy baja → comportamiento inusual →
+              posible fraude o intrusión. Lo usan bancos y equipos de ciberseguridad.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- POR QUÉ COSENO Y NO EUCLIDEA -->
+      <div class="card" style="margin-top:1.5rem;margin-bottom:0;background:var(--violeta-claro);border-color:#ddd6fe">
+        <h2 style="border-color:#c4b5fd"><span class="icon">⚖️</span> ¿Por qué coseno y no distancia euclidiana?</h2>
+        <p>
+          La clave es que el coseno <strong>ignora la magnitud del vector</strong> — solo le importa la dirección.
+          En NLP esto es fundamental:
+        </p>
+
+        <div class="compare">
+          <div class="compare-box antes">
+            <div class="label">❌ Distancia euclidiana — problema</div>
+            <pre><code><span class="cm"># Documento largo: menciona "Madrid" 10 veces</span>
+doc_largo  = [<span class="num">10</span>, <span class="num">2</span>, <span class="num">8</span>, ...]
+
+<span class="cm"># Documento corto: menciona "Madrid" 2 veces</span>
+doc_corto  = [<span class="num">2</span>,  <span class="num">0</span>, <span class="num">2</span>, ...]
+
+<span class="cm"># Hablan del mismo tema pero...</span>
+<span class="cm"># distancia euclidiana = enorme → ¿sin relación?</span></code></pre>
+          </div>
+          <div class="compare-box despues">
+            <div class="label">✅ Similitud coseno — solución</div>
+            <pre><code><span class="cm"># Mismos vectores, diferente magnitud</span>
+doc_largo  = [<span class="num">10</span>, <span class="num">2</span>, <span class="num">8</span>, ...]
+doc_corto  = [<span class="num">2</span>,  <span class="num">0</span>, <span class="num">2</span>, ...]
+
+<span class="cm"># Apuntan en la misma dirección →</span>
+<span class="cm"># coseno ≈ 0.99 → casi idénticos ✓</span></code></pre>
+          </div>
+        </div>
+
+        <p>
+          <strong>Resumen:</strong> usa distancia euclidiana cuando la magnitud importa (¿cuánto?).
+          Usa similitud coseno cuando solo importa la dirección (¿de qué trata?).
+        </p>
+
+        <table style="margin-top:.8rem">
+          <thead>
+            <tr><th>Métrica</th><th>Mide</th><th>Cuándo usarla</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>np.linalg.norm(a − b)</code></td>
+              <td>Distancia en el espacio</td>
+              <td>Coordenadas físicas, asignación de clases (práctica Numpy II)</td>
+            </tr>
+            <tr>
+              <td><code>dot(a,b) / (‖a‖·‖b‖)</code></td>
+              <td>Ángulo entre vectores</td>
+              <td>Textos, preferencias, features de imágenes (esta práctica)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── BONUS WALL-E ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">🤖</span> Bonus — Wall-E y la recomendación a Jaime</h2>
+      <p>
+        Wall-E tiene géneros <strong>Acción, Aventura, Animación, Comedia</strong> → vector <code>[1,1,1,1,0]</code>.
+        Es el vector más "rico" del conjunto, con 4 géneros activos. ¿A quién se parece más?
+      </p>
+      <pre><code>peliculas[<span class="str">"Wall-E"</span>] = [<span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>]
+
+<span class="cm"># Resultado:</span>
+<span class="cm"># Wall-E ↔ Toy Story: 0.8660  ← máximo</span>
+<span class="cm"># Wall-E ↔ Jumanji:  0.5000</span>
+<span class="cm"># Wall-E ↔ M.Kombat: 0.7071</span>
+<span class="cm"># Wall-E ↔ Pocahon.: 0.2887</span></code></pre>
+
+      <div class="callout success">
+        <strong>Recomendación para Jaime: Toy Story</strong>
+        Comparten Aventura + Animación + Comedia (3 géneros de 4). El coseno 0.866 = cos(30°) — ángulo muy pequeño.
+        Tiene sentido intuitivamente: Wall-E es el hermano mayor de Toy Story.
+      </div>
+
+      <div class="callout warn" style="margin-top:.5rem">
+        <strong>Detalle importante del enunciado vs solución</strong>
+        El enunciado original dice que Wall-E tiene géneros "Aventura, Comedia, Acción" (sin Animación).
+        La solución usa <code>[1,1,1,1,0]</code> incluyendo Animación, que tiene más sentido para Wall-E.
+        Es un ejemplo de que en Data Science la <em>codificación de datos</em> importa tanto como el algoritmo.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RESUMEN FUNCIONES ── -->
+  <section>
+    <div class="card">
+      <h2><span class="icon">🧰</span> Funciones NumPy de esta práctica</h2>
+      <div class="grid-3">
+        <div class="mini-card">
+          <div class="fn-name">np.dot(a, b)</div>
+          <div class="fn-desc">Producto escalar (vectores) o matricial (matrices). El núcleo del coseno y del coste total.</div>
+          <div class="fn-ex">np.dot([1,0,1], [1,1,0]) → 1</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">np.linalg.norm(v)</div>
+          <div class="fn-desc">Norma (módulo) de un vector: √(x²+y²+…). Necesaria para normalizar en similitud coseno.</div>
+          <div class="fn-ex">np.linalg.norm([3,4]) → 5.0</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">array.T</div>
+          <div class="fn-desc">Transpuesta de una matriz. Intercambia filas y columnas para poder hacer el producto.</div>
+          <div class="fn-ex">np.array([[1,2],[3,4]]).T</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">np.argmin(arr)</div>
+          <div class="fn-desc">Devuelve el índice del valor mínimo. Útil para encontrar la tienda más barata.</div>
+          <div class="fn-ex">np.argmin([50, 49]) → 1</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">array.dot(b)</div>
+          <div class="fn-desc">Método equivalente a np.dot. Se puede encadenar como método del array.</div>
+          <div class="fn-ex">cantidad.dot(precios)</div>
+        </div>
+        <div class="mini-card">
+          <div class="fn-name">@ operador</div>
+          <div class="fn-desc">Operador de producto matricial en Python. La forma más legible y moderna.</div>
+          <div class="fn-ex">cantidad @ precios</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  The Bridge · DS Online · Sprint 03 — NumPy I
+</footer>
+
+</body>
+</html>
