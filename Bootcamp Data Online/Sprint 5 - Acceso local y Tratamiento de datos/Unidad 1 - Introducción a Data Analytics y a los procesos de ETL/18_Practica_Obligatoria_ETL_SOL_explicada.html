@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Práctica ETL – Solución Explicada · Netflix Dataset</title>
+<style>
+  :root {
+    --brand:   #e50914;   /* Netflix red */
+    --brand2:  #6366f1;   /* indigo */
+    --green:   #10b981;
+    --amber:   #f59e0b;
+    --blue:    #3b82f6;
+    --purple:  #8b5cf6;
+    --bg:      #f8fafc;
+    --card:    #ffffff;
+    --border:  #e2e8f0;
+    --text:    #1e293b;
+    --muted:   #64748b;
+    --code-bg: #0f172a;
+    --code-fg: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #141414 0%, #1a0a0a 50%, #141414 100%);
+    color: white; padding: 56px 40px 46px; text-align: center; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(229,9,20,.2) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(99,102,241,.1) 0%, transparent 60%);
+  }
+  .hero-inner { position: relative; max-width: 860px; margin: auto; }
+  .hero .badge {
+    display: inline-block; background: rgba(229,9,20,.3); border: 1px solid rgba(229,9,20,.5);
+    color: #fca5a5; font-size: .74rem; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; padding: 4px 14px; border-radius: 999px; margin-bottom: 18px;
+  }
+  .hero h1 { font-size: clamp(1.7rem,4vw,2.6rem); font-weight: 800; margin-bottom: 10px; }
+  .hero h1 span { color: var(--brand); }
+  .hero p { font-size: 1rem; color: #94a3b8; max-width: 580px; margin: 0 auto 26px; }
+  .hero-pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .hero-pill { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); padding: 5px 16px; border-radius: 999px; font-size: .82rem; color: #cbd5e1; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 980px; margin: 0 auto; padding: 44px 22px; }
+
+  /* ── TOC ── */
+  .toc { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 26px; margin-bottom: 34px; }
+  .toc h3 { font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .toc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; }
+  .toc-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: var(--text); font-size: .87rem; font-weight: 500; border: 1px solid var(--border); transition: all .15s; }
+  .toc-item:hover { background: var(--bg); border-color: var(--brand); color: var(--brand); }
+  .toc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── SECTION ── */
+  .section { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 34px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .section-header { display: flex; align-items: center; gap: 14px; padding: 20px 26px; border-bottom: 1px solid var(--border); }
+  .section-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+  .section-header h2 { font-size: 1.15rem; font-weight: 700; }
+  .section-header p { font-size: .83rem; color: var(--muted); margin-top: 2px; }
+  .section-body { padding: 26px; }
+
+  /* ── EXERCISE ── */
+  .exercise { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 22px; overflow: hidden; }
+  .exercise:last-child { margin-bottom: 0; }
+  .exercise-title { display: flex; align-items: center; gap: 10px; padding: 13px 18px; background: var(--bg); border-bottom: 1px solid var(--border); font-weight: 600; font-size: .93rem; }
+  .exercise-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 800; flex-shrink: 0; color: white; }
+  .exercise-body { padding: 18px; }
+
+  /* ── INFO BOXES ── */
+  .explain { background: #eff6ff; border-left: 4px solid var(--blue); padding: 11px 15px; border-radius: 0 7px 7px 0; margin-bottom: 14px; font-size: .89rem; color: #0c4a6e; }
+  .explain strong { color: #1e40af; }
+  .why  { background: #fffbeb; border-left: 4px solid var(--amber); padding: 11px 15px; border-radius: 0 7px 7px 0; margin: 12px 0; font-size: .87rem; color: #78350f; }
+  .how  { background: #f0fdf4; border-left: 4px solid var(--green); padding: 11px 15px; border-radius: 0 7px 7px 0; margin: 12px 0; font-size: .87rem; color: #064e3b; }
+  .tip  { background: #fdf4ff; border-left: 4px solid var(--purple); padding: 11px 15px; border-radius: 0 7px 7px 0; margin: 12px 0; font-size: .87rem; color: #4a044e; }
+  .warn { background: #fff1f2; border-left: 4px solid var(--brand); padding: 11px 15px; border-radius: 0 7px 7px 0; margin: 12px 0; font-size: .87rem; color: #881337; }
+  .enunciado { background: #f1f5f9; border-left: 4px solid var(--muted); padding: 10px 14px; border-radius: 0 7px 7px 0; margin-bottom: 14px; font-style: italic; font-size: .88rem; color: #334155; }
+
+  /* ── CODE ── */
+  pre { background: var(--code-bg); color: var(--code-fg); border-radius: 10px; padding: 16px 18px; font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: .81rem; line-height: 1.65; overflow-x: auto; margin: 10px 0; }
+  .kw { color: #c084fc; } .fn { color: #67e8f9; } .st { color: #86efac; }
+  .nb { color: #fca5a5; } .cm { color: #475569; font-style: italic; }
+  .var { color: #fde68a; } .op { color: #94a3b8; } .bi { color: #fb923c; }
+  .rx { color: #f472b6; }  /* regex */
+
+  /* ── OUTPUT ── */
+  .output-wrap { background: #0f172a; border-radius: 10px; padding: 12px 16px; margin: 8px 0; overflow-x: auto; }
+  .output-label { font-size: .7rem; font-weight: 700; letter-spacing: .1em; color: #475569; text-transform: uppercase; margin-bottom: 8px; }
+  table.out { width: 100%; border-collapse: collapse; font-family: 'Cascadia Code',monospace; font-size: .79rem; color: #e2e8f0; }
+  table.out th { background: rgba(99,102,241,.18); color: #a5b4fc; padding: 5px 11px; text-align: left; border-bottom: 1px solid rgba(99,102,241,.25); }
+  table.out td { padding: 4px 11px; border-bottom: 1px solid rgba(255,255,255,.04); }
+  table.out tr:hover td { background: rgba(255,255,255,.03); }
+  .out-num { color: #86efac; text-align: right; }
+  .out-str { color: #fde68a; }
+  .out-idx { color: #94a3b8; }
+  .text-output { background: var(--code-bg); color: #86efac; font-family: monospace; font-size: .81rem; padding: 12px 16px; border-radius: 10px; margin: 8px 0; white-space: pre-wrap; }
+
+  /* ── CARDS ── */
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 10px; margin: 12px 0; }
+  .result-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; text-align: center; }
+  .result-card .val { font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, var(--brand), var(--brand2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .result-card .lbl { font-size: .76rem; color: var(--muted); margin-top: 3px; }
+
+  /* ── RANKING ── */
+  .ranking { margin: 12px 0; }
+  .rank-item { margin-bottom: 7px; }
+  .rank-label { display: flex; justify-content: space-between; font-size: .81rem; margin-bottom: 3px; }
+  .rank-bar-wrap { background: var(--bg); border-radius: 999px; height: 7px; overflow: hidden; border: 1px solid var(--border); }
+  .rank-bar { height: 100%; border-radius: 999px; }
+
+  /* ── FORMULA ── */
+  .formula { background: linear-gradient(135deg, #1e1b4b, #0f172a); border: 1px solid rgba(99,102,241,.3); border-radius: 10px; padding: 14px 18px; text-align: center; margin: 12px 0; color: #e0e7ff; font-family: 'Cascadia Code',monospace; font-size: .95rem; }
+
+  /* ── INLINE ── */
+  .hl { background: rgba(99,102,241,.1); color: #6366f1; padding: 1px 6px; border-radius: 4px; font-family: monospace; font-size: .86em; }
+  .bonus-badge { display: inline-block; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 2px 9px; border-radius: 999px; margin-left: 8px; }
+  hr.div { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* ── PROGRESS ITER ── */
+  .iter-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 12px 0; }
+  .iter-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .iter-header { display: flex; align-items: center; gap: 8px; padding: 9px 14px; font-size: .84rem; font-weight: 600; }
+  .iter-body { padding: 0 14px 14px; }
+
+  /* ── FLOW SUMMARY ── */
+  .flow { background: linear-gradient(135deg, #0f172a, #1e1b4b); border-radius: 12px; padding: 18px 22px; border: 1px solid rgba(99,102,241,.25); margin-top: 18px; }
+  .flow-title { color: #a5b4fc; font-size: .73rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
+  .flow-steps { display: flex; flex-direction: column; gap: 0; }
+  .flow-step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,.08); }
+  .flow-step:last-child { border-bottom: none; }
+  .flow-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .73rem; font-weight: 800; flex-shrink: 0; color: white; margin-top: 1px; }
+  .flow-step strong { color: #e2e8f0; font-size: .88rem; display: block; }
+  .flow-step span { color: #64748b; font-size: .81rem; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="badge">Sprint 05 · Unidad 01 · Data Analysis</div>
+    <h1>Práctica ETL – <span>Netflix</span> Dataset</h1>
+    <p>Solución visual y comentada · Transformación y Limpieza de datos reales</p>
+    <div class="hero-pills">
+      <span class="hero-pill">📥 Extracción</span>
+      <span class="hero-pill">🔄 Transformación</span>
+      <span class="hero-pill">📤 Carga</span>
+      <span class="hero-pill">🎬 8 807 títulos Netflix</span>
+      <span class="hero-pill">🔍 Regex aplicado</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TOC -->
+  <div class="toc">
+    <h3>Índice</h3>
+    <div class="toc-grid">
+      <a class="toc-item" href="#s0"><span class="toc-dot" style="background:#6366f1"></span>#0 Carga y exploración</a>
+      <a class="toc-item" href="#s1"><span class="toc-dot" style="background:#10b981"></span>#1 Duplicados y cardinalidad</a>
+      <a class="toc-item" href="#s2"><span class="toc-dot" style="background:#f59e0b"></span>#2 Limpieza y transformación</a>
+      <a class="toc-item" href="#s3"><span class="toc-dot" style="background:#e50914"></span>#3 Tratamiento de nulos</a>
+      <a class="toc-item" href="#s4"><span class="toc-dot" style="background:#8b5cf6"></span>#4 Generación de nuevos datos</a>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════ #0 CARGA ══════════════════ -->
+  <div class="section" id="s0">
+    <div class="section-header">
+      <div class="section-icon" style="background:#ede9fe">🔍</div>
+      <div>
+        <h2>#0 · Carga de datos y primera exploración</h2>
+        <p>Dataset de títulos de Netflix — 8 807 registros, 12 columnas</p>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#6366f1">↓</div>
+          Carga del dataset
+        </div>
+        <div class="exercise-body">
+          <div class="explain">
+            Importamos también <strong>re</strong> (módulo de expresiones regulares) desde el principio,
+            porque lo usaremos en el bloque 4.
+          </div>
+<pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> re                    <span class="cm"># lo usaremos en el bloque #4</span>
+
+pd.options.mode.copy_on_write <span class="op">=</span> <span class="bi">True</span>
+
+<span class="var">df_peliculas</span> <span class="op">=</span> pd.<span class="fn">read_csv</span>(<span class="st">"data/dataset_netflix_titles.csv"</span>)
+<span class="var">df</span> <span class="op">=</span> df_peliculas.<span class="fn">copy</span>()   <span class="cm"># siempre trabajar sobre una copia</span></pre>
+        </div>
+      </div>
+
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#6366f1">1</div>
+          Primera exploración: estructura, tipos y distribuciones
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Visualización inicial, info general, describe y distribución de tres columnas elegidas.</div>
+
+<pre><span class="var">df</span>.<span class="fn">head</span>(<span class="nb">10</span>)
+<span class="var">df</span>.<span class="fn">info</span>()
+<span class="var">df</span>.<span class="fn">describe</span>()   <span class="cm"># solo release_year es numérica → el describe no dice mucho</span>
+<span class="var">df</span>.columns</pre>
+
+          <div class="output-wrap">
+            <div class="output-label">df.info() — estructura del dataset</div>
+            <table class="out">
+              <tr><th>#</th><th>Columna</th><th>No-Nulos</th><th>Tipo</th></tr>
+              <tr><td class="out-idx">0</td><td class="out-str">show_id</td><td class="out-num">8 807</td><td>object</td></tr>
+              <tr><td class="out-idx">1</td><td class="out-str">type</td><td class="out-num">8 807</td><td>object</td></tr>
+              <tr><td class="out-idx">2</td><td class="out-str">title</td><td class="out-num">8 807</td><td>object</td></tr>
+              <tr><td class="out-idx">3</td><td class="out-str">director</td><td class="out-num" style="color:#f59e0b">6 173 ⚠</td><td>object</td></tr>
+              <tr><td class="out-idx">4</td><td class="out-str">cast</td><td class="out-num" style="color:#f59e0b">7 982 ⚠</td><td>object</td></tr>
+              <tr><td class="out-idx">5</td><td class="out-str">country</td><td class="out-num" style="color:#f59e0b">7 976 ⚠</td><td>object</td></tr>
+              <tr><td class="out-idx">6</td><td class="out-str">date_added</td><td class="out-num" style="color:#10b981">8 797 ~ok</td><td>object → datetime</td></tr>
+              <tr><td class="out-idx">7</td><td class="out-str">release_year</td><td class="out-num">8 807</td><td>int64</td></tr>
+              <tr><td class="out-idx">8</td><td class="out-str">rating</td><td class="out-num" style="color:#10b981">8 800 ~ok</td><td>object</td></tr>
+              <tr><td class="out-idx">9</td><td class="out-str">duration</td><td class="out-num">8 807</td><td>object</td></tr>
+              <tr><td class="out-idx">10</td><td class="out-str">listed_in</td><td class="out-num">8 807</td><td>object</td></tr>
+              <tr><td class="out-idx">11</td><td class="out-str">description</td><td class="out-num">8 807</td><td>object</td></tr>
+            </table>
+          </div>
+
+<pre><span class="cm"># Distribución de las tres columnas más interesantes</span>
+<span class="var">mis_elegidas</span> <span class="op">=</span> [<span class="st">"type"</span>, <span class="st">"rating"</span>, <span class="st">"country"</span>]
+<span class="kw">for</span> col <span class="kw">in</span> mis_elegidas:
+    <span class="fn">print</span>(<span class="st">f"Para </span><span class="var">{col}</span><span class="st"> la distribución es:"</span>)
+    <span class="fn">print</span>(df[col].<span class="fn">value_counts</span>())
+    <span class="fn">print</span>(<span class="st">"*"</span> <span class="op">*</span> <span class="nb">10</span>)</pre>
+
+          <div class="output-wrap">
+            <div class="output-label">value_counts de las 3 columnas elegidas — primeras señales de suciedad</div>
+            <table class="out">
+              <tr><th>type</th><th>#</th><th>rating</th><th>#</th></tr>
+              <tr><td class="out-str">Movie</td><td class="out-num">5 597</td><td class="out-str">TV-MA</td><td class="out-num">3 207</td></tr>
+              <tr><td class="out-str">TV Show</td><td class="out-num">1 231</td><td class="out-str">TV-14</td><td class="out-num">2 160</td></tr>
+              <tr><td class="out-str">Series TV</td><td class="out-num">1 004</td><td class="out-str">TV-PG</td><td class="out-num">863</td></tr>
+              <tr><td class="out-str">Film</td><td class="out-num">534</td><td class="out-str">R</td><td class="out-num">799</td></tr>
+              <tr><td class="out-str">Show</td><td class="out-num">441</td><td class="out-str" style="color:#ef4444">74 min ⚠</td><td class="out-num" style="color:#ef4444">1</td></tr>
+            </table>
+          </div>
+
+          <div class="tip">💡 <strong>Primer diagnóstico:</strong>
+            <ul style="margin:.5rem 0 0 1.2rem;font-size:.86rem">
+              <li><span class="hl">type</span>: 5 valores distintos para solo 2 conceptos → simplificar</li>
+              <li><span class="hl">rating</span>: aparecen valores "min" (duración en vez de clasificación) → limpiar</li>
+              <li><span class="hl">country</span>: coproducciones, inconsistencias de nombres → análisis más profundo</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /s0 -->
+
+
+  <!-- ══════════════════ #1 DUPLICADOS ══════════════════ -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-icon" style="background:#dcfce7">🔢</div>
+      <div>
+        <h2>#1 · Duplicados y cardinalidad</h2>
+        <p>Verificar integridad · Calcular cardinalidad · Detectar posibles índices</p>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- ej 1 -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#10b981">1</div>
+          ¿Hay filas duplicadas?
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Comprobar si existen filas duplicadas y cuántas son.</div>
+<pre><span class="fn">print</span>(df.<span class="fn">duplicated</span>().<span class="fn">sum</span>())
+df[df.<span class="fn">duplicated</span>()]</pre>
+          <div class="text-output">0
+Empty DataFrame  →  No hay duplicados (de momento)</div>
+          <div class="warn">⚠️ <strong>Spoiler:</strong> tras aplicar <span class="hl">strip()</span> en el bloque #2, aparecerá un duplicado oculto en la película "Consequences" — tenía espacios extra que la hacían parecer diferente.</div>
+        </div>
+      </div>
+
+      <!-- ej 2 -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#10b981">2</div>
+          Eliminar duplicados (keep last) — no aplica aún
+        </div>
+        <div class="exercise-body">
+          <div class="explain">No hay duplicados ahora, pero el código para eliminarlos sería:</div>
+<pre><span class="cm"># Si los hubiera, nos quedaríamos con la última ocurrencia</span>
+df.<span class="fn">drop_duplicates</span>(keep<span class="op">=</span><span class="st">"last"</span>, inplace<span class="op">=</span><span class="bi">True</span>)</pre>
+        </div>
+      </div>
+
+      <!-- ej 3 -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#10b981">3</div>
+          Calcular la cardinalidad de cada columna
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Obtener la cardinalidad (% de valores únicos sobre total) y guardarla en un diccionario.</div>
+          <div class="explain">
+            <strong>¿Qué es la cardinalidad?</strong> El porcentaje de valores únicos de una columna respecto al total de filas.
+            Una cardinalidad del 100% significa que cada fila tiene un valor distinto → posible índice.
+            Una cardinalidad muy baja indica una columna categórica con pocos valores distintos.
+          </div>
+
+          <div class="formula">cardinalidad = (nº valores únicos / nº total de filas) × 100</div>
+
+<pre><span class="cm"># Versión explícita (con bucle for)</span>
+<span class="var">diccionario_cardinalidad</span> <span class="op">=</span> {}
+<span class="kw">for</span> col <span class="kw">in</span> df.columns:
+    cardinalidad <span class="op">=</span> <span class="fn">round</span>(df[col].<span class="fn">nunique</span>() <span class="op">/</span> <span class="fn">len</span>(df) <span class="op">*</span> <span class="nb">100</span>, <span class="nb">2</span>)
+    <span class="var">diccionario_cardinalidad</span>[col] <span class="op">=</span> cardinalidad
+
+<span class="cm"># Versión corta con Series (equivalente, más pythónica)</span>
+<span class="var">serie_cardinalidad</span> <span class="op">=</span> (df.<span class="fn">nunique</span>() <span class="op">/</span> <span class="fn">len</span>(df) <span class="op">*</span> <span class="nb">100</span>).<span class="fn">round</span>(<span class="nb">2</span>)
+<span class="var">diccionario_cardinalidad</span> <span class="op">=</span> <span class="fn">dict</span>(serie_cardinalidad)</pre>
+
+          <div class="output-wrap">
+            <div class="output-label">cardinalidad por columna</div>
+            <table class="out">
+              <tr><th>Columna</th><th>Cardinalidad</th><th>Interpretación</th></tr>
+              <tr><td class="out-str">show_id</td><td class="out-num" style="color:#10b981">100.00%</td><td style="color:#10b981">→ posible índice</td></tr>
+              <tr><td class="out-str">title</td><td class="out-num" style="color:#10b981">100.00%</td><td style="color:#10b981">→ posible índice</td></tr>
+              <tr><td class="out-str">description</td><td class="out-num">99.64%</td><td>casi única por fila</td></tr>
+              <tr><td class="out-str">cast</td><td class="out-num">87.34%</td><td>alta dispersión</td></tr>
+              <tr><td class="out-str">director</td><td class="out-num">51.41%</td><td>alta dispersión</td></tr>
+              <tr><td class="out-str">date_added</td><td class="out-num">20.06%</td><td>media dispersión</td></tr>
+              <tr><td class="out-str">country</td><td class="out-num">8.49%</td><td style="color:#f59e0b">↓ baja → analizar</td></tr>
+              <tr><td class="out-str">listed_in</td><td class="out-num">5.84%</td><td style="color:#f59e0b">↓ baja → analizar</td></tr>
+              <tr><td class="out-str">duration</td><td class="out-num">2.50%</td><td style="color:#f59e0b">↓ baja → analizar</td></tr>
+              <tr><td class="out-str">release_year</td><td class="out-num">0.84%</td><td style="color:#f59e0b">↓ baja → analizar</td></tr>
+              <tr><td class="out-str">rating</td><td class="out-num">0.19%</td><td style="color:#f59e0b">↓ muy baja → analizar</td></tr>
+              <tr><td class="out-str">type</td><td class="out-num">0.06%</td><td style="color:#ef4444">↓ mínima (5 valores)</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ej 4 -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#10b981">4</div>
+          Detectar columnas con cardinalidad = 100% (posibles índices)
+        </div>
+        <div class="exercise-body">
+<pre><span class="cm"># Con diccionario</span>
+<span class="var">posibles_indices</span> <span class="op">=</span> []
+<span class="kw">for</span> col, cardinalidad <span class="kw">in</span> diccionario_cardinalidad.<span class="fn">items</span>():
+    <span class="kw">if</span> cardinalidad <span class="op">==</span> <span class="nb">100</span>:
+        <span class="fn">print</span>(<span class="st">f"</span><span class="var">{col}</span><span class="st"> sería un buen índice"</span>)
+        posibles_indices.<span class="fn">append</span>(col)
+
+<span class="cm"># Con Series (más corto)</span>
+<span class="var">posibles_indices</span> <span class="op">=</span> serie_cardinalidad[serie_cardinalidad <span class="op">==</span> <span class="nb">100</span>].index.<span class="fn">to_list</span>()</pre>
+
+          <div class="text-output">show_id sería un buen índice
+title sería un buen índice</div>
+          <div class="tip">💡 <strong>¿Cuál usar como índice?</strong> <span class="hl">show_id</span> es más robusto: es un ID artificial que nunca cambia. <span class="hl">title</span> podría tener colisiones si hay remakes. Lo usaremos en el bloque #3.</div>
+        </div>
+      </div>
+
+      <!-- bonus -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#10b981">B</div>
+          BONUS: versión con Series en vez de diccionario <span class="bonus-badge">bonus</span>
+        </div>
+        <div class="exercise-body">
+<pre><span class="var">serie_cardinalidad</span> <span class="op">=</span> (df.<span class="fn">nunique</span>() <span class="op">/</span> <span class="fn">len</span>(df) <span class="op">*</span> <span class="nb">100</span>).<span class="fn">round</span>(<span class="nb">2</span>)
+
+<span class="cm"># Posibles índices en una sola línea</span>
+<span class="var">posibles_indices</span> <span class="op">=</span> serie_cardinalidad[serie_cardinalidad <span class="op">==</span> <span class="nb">100</span>].index.<span class="fn">to_list</span>()
+<span class="fn">print</span>(<span class="st">f"</span><span class="var">{posibles_indices}</span><span class="st"> serían posibles índices"</span> <span class="kw">if</span> posibles_indices <span class="kw">else</span> <span class="st">"Sin índices"</span>)</pre>
+          <div class="tip">💡 La Series es más compacta y permite hacer filtrados directamente. Un diccionario es más explícito y legible para principiantes.</div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /s1 -->
+
+
+  <!-- ══════════════════ #2 LIMPIEZA ══════════════════ -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <div class="section-icon" style="background:#fef9c3">🧹</div>
+      <div>
+        <h2>#2 · Limpieza y transformación (I)</h2>
+        <p>Strip · Cardinalidad baja · Simplificar tipos · Corregir rating · Convertir fechas</p>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- ej 1 strip -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#f59e0b">1</div>
+          Eliminar espacios en blanco con strip()
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Quitar espacios antes/después de cada valor string en todas las columnas.</div>
+          <div class="explain">
+            Los espacios invisibles son un problema clásico en datos reales: "Ginebra" y " Ginebra" son distintos para Pandas aunque visualmente parezcan iguales. Se aplica <span class="hl">str.strip()</span> solo a columnas <span class="hl">object</span> (no se puede aplicar a numéricas).
+          </div>
+<pre><span class="kw">for</span> col <span class="kw">in</span> df.columns:
+    <span class="kw">if</span> df[col].dtype <span class="op">==</span> <span class="st">"O"</span>:   <span class="cm"># solo columnas de tipo object (strings)</span>
+        df[col] <span class="op">=</span> df[col].str.<span class="fn">strip</span>()</pre>
+
+          <div class="why">
+            <strong>¿Por qué comprobar el tipo antes de aplicar strip?</strong>
+            Si se aplica <span class="hl">.str.strip()</span> a una columna entera como <span class="hl">release_year</span> (int64), Pandas lanzará un error porque los enteros no tienen métodos de cadena.
+          </div>
+        </div>
+      </div>
+
+      <!-- bonus strip -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#f59e0b">B</div>
+          BONUS: verificar si strip() tuvo efecto <span class="bonus-badge">bonus</span>
+        </div>
+        <div class="exercise-body">
+          <div class="explain">Comparamos la cardinalidad antes y después del strip. Las columnas que cambien son las que tenían espacios.</div>
+<pre><span class="var">serie_card_after</span> <span class="op">=</span> (df.<span class="fn">nunique</span>() <span class="op">/</span> <span class="fn">len</span>(df) <span class="op">*</span> <span class="nb">100</span>).<span class="fn">round</span>(<span class="nb">2</span>)
+
+<span class="cm"># Columnas cuya cardinalidad cambió</span>
+serie_card_after[serie_cardinalidad <span class="op">!=</span> serie_card_after]</pre>
+          <div class="text-output">title         99.99   ← antes era 100.00
+date_added    19.46   ← antes era 20.06</div>
+          <div class="warn">⚠️ <span class="hl">title</span> ya no tiene cardinalidad 100% → ahora sí hay un duplicado real. La película <strong>"Consequences"</strong> aparece dos veces pero tenía un espacio extra que la hacía parecer diferente.</div>
+        </div>
+      </div>
+
+      <!-- ej 2 cardinalidad baja -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#f59e0b">2</div>
+          Listar campos con cardinalidad menor al 10%
+        </div>
+        <div class="exercise-body">
+<pre><span class="var">umbral</span> <span class="op">=</span> <span class="nb">10</span>
+<span class="var">col_seleccionados</span> <span class="op">=</span> []
+<span class="kw">for</span> col, card <span class="kw">in</span> diccionario_cardinalidad.<span class="fn">items</span>():
+    <span class="kw">if</span> card <span class="op">&lt;</span> umbral:
+        col_seleccionados.<span class="fn">append</span>(col)</pre>
+          <div class="text-output">type        0.06%  → 5 valores distintos
+country     8.49%  → 748 valores
+release_year  0.84%  → 97 años distintos
+rating      0.19%  → 15 valores
+duration    2.50%  → 220 valores únicos
+listed_in   5.84%  → 514 géneros</div>
+          <div class="tip">💡 Las columnas con cardinalidad baja son las más interesantes para limpiar/analizar porque tienen valores repetidos → más fácil detectar inconsistencias.</div>
+        </div>
+      </div>
+
+      <!-- ej 3 mostrar distribución -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#f59e0b">3</div>
+          Mostrar distribución y valores únicos de las columnas de baja cardinalidad
+        </div>
+        <div class="exercise-body">
+<pre><span class="kw">for</span> col <span class="kw">in</span> col_seleccionados:
+    <span class="fn">print</span>(<span class="st">f"Para &lt;</span><span class="var">{col}</span><span class="st">&gt;"</span>)
+    <span class="fn">print</span>(<span class="st">"Value counts:"</span>)
+    <span class="fn">print</span>(df[col].<span class="fn">value_counts</span>())
+    <span class="fn">print</span>(<span class="st">"Valores únicos:"</span>)
+    <span class="fn">print</span>(df[col].<span class="fn">unique</span>())</pre>
+          <div class="explain">
+            <strong>Conclusiones del análisis:</strong>
+            <ul style="margin:.4rem 0 0 1.1rem;font-size:.86rem">
+              <li><span class="hl">type</span>: 5 valores para 2 conceptos — simplificar a Movie / Series TV</li>
+              <li><span class="hl">rating</span>: 3 filas tienen duraciones ("74 min") en vez de rating — corregir</li>
+              <li><span class="hl">duration</span>: mezcla "90 min" (películas) y "1 Season" (series) — separar en #4</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ej 4 transformaciones -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#f59e0b">4</div>
+          Limpiar y simplificar: type y rating
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Agrupar categorías similares en type. Corregir los valores erróneos en rating.</div>
+
+          <strong style="font-size:.88rem">4.1 · Simplificar "type": 5 valores → 2</strong>
+<pre><span class="kw">def</span> <span class="fn">contrae_tipos</span>(tipo):
+    <span class="kw">if</span> tipo <span class="kw">in</span> [<span class="st">"Movie"</span>, <span class="st">"Film"</span>]:
+        <span class="kw">return</span> <span class="st">"Movie"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="st">"Series TV"</span>    <span class="cm"># TV Show, Show, Series TV → Series TV</span>
+
+df[<span class="st">"type"</span>] <span class="op">=</span> df[<span class="st">"type"</span>].<span class="fn">apply</span>(contrae_tipos)</pre>
+
+          <div class="output-wrap">
+            <div class="output-label">type simplificado</div>
+            <table class="out">
+              <tr><th>Tipo</th><th>Antes</th><th>Después</th></tr>
+              <tr><td class="out-str">Movie</td><td class="out-num">5 597</td><td class="out-num" style="color:#10b981">6 131</td></tr>
+              <tr><td class="out-str">Series TV</td><td class="out-num">1 004+1 231+441</td><td class="out-num" style="color:#10b981">2 676</td></tr>
+            </table>
+          </div>
+
+          <hr class="div">
+          <strong style="font-size:.88rem">4.2 · Corregir "rating": 3 filas con duración en vez de clasificación</strong>
+
+          <div class="explain">
+            Hay 3 películas de Louis C.K. donde la columna <span class="hl">rating</span> contiene "74 min", "84 min"... (duraciones), y la columna <span class="hl">duration</span> está vacía. Hay que intercambiar los valores.
+          </div>
+<pre><span class="cm"># Problema: df.rating.str.match("min") falla si hay NaN en rating</span>
+<span class="cm"># Solución: usar una función que maneje el caso nulo explícitamente</span>
+
+<span class="kw">def</span> <span class="fn">hay_min</span>(rating):
+    <span class="kw">if</span> <span class="fn">isinstance</span>(rating, <span class="bi">str</span>):
+        <span class="kw">return</span> <span class="st">"min"</span> <span class="kw">in</span> rating
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="bi">False</span>
+
+<span class="var">es_rating_raro</span> <span class="op">=</span> df.rating.<span class="fn">apply</span>(hay_min)
+
+<span class="cm"># Mover el valor de rating → duration, y poner NaN en rating</span>
+df.<span class="fn">loc</span>[es_rating_raro, <span class="st">"duration"</span>] <span class="op">=</span> df.<span class="fn">loc</span>[es_rating_raro, <span class="st">"rating"</span>]
+df.<span class="fn">loc</span>[es_rating_raro, <span class="st">"rating"</span>] <span class="op">=</span> np.nan</pre>
+
+          <div class="output-wrap">
+            <div class="output-label">las 3 filas corregidas (Louis C.K.)</div>
+            <table class="out">
+              <tr><th>title</th><th>rating (antes)</th><th>duration (corregida)</th></tr>
+              <tr><td class="out-str">Louis C.K. 2017</td><td class="out-str" style="color:#ef4444">74 min</td><td class="out-str" style="color:#10b981">74 min</td></tr>
+              <tr><td class="out-str">Louis C.K.: Hilarious</td><td class="out-str" style="color:#ef4444">84 min</td><td class="out-str" style="color:#10b981">84 min</td></tr>
+              <tr><td class="out-str">Louis C.K.: Live at...</td><td class="out-str" style="color:#ef4444">58 min</td><td class="out-str" style="color:#10b981">58 min</td></tr>
+            </table>
+          </div>
+          <div class="why">
+            <strong>¿Por qué usar isinstance() en vez de type()?</strong>
+            <span class="hl">isinstance(valor, str)</span> es más robusto porque también detecta subclases de str. Además, es la forma recomendada en Python moderno.
+          </div>
+        </div>
+      </div>
+
+      <!-- ej 5 datetime -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#f59e0b">5</div>
+          Convertir date_added a tipo datetime
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">La columna date_added está como string. Convertirla a datetime para poder operar con fechas.</div>
+<pre><span class="var">df_back</span> <span class="op">=</span> df.<span class="fn">copy</span>()   <span class="cm"># guardamos copia por si falla</span>
+
+df[<span class="st">"date_added"</span>] <span class="op">=</span> pd.<span class="fn">to_datetime</span>(df[<span class="st">"date_added"</span>])</pre>
+          <div class="tip">
+            💡 <span class="hl">pd.to_datetime()</span> intenta inferir el formato automáticamente. Si hay fechas con formatos inconsistentes, añade <span class="hl">format="mixed"</span> o especifica el formato con <span class="hl">format="%B %d, %Y"</span>.
+            <br>La columna <span class="hl">release_year</span> (solo el año) se deja como entero — es más fácil operar así.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /s2 -->
+
+
+  <!-- ══════════════════ #3 NULOS ══════════════════ -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <div class="section-icon" style="background:#fff1f2">🩹</div>
+      <div>
+        <h2>#3 · Tratamiento de Missings / Nulos</h2>
+        <p>Identificar · Cuantificar · Imputar con criterio · Verificar duplicados</p>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- ej 1 identificar -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#e50914">1</div>
+          Identificar columnas con nulos
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Obtener la lista de columnas que contienen valores nulos, de forma manual o automática.</div>
+<pre><span class="cm"># Forma A: mirar el output de info() a mano</span>
+<span class="var">col_con_nulos</span> <span class="op">=</span> [<span class="st">"director"</span>, <span class="st">"cast"</span>, <span class="st">"country"</span>, <span class="st">"date_added"</span>, <span class="st">"rating"</span>]
+
+<span class="cm"># Forma B: bucle for</span>
+<span class="var">col_con_nulos</span> <span class="op">=</span> [col <span class="kw">for</span> col <span class="kw">in</span> df.columns <span class="kw">if</span> df[col].<span class="fn">isna</span>().<span class="fn">any</span>()]
+
+<span class="cm"># Forma C: más corta aún</span>
+<span class="var">col_con_nulos</span> <span class="op">=</span> df.columns[(df.<span class="fn">isnull</span>().<span class="fn">sum</span>() <span class="op">&gt;</span> <span class="nb">0</span>)].<span class="fn">to_list</span>()</pre>
+          <div class="text-output">['director', 'cast', 'country', 'date_added', 'rating']</div>
+        </div>
+      </div>
+
+      <!-- ej 2 porcentajes -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#e50914">2</div>
+          Porcentaje de nulos por columna
+        </div>
+        <div class="exercise-body">
+<pre><span class="kw">for</span> col <span class="kw">in</span> col_con_nulos:
+    nulos <span class="op">=</span> df[col].<span class="fn">isna</span>().<span class="fn">sum</span>()
+    pct   <span class="op">=</span> <span class="fn">round</span>(nulos <span class="op">/</span> <span class="fn">len</span>(df) <span class="op">*</span> <span class="nb">100</span>, <span class="nb">2</span>)
+    <span class="fn">print</span>(<span class="st">f"</span><span class="var">{col}</span><span class="st">: </span><span class="var">{nulos}</span><span class="st"> nulos (</span><span class="var">{pct}</span><span class="st">%)"</span>)</pre>
+
+          <div class="ranking">
+            <div class="rank-item">
+              <div class="rank-label"><span>director</span><span style="color:#ef4444">2 634 nulos — 29.91%</span></div>
+              <div class="rank-bar-wrap"><div class="rank-bar" style="width:100%;background:#ef4444"></div></div>
+            </div>
+            <div class="rank-item">
+              <div class="rank-label"><span>country</span><span style="color:#f97316">831 nulos — 9.44%</span></div>
+              <div class="rank-bar-wrap"><div class="rank-bar" style="width:32%;background:#f97316"></div></div>
+            </div>
+            <div class="rank-item">
+              <div class="rank-label"><span>cast</span><span style="color:#f59e0b">825 nulos — 9.37%</span></div>
+              <div class="rank-bar-wrap"><div class="rank-bar" style="width:31%;background:#f59e0b"></div></div>
+            </div>
+            <div class="rank-item">
+              <div class="rank-label"><span>date_added</span><span style="color:#10b981">10 nulos — 0.11%</span></div>
+              <div class="rank-bar-wrap"><div class="rank-bar" style="width:2%;background:#10b981"></div></div>
+            </div>
+            <div class="rank-item">
+              <div class="rank-label"><span>rating</span><span style="color:#10b981">7 nulos — 0.08%</span></div>
+              <div class="rank-bar-wrap"><div class="rank-bar" style="width:1%;background:#10b981"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ej 3 corregir los dos menores -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#e50914">3</div>
+          Corregir las dos columnas con menor porcentaje de nulos
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Las columnas con pocos nulos (rating y date_added) merecen un tratamiento más cuidadoso.</div>
+
+          <strong style="font-size:.88rem">3a · rating: buscar el valor real para cada título</strong>
+          <div class="explain">
+            Son solo 7 filas (0.08%). La mejor estrategia es buscar el dato real en internet o en una IA y hardcodearlo en un diccionario. Es laborioso pero preciso.
+          </div>
+<pre><span class="cm"># Diccionario título → rating correcto (buscado manualmente)</span>
+<span class="var">peliculas</span> <span class="op">=</span> {
+    <span class="st">"Louis C.K. 2017"</span>              : <span class="st">"TV-MA"</span>,
+    <span class="st">"Louis C.K.: Hilarious"</span>        : <span class="st">"UR"</span>,
+    <span class="st">"Louis C.K.: Live at the Comedy Store"</span>: <span class="st">"UR"</span>,
+    <span class="st">"13TH: A Conversation with Oprah Winfrey &amp; Ava DuVernay"</span>: <span class="st">"UR"</span>,
+    <span class="cm"># ... resto de títulos</span>
+}
+
+<span class="kw">for</span> pelicula, rating <span class="kw">in</span> peliculas.<span class="fn">items</span>():
+    df.<span class="fn">loc</span>[df.title <span class="op">==</span> pelicula, <span class="st">"rating"</span>] <span class="op">=</span> rating</pre>
+
+          <div class="why">
+            <strong>¿Por qué no usar la moda para rating?</strong>
+            TV-MA es la moda, pero no todos los títulos son TV-MA. Con tan pocos nulos, buscar el valor real es factible y mucho más preciso.
+          </div>
+
+          <hr class="div">
+          <strong style="font-size:.88rem">3b · date_added: imputar con la moda + crear flag</strong>
+          <div class="explain">
+            Solo 10 filas sin fecha. Es imposible saber cuándo se añadieron exactamente, así que usamos la <strong>moda</strong> (fecha más frecuente). Además creamos una columna flag para registrar que ese valor fue imputado.
+          </div>
+<pre><span class="var">moda_added_date</span> <span class="op">=</span> df.date_added.<span class="fn">mode</span>()
+<span class="fn">print</span>(moda_added_date)  <span class="cm"># → 2020-01-01</span>
+
+<span class="cm"># Columna flag: True si la fecha fue imputada</span>
+df[<span class="st">"added_date_was_null"</span>] <span class="op">=</span> df.date_added.<span class="fn">isna</span>()
+
+<span class="cm"># Imputar con la moda</span>
+df.<span class="fn">loc</span>[df.date_added.<span class="fn">isna</span>(), <span class="st">"date_added"</span>] <span class="op">=</span> moda_added_date.<span class="fn">values</span>[<span class="nb">0</span>]</pre>
+          <div class="tip">💡 La columna flag <span class="hl">added_date_was_null</span> es una buena práctica: permite al analista futuro saber que esa fecha no es fiable y filtrarla si es necesario.</div>
+        </div>
+      </div>
+
+      <!-- ej 4 fillna UNK -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#e50914">4</div>
+          Rellenar nulos restantes con "UNK"
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Para director, cast y country (muchos nulos, difícil imputar) → marcar como desconocido.</div>
+          <div class="explain">
+            Con un 30% de directores desconocidos y un 9% de países, no tiene sentido imputar. Lo correcto es mantenerlos como un valor explícito que signifique "desconocido" y que sea del mismo tipo que el resto de valores de la columna.
+          </div>
+<pre>df.<span class="fn">fillna</span>(<span class="st">"UNK"</span>, inplace<span class="op">=</span><span class="bi">True</span>)</pre>
+          <div class="result-grid">
+            <div class="result-card"><div class="val">13</div><div class="lbl">Columnas tras fillna<br>(+added_date_was_null)</div></div>
+            <div class="result-card"><div class="val">0</div><div class="lbl">Nulos restantes</div></div>
+            <div class="result-card"><div class="val">8 807</div><div class="lbl">Filas (sin pérdida)</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ej 5 duplicados tras nulos -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#e50914">5</div>
+          Comprobar nuevos duplicados y establecer el índice
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Verificar que rellenar nulos no ha generado duplicados. Atención: si show_id es el índice, nunca detectaremos el duplicado.</div>
+<pre><span class="cm"># Con show_id como columna normal</span>
+df[df.<span class="fn">duplicated</span>(keep<span class="op">=</span><span class="bi">False</span>)]   <span class="cm"># → Empty (el ID impide detectarlo)</span>
+
+<span class="cm"># Hacemos show_id índice y buscamos duplicados en el resto</span>
+df.<span class="fn">set_index</span>(<span class="st">"show_id"</span>, inplace<span class="op">=</span><span class="bi">True</span>)
+df[df.<span class="fn">duplicated</span>(keep<span class="op">=</span><span class="bi">False</span>)]</pre>
+
+          <div class="output-wrap">
+            <div class="output-label">duplicado descubierto al excluir show_id</div>
+            <table class="out">
+              <tr><th>show_id</th><th>type</th><th>title</th><th>director</th><th>country</th></tr>
+              <tr><td class="out-idx">s3372</td><td class="out-str">Movie</td><td class="out-str">Consequences</td><td class="out-str">Ozan Açıktan</td><td class="out-str">Turkey</td></tr>
+              <tr><td class="out-idx">s6530</td><td class="out-str">Movie</td><td class="out-str">Consequences</td><td class="out-str">Ozan Açıktan</td><td class="out-str" style="color:#ef4444">Turke<em>y</em> ← espacio</td></tr>
+            </table>
+          </div>
+          <div class="warn">⚠️ El duplicado tenía "Turkey" con un espacio extra. Después del strip son idénticas, pero el <span class="hl">show_id</span> diferente hizo que no se detectara antes. Lección: siempre comprobar duplicados <strong>sin</strong> la columna índice.</div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /s3 -->
+
+
+  <!-- ══════════════════ #4 NUEVOS DATOS ══════════════════ -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-icon" style="background:#f3e8ff">✨</div>
+      <div>
+        <h2>#4 · Generación de nuevos datos</h2>
+        <p>Separar movies/series · Extraer duración numérica · Regex para secuelas</p>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- ej 1 separar -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#8b5cf6">1</div>
+          Separar en dos DataFrames: películas y series
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Dividir el dataset según el tipo de contenido.</div>
+<pre><span class="var">df_movies</span> <span class="op">=</span> df[df.type <span class="op">==</span> <span class="st">"Movie"</span>].<span class="fn">copy</span>()
+<span class="var">df_series</span> <span class="op">=</span> df[df.type <span class="op">==</span> <span class="st">"Series TV"</span>].<span class="fn">copy</span>()</pre>
+
+          <div class="result-grid">
+            <div class="result-card"><div class="val">6 131</div><div class="lbl">df_movies</div></div>
+            <div class="result-card"><div class="val">2 676</div><div class="lbl">df_series</div></div>
+          </div>
+          <div class="tip">💡 <span class="hl">.copy()</span> es importante: crea DataFrames independientes. Sin él, las modificaciones en df_movies afectarían al df original.</div>
+        </div>
+      </div>
+
+      <!-- ej 2 distribución duration -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#8b5cf6">2</div>
+          Distribución de "duration" en cada DataFrame
+        </div>
+        <div class="exercise-body">
+<pre>df_movies.<span class="fn">duration</span>.<span class="fn">value_counts</span>()
+df_series.<span class="fn">duration</span>.<span class="fn">value_counts</span>()</pre>
+
+          <div class="output-wrap">
+            <div class="output-label">distribución de duration</div>
+            <table class="out">
+              <tr><th>Películas (minutos)</th><th>#</th><th>Series (temporadas)</th><th>#</th></tr>
+              <tr><td class="out-str">90 min</td><td class="out-num">152</td><td class="out-str">1 Season</td><td class="out-num">1 793</td></tr>
+              <tr><td class="out-str">97 min</td><td class="out-num">146</td><td class="out-str">2 Seasons</td><td class="out-num">425</td></tr>
+              <tr><td class="out-str">94 min</td><td class="out-num">146</td><td class="out-str">3 Seasons</td><td class="out-num">199</td></tr>
+              <tr><td class="out-str">...</td><td class="out-num">...</td><td class="out-str">4 Seasons</td><td class="out-num">95</td></tr>
+              <tr><td class="out-str">duración más larga</td><td class="out-str">+300 min</td><td class="out-str">17 Seasons</td><td class="out-str">Grey's Anatomy</td></tr>
+            </table>
+          </div>
+          <div class="explain">Ambas columnas usan el mismo campo "duration" pero con formatos completamente distintos. Hay que extraer el número de cada una de forma independiente.</div>
+        </div>
+      </div>
+
+      <!-- ej 3 convertir duration -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#8b5cf6">3</div>
+          Convertir duration a valores numéricos
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Extraer el número de minutos (películas) y de temporadas (series) como enteros.</div>
+
+          <strong style="font-size:.88rem">Películas → quitar "min" y convertir a int</strong>
+<pre><span class="cm"># Quitar el texto " min" y convertir el resultado a entero</span>
+df_movies[<span class="st">"duration"</span>] <span class="op">=</span> df_movies.duration.str.<span class="fn">replace</span>(<span class="st">"min"</span>, <span class="st">""</span>).<span class="fn">astype</span>(<span class="st">"int"</span>)
+
+<span class="cm"># Alternativa con regex (se valorará)</span>
+<span class="cm"># df_movies["duration"] = df_movies.duration.str.extract("([0-9]+)").astype("int")</span></pre>
+
+          <div class="output-wrap">
+            <div class="output-label">describe() tras convertir</div>
+            <table class="out">
+              <tr><th>Estadístico</th><th>duration (min)</th></tr>
+              <tr><td class="out-idx">mean</td><td class="out-num">99.56 min</td></tr>
+              <tr><td class="out-idx">min</td><td class="out-num">3 min</td></tr>
+              <tr><td class="out-idx">max</td><td class="out-num">> 300 min</td></tr>
+            </table>
+          </div>
+          <div class="tip">💡 La película más larga es <strong>Black Mirror: Bandersnatch</strong> con más de 300 minutos — una "película interactiva" donde el tiempo varía según las elecciones del espectador.</div>
+
+          <hr class="div">
+          <strong style="font-size:.88rem">Series → extraer nº de temporadas con regex</strong>
+<pre><span class="cm"># str.extract() usa un grupo de captura regex para sacar el número</span>
+<span class="cm"># "[0-9]+" → uno o más dígitos, "S.*" → " Season" o " Seasons"</span>
+df_series[<span class="st">"Num_of_seasons"</span>] <span class="op">=</span> (
+    df_series.duration
+             .str.<span class="fn">extract</span>(<span class="rx">"([0-9]+) S.*"</span>)
+             .<span class="fn">astype</span>(<span class="st">"int"</span>)
+)</pre>
+
+          <div class="output-wrap">
+            <div class="output-label">describe() series</div>
+            <table class="out">
+              <tr><th>Estadístico</th><th>Num_of_seasons</th></tr>
+              <tr><td class="out-idx">mean</td><td class="out-num">1.76 temporadas</td></tr>
+              <tr><td class="out-idx">median</td><td class="out-num">1 temporada</td></tr>
+              <tr><td class="out-idx">max</td><td class="out-num">17 temporadas (Grey's Anatomy)</td></tr>
+            </table>
+          </div>
+          <div class="explain"><strong>¿Por qué str.extract() y no str.replace()?</strong> <span class="hl">str.extract()</span> con un grupo de captura <span class="hl">([0-9]+)</span> devuelve solo la parte que queremos, sin depender de si el texto es "Season" o "Seasons". Es más robusto.</div>
+        </div>
+      </div>
+
+      <!-- ej 4 BONUS posible_secuela -->
+      <div class="exercise">
+        <div class="exercise-title">
+          <div class="exercise-num" style="background:#8b5cf6">4</div>
+          BONUS: campo "Posible_Secuela" con expresiones regulares <span class="bonus-badge">bonus</span>
+        </div>
+        <div class="exercise-body">
+          <div class="enunciado">Crear un campo booleano que detecte si una película podría ser una secuela (el título de la película original también existe en el dataset).</div>
+          <div class="explain">
+            La solución evoluciona en 3 versiones progresivas, cada una más precisa. Es un ejemplo perfecto de cómo se refinan las expresiones regulares en la práctica.
+          </div>
+
+          <div class="iter-grid">
+
+            <!-- V1 -->
+            <div class="iter-card">
+              <div class="iter-header" style="background:#fff1f2;color:#881337">
+                <span style="font-size:1rem">❌</span> Versión 1 — demasiado simple
+              </div>
+              <div class="iter-body">
+<pre><span class="kw">def</span> <span class="fn">es_posible_secuela</span>(titulo):
+    <span class="cm"># Solo detecta títulos que SON un número: "2012", "678"...</span>
+    match <span class="op">=</span> re.<span class="fn">match</span>(<span class="rx">"[0-9]+$"</span>, titulo)
+    <span class="kw">return</span> match <span class="kw">is not</span> <span class="bi">None</span></pre>
+                <div class="warn" style="margin-top:8px">Problema: detecta películas como "1922" o "3022" que son títulos que solo son números, no secuelas.</div>
+              </div>
+            </div>
+
+            <!-- V2 -->
+            <div class="iter-card">
+              <div class="iter-header" style="background:#fffbeb;color:#78350f">
+                <span style="font-size:1rem">⚠️</span> Versión 2 — mejor, pero imprecisa
+              </div>
+              <div class="iter-body">
+<pre><span class="kw">def</span> <span class="fn">es_posible_secuela</span>(titulo):
+    <span class="cm"># Detecta: cualquier texto + espacio + número al final</span>
+    <span class="cm"># "Jaws 2" ✓  "Shrek 2" ✓  "Rocky IV" ✗ (letras, no número)</span>
+    match <span class="op">=</span> re.<span class="fn">match</span>(<span class="rx">".* [0-9]+$"</span>, titulo)
+    <span class="kw">return</span> match <span class="kw">is not</span> <span class="bi">None</span></pre>
+                <div class="warn" style="margin-top:8px">Detecta "Jaws 2", "Jaws 3"... pero también "Ocean's 11" (que no es secuela de nada).</div>
+              </div>
+            </div>
+
+            <!-- V3 -->
+            <div class="iter-card">
+              <div class="iter-header" style="background:#f0fdf4;color:#064e3b">
+                <span style="font-size:1rem">✅</span> Versión 3 — la mejor: verifica que la película original existe
+              </div>
+              <div class="iter-body">
+<pre><span class="kw">def</span> <span class="fn">es_posible_secuela</span>(titulo):
+    <span class="cm"># Grupo de captura: extrae el texto antes del número final</span>
+    match <span class="op">=</span> re.<span class="fn">match</span>(<span class="rx">"(.*) [0-9]+$"</span>, titulo)
+    <span class="kw">if</span> match <span class="kw">is not</span> <span class="bi">None</span>:
+        <span class="cm"># Extraemos el título base: "Jaws 2" → "Jaws"</span>
+        titulo_base <span class="op">=</span> match.<span class="fn">group</span>(<span class="nb">1</span>).<span class="fn">strip</span>()
+        <span class="cm"># Comprobamos si "Jaws" existe en el dataset</span>
+        <span class="kw">return</span> <span class="fn">len</span>(df_movies[df_movies.title <span class="op">==</span> titulo_base]) <span class="op">&gt;</span> <span class="nb">0</span>
+    <span class="kw">return</span> <span class="bi">False</span>
+
+df_movies[<span class="st">"Posible_Secuela"</span>] <span class="op">=</span> df_movies.title.<span class="fn">apply</span>(es_posible_secuela)</pre>
+
+                <div class="output-wrap" style="margin-top:12px">
+                  <div class="output-label">películas marcadas como Posible_Secuela = True (muestra)</div>
+                  <table class="out">
+                    <tr><th>show_id</th><th>title</th><th>Posible_Secuela</th></tr>
+                    <tr><td class="out-idx">s43</td><td class="out-str">Jaws 2</td><td style="color:#10b981">True</td></tr>
+                    <tr><td class="out-idx">s44</td><td class="out-str">Jaws 3</td><td style="color:#10b981">True</td></tr>
+                    <tr><td class="out-idx">s146</td><td class="out-str">House Party 2</td><td style="color:#10b981">True</td></tr>
+                  </table>
+                </div>
+
+                <div class="how" style="margin-top:12px">
+                  <strong>¿Cómo funciona el grupo de captura <span class="hl">(.*)</span>?</strong>
+                  El patrón <span class="hl">"(.*) [0-9]+$"</span> tiene dos partes:
+                  <ul style="margin:.4rem 0 0 1.1rem;font-size:.85rem">
+                    <li><span class="hl">(.*)</span> — grupo 1: captura todo el texto hasta el último espacio</li>
+                    <li><span class="hl"> [0-9]+$</span> — espacio + uno o más dígitos al final</li>
+                  </ul>
+                  Con <span class="hl">match.group(1)</span> recuperamos el texto del grupo 1 (el título base).
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /iter-grid -->
+
+          <div class="tip">
+            💡 <strong>¿Podría mejorarse aún más?</strong> Sí. Esta versión no detecta "Rocky IV" (número romano) ni "El Padrino II". Para casos más complejos habría que ampliar el patrón regex o usar un diccionario de números romanos. Pero para el alcance de la práctica, la versión 3 es excelente.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /s4 -->
+
+
+  <!-- RESUMEN FLUJO ETL -->
+  <div class="flow">
+    <div class="flow-title">Flujo completo del proceso ETL aplicado</div>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-dot" style="background:#6366f1">E</div>
+        <div>
+          <strong>EXTRACT — Carga y exploración</strong>
+          <span>read_csv · head · info · describe · value_counts → primer diagnóstico visual</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot" style="background:#10b981">T1</div>
+        <div>
+          <strong>TRANSFORM — Cardinalidad y duplicados</strong>
+          <span>nunique / len · duplicated · posibles índices → entender la estructura</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot" style="background:#f59e0b">T2</div>
+        <div>
+          <strong>TRANSFORM — Limpieza I</strong>
+          <span>str.strip · apply(contrae_tipos) · hay_min + loc swap · pd.to_datetime</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot" style="background:#e50914">T3</div>
+        <div>
+          <strong>TRANSFORM — Nulos</strong>
+          <span>isna · porcentajes · dict lookup · mode + flag · fillna("UNK") · set_index</span>
+        </div>
+      </div>
+      <div class="flow-step" style="border:none">
+        <div class="flow-dot" style="background:#8b5cf6">T4</div>
+        <div>
+          <strong>TRANSFORM — Enriquecimiento</strong>
+          <span>split movies/series · str.replace + astype · str.extract(regex) · regex iterativo para Posible_Secuela</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:28px 0;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);margin-top:8px">
+    <strong style="color:var(--text)">The Bridge · Data Science Bootcamp</strong> &nbsp;·&nbsp;
+    Sprint 05 – ETL Introducción &nbsp;·&nbsp; Solución visual comentada
+  </div>
+
+</div><!-- /container -->
+</body>
+</html>
