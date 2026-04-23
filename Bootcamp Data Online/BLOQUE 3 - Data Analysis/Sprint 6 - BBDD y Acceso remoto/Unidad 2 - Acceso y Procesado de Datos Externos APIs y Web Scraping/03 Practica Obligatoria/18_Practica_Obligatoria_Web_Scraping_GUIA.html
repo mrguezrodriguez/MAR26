@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Práctica Obligatoria Web Scraping & APIs — Guía de Soluciones</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #232635;
+      --border: #2e3249;
+      --accent: #f97316;
+      --accent2: #38bdf8;
+      --green: #4ade80;
+      --purple: #a78bfa;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --text: #e2e4f0;
+      --muted: #8b92b3;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --cm: #546e7a;
+      --num: #f78c6c;
+      --op: #89ddff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #12152b 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 2rem 2rem;
+      position: sticky; top: 0; z-index: 100;
+    }
+    header h1 {
+      font-size: 1.6rem; font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    header p { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+    /* ── LAYOUT ── */
+    .page { display: flex; max-width: 1400px; margin: 0 auto; }
+
+    /* ── NAV ── */
+    nav {
+      width: 265px; min-width: 265px;
+      padding: 1.5rem 1rem;
+      position: sticky; top: 80px;
+      height: calc(100vh - 80px); overflow-y: auto;
+      border-right: 1px solid var(--border);
+    }
+    nav h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin-bottom: 0.75rem; }
+    nav a {
+      display: block; padding: 0.35rem 0.75rem; border-radius: 6px;
+      color: var(--muted); text-decoration: none; font-size: 0.83rem;
+      transition: all .15s; border-left: 2px solid transparent;
+    }
+    nav a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--accent); }
+    nav .section-label {
+      margin-top: 1rem; margin-bottom: 0.25rem;
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--accent); padding-left: 0.75rem;
+    }
+
+    /* ── MAIN ── */
+    main { flex: 1; padding: 2rem 2.5rem; max-width: 1100px; }
+
+    /* ── EXERCISE CARD ── */
+    .exercise {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; margin-bottom: 2rem; overflow: hidden;
+    }
+    .exercise-header {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1rem 1.5rem; background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .exercise-num {
+      font-size: 0.75rem; font-weight: 700;
+      background: var(--accent); color: #fff;
+      border-radius: 6px; padding: 0.2rem 0.6rem; white-space: nowrap;
+    }
+    .exercise-num.extra { background: var(--purple); }
+    .exercise-num.api   { background: var(--accent2); color: #0f1117; }
+    .exercise-title { font-weight: 600; font-size: 1.05rem; flex: 1; }
+    .time-badge {
+      display: flex; align-items: center; gap: 0.35rem; font-size: 0.78rem;
+      background: rgba(251,191,36,.12); color: var(--yellow);
+      border: 1px solid rgba(251,191,36,.25); border-radius: 20px;
+      padding: 0.25rem 0.75rem; white-space: nowrap;
+    }
+    .exercise-body { padding: 1.5rem; }
+
+    .enunciado {
+      background: rgba(249,115,22,.08); border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0; padding: 0.85rem 1.1rem; margin-bottom: 1.25rem; font-size: 0.95rem;
+    }
+    .explanation {
+      background: rgba(56,189,248,.07); border-left: 3px solid var(--accent2);
+      border-radius: 0 8px 8px 0; padding: 0.85rem 1.1rem; margin-bottom: 1.25rem; font-size: 0.92rem;
+    }
+    .explanation strong { color: var(--accent2); }
+
+    /* ── TABS ── */
+    .tabs { margin-top: 1rem; }
+    .tab-buttons { display: flex; gap: 0.5rem; }
+    .tab-btn {
+      padding: 0.45rem 1rem; border-radius: 8px 8px 0 0;
+      border: 1px solid var(--border); border-bottom: none;
+      background: var(--surface2); color: var(--muted);
+      cursor: pointer; font-size: 0.82rem; font-weight: 600; transition: all .15s;
+    }
+    .tab-btn.active { background: #13162a; color: var(--text); border-color: var(--accent); }
+    .tab-content { display: none; border: 1px solid var(--border); border-radius: 0 8px 8px 8px; overflow: hidden; }
+    .tab-content.active { display: block; }
+
+    /* ── CODE ── */
+    pre {
+      background: #13162a; padding: 1.1rem 1.25rem;
+      font-family: 'Consolas','Fira Code', monospace; font-size: 0.85rem;
+      line-height: 1.65; overflow-x: auto; tab-size: 4;
+    }
+    .kw  { color: var(--kw); font-weight: 600; }
+    .fn  { color: var(--fn); }
+    .str { color: var(--str); }
+    .cm  { color: var(--cm); font-style: italic; }
+    .num { color: var(--num); }
+    .op  { color: var(--op); }
+
+    /* ── OUTPUT ── */
+    .output-wrap { background: #13162a; padding: 0.85rem 1.25rem; overflow-x: auto; border-top: 1px solid var(--border); }
+    .output-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 0.5rem; }
+    table { border-collapse: collapse; font-size: 0.8rem; font-family: 'Consolas', monospace; }
+    th { background: var(--surface2); color: var(--accent2); padding: 0.4rem 0.75rem; text-align: left; border: 1px solid var(--border); }
+    td { padding: 0.3rem 0.75rem; border: 1px solid var(--border); color: var(--text); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+
+    /* ── CALLOUTS ── */
+    .callout { border-radius: 8px; padding: 0.85rem 1.1rem; margin: 1rem 0; font-size: 0.9rem; }
+    .callout.info { background: rgba(130,170,255,.1); border-left: 3px solid var(--fn); }
+    .callout.tip  { background: rgba(74,222,128,.08); border-left: 3px solid var(--green); }
+    .callout.warn { background: rgba(251,191,36,.08); border-left: 3px solid var(--yellow); }
+    .callout.trick{ background: rgba(167,139,250,.08); border-left: 3px solid var(--purple); }
+
+    /* ── ANSWER ── */
+    .answer {
+      background: rgba(74,222,128,.07); border: 1px solid rgba(74,222,128,.2);
+      border-radius: 8px; padding: 0.9rem 1.1rem; font-size: 0.9rem;
+    }
+    .answer strong { color: var(--green); }
+
+    /* ── SECTION DIVIDER ── */
+    .section-divider { display: flex; align-items: center; gap: 1rem; margin: 2.5rem 0 1.5rem; }
+    .section-divider h2 {
+      font-size: 1.25rem; white-space: nowrap;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .section-divider hr { flex: 1; border: none; border-top: 1px solid var(--border); }
+
+    /* ── CHAIN ── */
+    .chain {
+      display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+      background: var(--surface2); border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0;
+      font-family: 'Consolas', monospace; font-size: 0.85rem;
+    }
+    .chain-box {
+      background: rgba(249,115,22,.15); border: 1px solid var(--accent);
+      border-radius: 6px; padding: 0.3rem 0.7rem; color: var(--accent);
+    }
+    .chain-arr { color: var(--muted); }
+
+    /* ── SUMMARY ── */
+    .summary-card {
+      background: linear-gradient(135deg, rgba(249,115,22,.12), rgba(56,189,248,.08));
+      border: 1px solid var(--accent); border-radius: 12px;
+      padding: 1.5rem; margin-bottom: 2.5rem;
+      display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start;
+    }
+    .summary-card h2 { font-size: 1rem; color: var(--accent); margin-bottom: 0.25rem; }
+    .summary-card .total { font-size: 2rem; font-weight: 700; color: var(--yellow); }
+    .time-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 0.5rem; flex: 1; }
+    .time-item { background: rgba(255,255,255,.04); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+    .time-item .t-label { color: var(--muted); }
+    .time-item .t-val { color: var(--yellow); font-weight: 700; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Práctica Obligatoria — Web Scraping &amp; APIs</h1>
+  <p>TMDb API + BoxOfficeMojo · Sprint 06 · Guía de soluciones con explicaciones y tiempos de corrección</p>
+</header>
+
+<div class="page">
+
+  <!-- NAV -->
+  <nav>
+    <h3>Índice</h3>
+    <div class="section-label">Setup</div>
+    <a href="#ej0">Ejercicio 0 — Imports</a>
+
+    <div class="section-label">#1 API — TMDb</div>
+    <a href="#ej11">1.1 — Parámetros Discover</a>
+    <a href="#ej12">1.2 — Llamada USA (querystring)</a>
+    <a href="#ej13">1.3 — Respuesta y pelis_usa</a>
+    <a href="#ej13alt">1.3 Alt — Leer JSON local</a>
+    <a href="#ej14">1.4 — DataFrame df_movies</a>
+    <a href="#ej15">1.5 — Selección columnas USA</a>
+    <a href="#ej16">1.6 — Dict querystring Spain</a>
+    <a href="#ej17">1.7 — url_spain</a>
+    <a href="#ej18">1.8 — Llamada Spain (params)</a>
+    <a href="#ej19">1.9 — df_pop_spain</a>
+    <a href="#ej110">1.10 — pd.concat + índice</a>
+
+    <div class="section-label">#2 Scraping — BoxOfficeMojo</div>
+    <a href="#ej21">2.1 [EXTRA] — Scraping</a>
+    <a href="#ej22">2.2 — Leer Excel</a>
+    <a href="#ej23">2.3 — Merge con df_mojo</a>
+    <a href="#ej24">2.4 — Resultado y .info()</a>
+    <a href="#ej25">2.5 — Pelis españolas con ingresos</a>
+    <a href="#ej26">2.6 — Inner join + rankings</a>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- SUMMARY -->
+    <div class="summary-card">
+      <div>
+        <h2>Tiempo total estimado de corrección</h2>
+        <div class="total">~80 min</div>
+        <div style="color:var(--muted);font-size:0.8rem;">Obligatorio: ~50 min · Extra scraping: ~20 min · Pandas final: ~10 min</div>
+      </div>
+      <div class="time-grid">
+        <div class="time-item"><div class="t-label">Ej. 0 — Imports</div><div class="t-val">2 min</div></div>
+        <div class="time-item"><div class="t-label">1.1 — Parámetros API</div><div class="t-val">5 min</div></div>
+        <div class="time-item"><div class="t-label">1.2 — Llamada USA URL</div><div class="t-val">7 min</div></div>
+        <div class="time-item"><div class="t-label">1.3 — JSON → pelis_usa</div><div class="t-val">5 min</div></div>
+        <div class="time-item"><div class="t-label">1.4 — DataFrame</div><div class="t-val">3 min</div></div>
+        <div class="time-item"><div class="t-label">1.5 — Columnas USA</div><div class="t-val">3 min</div></div>
+        <div class="time-item"><div class="t-label">1.6-1.8 — Spain params</div><div class="t-val">5 min</div></div>
+        <div class="time-item"><div class="t-label">1.9 — df_pop_spain</div><div class="t-val">4 min</div></div>
+        <div class="time-item"><div class="t-label">1.10 — concat + índice</div><div class="t-val">4 min</div></div>
+        <div class="time-item"><div class="t-label">2.1 — Scraping BS4</div><div class="t-val">20 min</div></div>
+        <div class="time-item"><div class="t-label">2.2 — Leer Excel</div><div class="t-val">2 min</div></div>
+        <div class="time-item"><div class="t-label">2.3-2.4 — Merge</div><div class="t-val">7 min</div></div>
+        <div class="time-item"><div class="t-label">2.5 — Filtro ES</div><div class="t-val">5 min</div></div>
+        <div class="time-item"><div class="t-label">2.6 — Inner + rankings</div><div class="t-val">8 min</div></div>
+      </div>
+    </div>
+
+    <!-- ══ SETUP ══ -->
+    <div class="section-divider"><h2>Setup</h2><hr/></div>
+
+    <div class="exercise" id="ej0">
+      <div class="exercise-header">
+        <span class="exercise-num">Ejercicio 0</span>
+        <span class="exercise-title">Imports</span>
+        <span class="time-badge">⏱ 2 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">Importa los paquetes necesarios para toda la práctica.</div>
+        <div class="explanation">
+          <strong>Librerías clave:</strong>
+          <ul style="margin-top:.5rem;padding-left:1.25rem;">
+            <li><code>requests</code> — realiza peticiones HTTP (GET/POST) a APIs y páginas web.</li>
+            <li><code>BeautifulSoup</code> (alias <code>bs</code>) — parsea HTML/XML para extraer datos estructurados.</li>
+            <li><code>json</code> — lee/escribe ficheros JSON.</li>
+            <li><code>pandas</code> — manipula los datos una vez extraídos.</li>
+          </ul>
+        </div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej0-py')">Python</button></div>
+          <div class="tab-content active" id="ej0-py">
+<pre><code><span class="kw">import</span> json
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> requests
+
+<span class="kw">from</span> bs4 <span class="kw">import</span> BeautifulSoup <span class="kw">as</span> bs
+
+pd.options.mode.copy_on_write = <span class="kw">True</span>  <span class="cm"># CoW por defecto en Pandas 3.0+</span></code></pre>
+          </div>
+        </div>
+        <div class="callout tip"><strong>Punto clave:</strong> Que estén las cuatro librerías. El alias <code>bs</code> no es obligatorio pero es la convención usada en el workout.</div>
+      </div>
+    </div>
+
+    <!-- ══ SECCIÓN 1 ══ -->
+    <div class="section-divider"><h2>#1 API — The Movie Database (TMDb)</h2><hr/></div>
+
+    <!-- 1.1 -->
+    <div class="exercise" id="ej11">
+      <div class="exercise-header">
+        <span class="exercise-num api">1.1</span>
+        <span class="exercise-title">Identificar parámetros del endpoint <code>/discover/movie</code></span>
+        <span class="time-badge">⏱ 5 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">
+          Investiga la documentación de TMDb e identifica los parámetros necesarios para obtener las 20 películas americanas y las 20 españolas más populares de 2023.
+        </div>
+        <div class="explanation">
+          <strong>Conceptos clave:</strong>
+          <ul style="margin-top:.5rem;padding-left:1.25rem;">
+            <li><strong>Endpoint Discover:</strong> <code>/discover/movie</code> permite filtrar películas por múltiples criterios (año, país de origen, popularidad, etc.). Es el más potente de la API.</li>
+            <li><strong>Paginación:</strong> La API devuelve 20 resultados por página por defecto. Si no se especifica <code>page</code> se obtiene la primera página (20 resultados).</li>
+          </ul>
+        </div>
+        <div class="answer">
+          <strong>Parámetros necesarios:</strong><br/><br/>
+          <code>with_origin_country</code> — código ISO del país (US o ES). Solo admite un valor → hay que hacer dos consultas separadas.<br/>
+          <code>year</code> o <code>primary_release_year</code> — año de estreno (2023).<br/>
+          <code>sort_by=popularity.desc</code> — ordena por popularidad descendente.<br/>
+          <code>language=es-ES</code> — (extra) devuelve campos traducidos como <code>overview</code> y <code>title</code>.
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.2 -->
+    <div class="exercise" id="ej12">
+      <div class="exercise-header">
+        <span class="exercise-num api">1.2</span>
+        <span class="exercise-title">Llamada USA — parámetros en la URL (querystring)</span>
+        <span class="time-badge">⏱ 7 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">
+          Construye <code>url_usa</code> con todos los parámetros en la propia URL mediante la sintaxis <code>?param=val&amp;param2=val2</code> y lanza la petición a <code>respuesta_usa</code>.
+        </div>
+        <div class="explanation">
+          <strong>Conceptos clave:</strong>
+          <ul style="margin-top:.5rem;padding-left:1.25rem;">
+            <li><strong>Querystring en URL:</strong> método directo de enviar parámetros GET. Se concatena todo como un string. Es transparente y fácil de depurar pegando la URL en el navegador.</li>
+            <li>El método correcto es <code>requests.get()</code> — las APIs REST de lectura usan siempre GET.</li>
+            <li>El país de Estados Unidos en ISO 3166-1 es <strong>US</strong> (no USA).</li>
+          </ul>
+        </div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej12-py')">Python</button></div>
+          <div class="tab-content active" id="ej12-py">
+<pre><code>base_url = <span class="str">"https://api.themoviedb.org/3"</span>
+endpoint_discover = <span class="str">"/discover/movie"</span>
+
+querystring = (
+    <span class="str">f"?api_key={api_key}"</span>
+    <span class="str">"&with_origin_country=US"</span>
+    <span class="str">"&year=2023"</span>
+    <span class="str">"&sort_by=popularity.desc"</span>
+    <span class="str">"&language=es-ES"</span>   <span class="cm"># EXTRA: resultados en español</span>
+)
+
+url_usa = base_url + endpoint_discover + querystring
+
+respuesta_usa = requests.get(url_usa)</code></pre>
+          </div>
+        </div>
+        <div class="callout warn"><strong>Error frecuente:</strong> Usar <code>USA</code> en lugar de <code>US</code> como valor de <code>with_origin_country</code>. La API no devolvería resultados.</div>
+        <div class="callout info"><strong>Extra:</strong> Añadir <code>&amp;language=es-ES</code> hace que campos como <code>overview</code> y <code>title</code> se devuelvan en español cuando exista traducción.</div>
+      </div>
+    </div>
+
+    <!-- 1.3 -->
+    <div class="exercise" id="ej13">
+      <div class="exercise-header">
+        <span class="exercise-num api">1.3</span>
+        <span class="exercise-title">Código de respuesta, JSON y extracción de <code>pelis_usa</code></span>
+        <span class="time-badge">⏱ 5 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">
+          Muestra el código de respuesta, vuelca el JSON en <code>datos_usa</code>, examina sus campos y asigna el campo con los datos a <code>pelis_usa</code>.
+        </div>
+        <div class="explanation">
+          <strong>Conceptos clave:</strong>
+          <ul style="margin-top:.5rem;padding-left:1.25rem;">
+            <li><strong>Código 200 OK</strong> — respuesta exitosa. Otros códigos relevantes: 401 (API key inválida), 404 (recurso no encontrado), 429 (rate limit superado).</li>
+            <li>El JSON de TMDb tiene siempre 4 campos de primer nivel: <code>page</code>, <code>results</code>, <code>total_pages</code>, <code>total_results</code>. Los datos están en <strong><code>results</code></strong>.</li>
+            <li><code>.json()</code> de requests parsea automáticamente la respuesta a dict/lista Python.</li>
+          </ul>
+        </div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej13-py')">Python</button></div>
+          <div class="tab-content active" id="ej13-py">
+<pre><code><span class="cm"># Código de respuesta y descripción</span>
+<span class="fn">print</span>(respuesta_usa.status_code, respuesta_usa.reason)
+<span class="cm"># → 200 OK</span>
+
+<span class="cm"># Volcar JSON en variable</span>
+datos_usa = respuesta_usa.json()
+
+<span class="cm"># Ver campos disponibles</span>
+<span class="fn">print</span>(<span class="fn">list</span>(datos_usa.keys()))
+<span class="cm"># → ['page', 'results', 'total_pages', 'total_results']</span>
+
+<span class="cm"># Los datos están en 'results' → es una lista de diccionarios</span>
+pelis_usa = datos_usa[<span class="str">"results"</span>]
+
+<span class="cm"># (Opcional) Guardar backup local</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"./data/usa_movies_backup.json"</span>, <span class="str">"w"</span>) <span class="kw">as</span> f:
+    json.dump(pelis_usa, f)</code></pre>
+          </div>
+        </div>
+        <div class="callout tip"><strong>Punto clave:</strong> Que el alumno explore los campos del JSON antes de elegir <code>"results"</code>. Muestra que razona sobre la estructura, no que adivinó.</div>
+      </div>
+    </div>
+
+    <!-- 1.3 Alt -->
+    <div class="exercise" id="ej13alt">
+      <div class="exercise-header">
+        <span class="exercise-num" style="background:var(--muted);">1.3 Alt</span>
+        <span class="exercise-title">Alternativa sin API Key — leer JSON local</span>
+        <span class="time-badge">⏱ 2 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">Si no se dispone de API Key, cargar los datos desde el fichero <code>./data/usa_movies.json</code>.</div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej13alt-py')">Python</button></div>
+          <div class="tab-content active" id="ej13alt-py">
+<pre><code><span class="kw">with</span> <span class="fn">open</span>(<span class="str">"./data/usa_movies.json"</span>) <span class="kw">as</span> f:
+    pelis_usa = json.load(f)</code></pre>
+          </div>
+        </div>
+        <div class="callout info"><strong>Nota:</strong> El resultado debe ser exactamente el mismo que el de la celda 1.3: una lista de 20 diccionarios, uno por película.</div>
+      </div>
+    </div>
+
+    <!-- 1.4 -->
+    <div class="exercise" id="ej14">
+      <div class="exercise-header">
+        <span class="exercise-num api">1.4</span>
+        <span class="exercise-title">Convertir lista de diccionarios a <code>df_movies</code></span>
+        <span class="time-badge">⏱ 3 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">Convierte <code>pelis_usa</code> (lista de diccionarios con la misma estructura) a un DataFrame y muestra sus primeras filas e info.</div>
+        <div class="explanation">
+          <strong>Conceptos clave:</strong>
+          <ul style="margin-top:.5rem;padding-left:1.25rem;">
+            <li><code>pd.DataFrame(lista_de_diccionarios)</code> — cuando todos los dicts tienen las mismas claves, cada clave se convierte en columna y cada dict en una fila. Es la conversión más directa de JSON a tabla.</li>
+            <li>Resultado: 20 filas × 14 columnas con campos como <code>id</code>, <code>title</code>, <code>genre_ids</code>, <code>vote_average</code>, etc.</li>
+          </ul>
+        </div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej14-py')">Python</button></div>
+          <div class="tab-content active" id="ej14-py">
+<pre><code>df_movies = pd.DataFrame(pelis_usa)
+
+df_movies.head()
+df_movies.info()</code></pre>
+          </div>
+        </div>
+        <div class="output-wrap">
+          <div class="output-label">Columnas obtenidas (14)</div>
+          <table>
+            <tr><th>Columna</th><th>Dtype</th><th>Nota</th></tr>
+            <tr><td>id</td><td>int64</td><td>Identificador único de TMDb</td></tr>
+            <tr><td>title</td><td>object</td><td>Título (en español si se usó language=es-ES)</td></tr>
+            <tr><td>original_title</td><td>object</td><td>Título original</td></tr>
+            <tr><td>genre_ids</td><td>object</td><td>Lista de IDs de géneros</td></tr>
+            <tr><td>vote_average</td><td>float64</td><td>Nota media de usuarios</td></tr>
+            <tr><td>popularity</td><td>float64</td><td>Score de popularidad TMDb</td></tr>
+            <tr><td>release_date</td><td>object</td><td>Fecha de estreno</td></tr>
+            <tr><td colspan="3" style="color:var(--muted);text-align:center">… 7 columnas más</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.5 -->
+    <div class="exercise" id="ej15">
+      <div class="exercise-header">
+        <span class="exercise-num api">1.5</span>
+        <span class="exercise-title">Seleccionar columnas → <code>df_pop_usa</code></span>
+        <span class="time-badge">⏱ 3 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">Quedarse solo con las columnas relevantes y guardar en <code>df_pop_usa</code>.</div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej15-py')">Python</button></div>
+          <div class="tab-content active" id="ej15-py">
+<pre><code>col_seleccionadas = [<span class="str">"id"</span>, <span class="str">"genre_ids"</span>, <span class="str">"original_title"</span>, <span class="str">"title"</span>, <span class="str">"overview"</span>, <span class="str">"vote_average"</span>]
+
+df_pop_usa = df_movies[col_seleccionadas].copy()</code></pre>
+          </div>
+        </div>
+        <div class="callout tip"><strong>Punto clave:</strong> El <code>.copy()</code> evita el <em>SettingWithCopyWarning</em> al modificar el DataFrame derivado más adelante. Con CoW activado es menos crítico, pero es buena práctica.</div>
+      </div>
+    </div>
+
+    <!-- 1.6 -->
+    <div class="exercise" id="ej16">
+      <div class="exercise-header">
+        <span class="exercise-num api">1.6</span>
+        <span class="exercise-title">Crear diccionario <code>querystring</code> para España</span>
+        <span class="time-badge">⏱ 2 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">Crea un diccionario con los parámetros para la petición de películas españolas. Este es el segundo método para enviar parámetros GET.</div>
+        <div class="explanation">
+          <strong>Diferencia entre los dos métodos:</strong><br/>
+          Método 1.2 (querystring en URL): parámetros en el string de la URL → fácil de compartir/depurar.<br/>
+          Método 1.6 (dict en <code>params</code>): <code>requests</code> construye la querystring automáticamente → más limpio programáticamente y evita errores de encoding.
+        </div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej16-py')">Python</button></div>
+          <div class="tab-content active" id="ej16-py">
+<pre><code>querystring = {
+    <span class="str">"api_key"</span>: api_key,
+    <span class="str">"with_origin_country"</span>: <span class="str">"ES"</span>,
+    <span class="str">"year"</span>: <span class="str">"2023"</span>,
+    <span class="str">"language"</span>: <span class="str">"es-ES"</span>,
+    <span class="str">"sort_by"</span>: <span class="str">"popularity.desc"</span>,
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.7 -->
+    <div class="exercise" id="ej17">
+      <div class="exercise-header">
+        <span class="exercise-num api">1.7</span>
+        <span class="exercise-title">Construir <code>url_spain</code></span>
+        <span class="time-badge">⏱ 1 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">Construye <code>url_spain</code> — ahora solo necesitas base URL + endpoint, sin parámetros.</div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej17-py')">Python</button></div>
+          <div class="tab-content active" id="ej17-py">
+<pre><code>url_spain = base_url + endpoint_discover
+<span class="cm"># → "https://api.themoviedb.org/3/discover/movie"</span>
+<span class="cm"># Los parámetros van aparte en el dict querystring</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.8 -->
+    <div class="exercise" id="ej18">
+      <div class="exercise-header">
+        <span class="exercise-num api">1.8</span>
+        <span class="exercise-title">Lanzar petición España con argumento <code>params</code></span>
+        <span class="time-badge">⏱ 2 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">Lanza la petición usando el argumento <code>params</code> de requests (no la URL) y muestra status code y reason.</div>
+        <div class="explanation">
+          <strong>Conceptos clave:</strong> Cuando se pasa un diccionario al argumento <code>params</code>, <code>requests.get()</code> lo convierte automáticamente en querystring y lo añade a la URL antes de enviar la petición. El resultado es equivalente al método anterior, pero más robusto (gestiona encoding de caracteres especiales).
+        </div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej18-py')">Python</button></div>
+          <div class="tab-content active" id="ej18-py">
+<pre><code>respuesta_spain = requests.get(url_spain, params=querystring)
+
+<span class="fn">print</span>(respuesta_spain.status_code, respuesta_spain.reason)
+<span class="cm"># → 200 OK</span></code></pre>
+          </div>
+        </div>
+        <div class="callout info"><strong>Diferencia clave:</strong> <code>params</code> → querystring (GET). <code>data</code>/<code>json</code> → body de la petición (POST/PUT). Las APIs REST de lectura usan siempre <code>params</code>.</div>
+      </div>
+    </div>
+
+    <!-- 1.9 -->
+    <div class="exercise" id="ej19">
+      <div class="exercise-header">
+        <span class="exercise-num api">1.9</span>
+        <span class="exercise-title">Construir <code>df_pop_spain</code></span>
+        <span class="time-badge">⏱ 4 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">
+          Repite el proceso completo (JSON → lista → DataFrame → selección de columnas) para las películas españolas. Resultado: <code>df_pop_spain</code> con las mismas columnas que <code>df_pop_usa</code>.
+        </div>
+        <div class="tabs">
+          <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab(this,'ej19-api')">Con API</button>
+            <button class="tab-btn" onclick="switchTab(this,'ej19-alt')">Sin API (JSON local)</button>
+          </div>
+          <div class="tab-content active" id="ej19-api">
+<pre><code><span class="cm"># Extraer lista de películas del JSON de respuesta</span>
+datos_spain = respuesta_spain.json()[<span class="str">"results"</span>]
+
+<span class="cm"># Convertir a DataFrame y seleccionar columnas en un paso</span>
+df_pop_spain = pd.DataFrame(datos_spain)[col_seleccionadas]
+
+df_pop_spain</code></pre>
+          </div>
+          <div class="tab-content" id="ej19-alt">
+<pre><code><span class="kw">with</span> <span class="fn">open</span>(<span class="str">"./data/spain_movies.json"</span>) <span class="kw">as</span> f:
+    datos_spain = json.load(f)
+
+df_pop_spain = pd.DataFrame(datos_spain)[col_seleccionadas]</code></pre>
+          </div>
+        </div>
+        <div class="output-wrap">
+          <div class="output-label">Muestra de df_pop_spain (top 3)</div>
+          <table>
+            <tr><th>id</th><th>original_title</th><th>title</th><th>vote_average</th></tr>
+            <tr><td>1010581</td><td>Culpa mía</td><td>Culpa mía</td><td>7.764</td></tr>
+            <tr><td>80278</td><td>The Impossible</td><td>Lo imposible</td><td>7.400</td></tr>
+            <tr><td>1073413</td><td>Fenómenas</td><td>Fenómenas</td><td>5.951</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.10 -->
+    <div class="exercise" id="ej110">
+      <div class="exercise-header">
+        <span class="exercise-num api">1.10</span>
+        <span class="exercise-title"><code>pd.concat</code> + convertir <code>id</code> en índice</span>
+        <span class="time-badge">⏱ 4 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">
+          Une los dos DataFrames en <code>df_base_movies</code> con <code>pd.concat</code> y convierte la columna <code>id</code> en el índice.
+        </div>
+        <div class="explanation">
+          <strong>Conceptos clave:</strong>
+          <ul style="margin-top:.5rem;padding-left:1.25rem;">
+            <li><strong><code>pd.concat</code></strong> vs <strong><code>merge</code></strong>: <code>concat</code> apila DataFrames verticalmente (más filas, mismas columnas), <code>merge</code> los une horizontalmente por una columna común. Aquí queremos apilar las 20 USA + 20 ES → <code>concat</code>.</li>
+            <li>El índice <code>id</code> de TMDb es único por película y nos servirá como columna de cruce en el siguiente ejercicio.</li>
+          </ul>
+        </div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej110-py')">Python</button></div>
+          <div class="tab-content active" id="ej110-py">
+<pre><code>df_base_movies = pd.concat([df_pop_usa, df_pop_spain])
+
+df_base_movies.set_index(<span class="str">"id"</span>, inplace=<span class="kw">True</span>)
+
+df_base_movies</code></pre>
+          </div>
+        </div>
+        <div class="output-wrap">
+          <div class="output-label">Resultado: 40 filas × 5 columnas (20 USA + 20 ES)</div>
+          <table>
+            <tr><th>id (índice)</th><th>original_title</th><th>title</th><th>genre_ids</th><th>overview</th><th>vote_average</th></tr>
+            <tr><td>297802</td><td>Aquaman</td><td>Aquaman</td><td>[28, 12, 14]</td><td>Arthur Curry…</td><td>6.871</td></tr>
+            <tr><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+            <tr><td>1010581</td><td>Culpa mía</td><td>Culpa mía</td><td>[18, 10749, 53]</td><td>Noah debe…</td><td>7.764</td></tr>
+          </table>
+        </div>
+        <div class="callout warn"><strong>Error frecuente:</strong> Usar <code>pd.merge</code> en lugar de <code>pd.concat</code>. <code>merge</code> cruza por columnas comunes, no apila filas.</div>
+      </div>
+    </div>
+
+    <!-- ══ SECCIÓN 2 ══ -->
+    <div class="section-divider"><h2>#2 Web Scraping — BoxOfficeMojo</h2><hr/></div>
+
+    <!-- 2.1 -->
+    <div class="exercise" id="ej21">
+      <div class="exercise-header">
+        <span class="exercise-num extra">2.1 EXTRA</span>
+        <span class="exercise-title">Scrapear la tabla de ingresos de BoxOfficeMojo con BeautifulSoup</span>
+        <span class="time-badge">⏱ 20 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">
+          Acceder a <code>https://www.boxofficemojo.com/year/2023/?area=ES</code> y extraer la tabla de datos en un DataFrame.
+        </div>
+        <div class="explanation">
+          <strong>Proceso de inspección del HTML:</strong>
+          <ol style="margin-top:.5rem;padding-left:1.25rem;">
+            <li>Abrir DevTools → <code>&lt;body&gt;</code> → <code>&lt;main&gt;</code> → <code>&lt;div class="a-section mojo-body"&gt;</code></li>
+            <li>Buscar <code>&lt;div id="table"&gt;</code> → <code>&lt;div class="imdb-scroll-table-inner"&gt;</code></li>
+            <li><strong>Columnas:</strong> primera <code>&lt;table&gt;</code> → tags <code>&lt;th&gt;</code> → texto de cada uno.</li>
+            <li><strong>Filas de datos:</strong> segunda <code>&lt;table&gt;</code> → <code>&lt;tbody&gt;</code> → tags <code>&lt;tr&gt;</code> → tags <code>&lt;td&gt;</code> con los valores.</li>
+          </ol>
+        </div>
+
+        <div class="callout trick">
+          <strong>Truco del índice de columna:</strong> Al iterar las <code>&lt;td&gt;</code> de cada <code>&lt;tr&gt;</code> con <code>enumerate</code>, el índice indica a qué columna pertenece cada valor → se puede poblar el diccionario directamente sin parsear atributos.
+        </div>
+
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej21-py')">Python</button></div>
+          <div class="tab-content active" id="ej21-py">
+<pre><code>url_mojo = <span class="str">"https://www.boxofficemojo.com/year/2023/?area=ES"</span>
+
+<span class="cm"># 1. Petición y parseo</span>
+mojo = requests.get(url_mojo)
+<span class="fn">print</span>(mojo.status_code, mojo.reason)  <span class="cm"># → 200 OK</span>
+sopa = bs(mojo.text, <span class="str">"lxml"</span>)
+
+<span class="cm"># 2. Extraer nombres de columnas (tags &lt;th&gt; del primer &lt;table&gt;)</span>
+columnas_mojo = []
+tabla = sopa.find(<span class="str">"table"</span>)
+<span class="kw">for</span> th <span class="kw">in</span> tabla.find_all(<span class="str">"th"</span>):
+    columnas_mojo.append(th.text.strip())
+
+<span class="fn">print</span>(columnas_mojo)
+<span class="cm"># → ['Rank','Release','Genre','Budget','Running Time','Gross',</span>
+<span class="cm">#    'Theaters','Total Gross','Release Date','Distributor','Estimated']</span>
+
+<span class="cm"># 3. Inicializar diccionario de listas (una lista por columna)</span>
+diccionario_data = {col: [] <span class="kw">for</span> col <span class="kw">in</span> columnas_mojo}
+
+<span class="cm"># 4. Extraer filas de datos (tags &lt;tr&gt; → &lt;td&gt;)</span>
+<span class="kw">for</span> fila <span class="kw">in</span> sopa.find_all(<span class="str">"tr"</span>):
+    <span class="kw">for</span> idx, celda <span class="kw">in</span> <span class="fn">enumerate</span>(fila.find_all(<span class="str">"td"</span>)):
+        col = columnas_mojo[idx]
+        diccionario_data[col].append(celda.text.strip())
+
+<span class="cm"># 5. Crear DataFrame</span>
+df_mojo = pd.DataFrame(diccionario_data)
+
+<span class="cm"># 6. Limpiar nombres de columnas y establecer índice</span>
+df_mojo.columns = [col.lower().replace(<span class="str">" "</span>, <span class="str">"_"</span>) <span class="kw">for</span> col <span class="kw">in</span> df_mojo.columns]
+df_mojo = df_mojo.set_index(<span class="str">"rank"</span>)
+
+df_mojo</code></pre>
+          </div>
+        </div>
+
+        <div class="output-wrap">
+          <div class="output-label">Resultado (200 filas × 10 columnas — top 5)</div>
+          <table>
+            <tr><th>rank</th><th>release</th><th>gross</th><th>theaters</th><th>total_gross</th><th>release_date</th><th>distributor</th></tr>
+            <tr><td>1</td><td>Barbie</td><td>$33,554,745</td><td>424</td><td>$35,574,798</td><td>Jul 21</td><td>Warner Bros.</td></tr>
+            <tr><td>2</td><td>The Super Mario Bros. Movie</td><td>$25,885,996</td><td>395</td><td>$29,917,392</td><td>Apr 5</td><td>Universal…</td></tr>
+            <tr><td>3</td><td>Avatar: The Way of Water</td><td>$25,885,456</td><td>416</td><td>$54,533,887</td><td>Dec 16</td><td>Walt Disney…</td></tr>
+            <tr><td>4</td><td>Oppenheimer</td><td>$21,913,768</td><td>397</td><td>$23,188,688</td><td>Jul 21</td><td>Universal…</td></tr>
+            <tr><td>5</td><td>Elemental</td><td>$14,241,183</td><td>325</td><td>$14,241,750</td><td>Jul 14</td><td>Walt Disney…</td></tr>
+          </table>
+        </div>
+
+        <div class="callout warn">
+          <strong>Puntos a verificar en corrección:</strong>
+          <ul style="margin-top:.4rem;padding-left:1.25rem;">
+            <li>Que use <code>sopa.find("table")</code> para las cabeceras (primer table) y <code>find_all("tr")</code> para los datos.</li>
+            <li>Que use <code>enumerate</code> o similar para mapear cada <code>&lt;td&gt;</code> a su columna correspondiente.</li>
+            <li>Que el DataFrame resultante tenga <code>rank</code> como índice y las 10-11 columnas esperadas.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.2 -->
+    <div class="exercise" id="ej22">
+      <div class="exercise-header">
+        <span class="exercise-num">2.2</span>
+        <span class="exercise-title">Alternativa: leer <code>mojo_data.xlsx</code></span>
+        <span class="time-badge">⏱ 2 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">Si no se pudo hacer el scraping, cargar los datos desde el Excel y establecer <code>rank</code> como índice.</div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej22-py')">Python</button></div>
+          <div class="tab-content active" id="ej22-py">
+<pre><code>df_mojo = pd.read_excel(<span class="str">"./data/mojo_data.xlsx"</span>, index_col=<span class="str">"rank"</span>)
+
+df_mojo.info()
+df_mojo</code></pre>
+          </div>
+        </div>
+        <div class="callout info"><strong>Nota:</strong> El <code>index_col="rank"</code> establece directamente esa columna como índice durante la lectura, evitando hacer un <code>set_index</code> posterior.</div>
+      </div>
+    </div>
+
+    <!-- 2.3 -->
+    <div class="exercise" id="ej23">
+      <div class="exercise-header">
+        <span class="exercise-num">2.3</span>
+        <span class="exercise-title">Merge: pegar recaudaciones a las 40 películas (LEFT JOIN)</span>
+        <span class="time-badge">⏱ 5 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">
+          Pegar las recaudaciones de <code>df_mojo</code> a <code>df_base_movies</code>, manteniendo siempre las 40 películas. Antes responder: ¿qué método? ¿qué tipo de join? ¿qué campos son los de cruce?
+        </div>
+        <div class="answer">
+          <strong>Método:</strong> <code>merge()</code> — necesitamos cruzar por una columna, no apilar filas.<br/><br/>
+          <strong>Tipo de join:</strong> LEFT JOIN — queremos mantener las 40 películas de <code>df_base_movies</code> aunque no tengan recaudación en Mojo. Las películas sin match quedan con NaN en las columnas de Mojo.<br/><br/>
+          <strong>Columnas de cruce:</strong> <code>original_title</code> en <code>df_base_movies</code> ↔ <code>release</code> en <code>df_mojo</code> (son columnas con nombres distintos → usar <code>left_on / right_on</code>).
+        </div>
+        <div class="explanation" style="margin-top:1rem;">
+          <strong>¿Por qué no podemos cruzar por <code>id</code>?</strong> Porque <code>df_mojo</code> viene de un scraping HTML y no contiene el ID interno de TMDb. El único campo en común es el título de la película.
+        </div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej23-py')">Python</button></div>
+          <div class="tab-content active" id="ej23-py">
+<pre><code>df_total = df_base_movies.merge(
+    df_mojo,
+    left_on=<span class="str">"original_title"</span>,   <span class="cm"># columna de cruce en df_base_movies</span>
+    right_on=<span class="str">"release"</span>,          <span class="cm"># columna de cruce en df_mojo</span>
+    how=<span class="str">"left"</span>                  <span class="cm"># mantener todas las películas de la izquierda</span>
+)</code></pre>
+          </div>
+        </div>
+        <div class="callout warn">
+          <strong>Advertencia importante:</strong> El cruce por título es impreciso: si el título en TMDb y en BoxOfficeMojo difiere ligeramente (tildes, traducción, etc.) no habrá match. En producción se usaría el IMDB ID que está disponible en ambas fuentes.
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.4 -->
+    <div class="exercise" id="ej24">
+      <div class="exercise-header">
+        <span class="exercise-num">2.4</span>
+        <span class="exercise-title">Mostrar resultado e <code>.info()</code></span>
+        <span class="time-badge">⏱ 2 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">Mostrar los 10 primeros registros y el resumen <code>.info()</code> del DataFrame resultante.</div>
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej24-py')">Python</button></div>
+          <div class="tab-content active" id="ej24-py">
+<pre><code>df_total.head(<span class="num">10</span>)
+df_total.info()</code></pre>
+          </div>
+        </div>
+        <div class="output-wrap">
+          <div class="output-label">Resumen .info() — puntos de atención</div>
+          <table>
+            <tr><th>Columna</th><th>Non-Null</th><th>Significado</th></tr>
+            <tr><td>genre_ids, original_title, title, overview, vote_average</td><td>40 / 40</td><td>Todas las películas (de TMDb)</td></tr>
+            <tr><td>release, gross, total_gross, distributor, etc.</td><td>~6 / 40</td><td>Solo las que tuvieron match en BoxOfficeMojo</td></tr>
+          </table>
+        </div>
+        <div class="callout info"><strong>Observación:</strong> El índice numérico (0-39) reemplaza al índice <code>id</code> de TMDb porque el merge resetea el índice al cruzar por columnas en lugar de por índices. Si quisiéramos mantener el índice habría que hacer un <code>reset_index</code> previo en <code>df_base_movies</code>.</div>
+      </div>
+    </div>
+
+    <!-- 2.5 -->
+    <div class="exercise" id="ej25">
+      <div class="exercise-header">
+        <span class="exercise-num">2.5</span>
+        <span class="exercise-title">Películas españolas con información de ingresos</span>
+        <span class="time-badge">⏱ 5 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">Muestra las películas españolas para las que sí hay información de ingresos. Cuidado: tiene "truco".</div>
+
+        <div class="callout trick">
+          <strong>El truco:</strong> <code>df_total</code> no tiene ninguna columna que indique si la película es española o americana (ese dato se perdió al hacer el concat). Hay que reconstruirlo sabiendo que en <code>df_base_movies</code> las primeras 20 filas son USA y las 20 siguientes son ES.
+        </div>
+
+        <div class="explanation">
+          <strong>Dos formas de detectar si hay datos de ingresos:</strong>
+          <ul style="margin-top:.5rem;padding-left:1.25rem;">
+            <li><code>df_total.gross.isna() == False</code> → filas donde la columna <code>gross</code> no es NaN (tiene recaudación).</li>
+            <li>El LEFT JOIN deja NaN en todas las columnas de Mojo cuando no hay coincidencia, así que cualquiera de esas columnas sirve como indicador.</li>
+          </ul>
+        </div>
+
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej25-py')">Python</button></div>
+          <div class="tab-content active" id="ej25-py">
+<pre><code><span class="cm"># Paso 1: marcar el país de origen (USA primeras 20, ES últimas 20)</span>
+df_total[<span class="str">"country"</span>] = <span class="str">"USA"</span>
+df_total.iloc[<span class="num">20</span>:, -<span class="num">1</span>] = <span class="str">"ES"</span>
+
+<span class="cm"># Paso 2: filtrar españolas con ingresos (gross no nulo)</span>
+df_total[(df_total.country == <span class="str">"ES"</span>) &amp; (df_total.gross.isna() == <span class="kw">False</span>)]</code></pre>
+          </div>
+        </div>
+
+        <div class="output-wrap">
+          <div class="output-label">Resultado: 3 películas españolas con datos en BoxOfficeMojo</div>
+          <table>
+            <tr><th>original_title</th><th>title</th><th>gross</th><th>total_gross</th><th>distributor</th></tr>
+            <tr><td>La Navidad en sus manos</td><td>La Navidad en sus manos</td><td>$3,734,025</td><td>$4,345,082</td><td>A Contracorriente Films</td></tr>
+            <tr><td>Robot Dreams</td><td>Robot Dreams</td><td>$190,020</td><td>$504,100</td><td>BTeam Pictures</td></tr>
+            <tr><td>Mari(dos)</td><td>Mari(dos)</td><td>$4,483,495</td><td>$4,483,495</td><td>Walt Disney Studios</td></tr>
+          </table>
+        </div>
+
+        <div class="callout warn">
+          <strong>Error frecuente:</strong> Intentar filtrar por <code>original_language == "es"</code> de una columna que no existe en <code>df_total</code>, o no saber cómo asignar el país. Verificar que el alumno resuelva el "truco" de reconstruir la columna país.
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.6 -->
+    <div class="exercise" id="ej26">
+      <div class="exercise-header">
+        <span class="exercise-num">2.6</span>
+        <span class="exercise-title">INNER JOIN + correlación visual de rankings</span>
+        <span class="time-badge">⏱ 8 min</span>
+      </div>
+      <div class="exercise-body">
+        <div class="enunciado">
+          Crear un índice de popularidad en <code>df_base_movies</code>, hacer un INNER JOIN con <code>df_mojo</code> para quedarse solo con las películas que tienen recaudación, y comparar visualmente ambos rankings.
+        </div>
+
+        <div class="explanation">
+          <strong>Conceptos clave:</strong>
+          <ul style="margin-top:.5rem;padding-left:1.25rem;">
+            <li><strong>Índice de popularidad:</strong> Las películas ya vienen ordenadas por popularidad dentro de cada grupo (USA 1-20, ES 1-20), por lo que basta con crear una lista <code>[1..20, 1..20]</code>.</li>
+            <li><strong>INNER JOIN:</strong> Solo devuelve las filas con coincidencia en ambas tablas → solo las películas que aparecen tanto en TMDb como en BoxOfficeMojo.</li>
+            <li>Antes del INNER hay que hacer un <code>reset_index</code> en <code>df_mojo</code> para no perder el campo <code>rank</code> (que era el índice).</li>
+          </ul>
+        </div>
+
+        <div class="tabs">
+          <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab(this,'ej26-py')">Python</button></div>
+          <div class="tab-content active" id="ej26-py">
+<pre><code><span class="cm"># 1. Añadir índice de popularidad (1-20 por cada grupo)</span>
+df_base_movies[<span class="str">"rank_pop"</span>] = <span class="fn">list</span>(<span class="fn">range</span>(<span class="num">1</span>, <span class="num">21</span>)) + <span class="fn">list</span>(<span class="fn">range</span>(<span class="num">1</span>, <span class="num">21</span>))
+
+<span class="cm"># 2. Sacar rank de df_mojo del índice para no perderlo en el merge</span>
+df_mojo.reset_index(names=<span class="str">"rank_ingresos"</span>, inplace=<span class="kw">True</span>)
+
+<span class="cm"># 3. INNER JOIN — solo películas con recaudación</span>
+df_total_inner = df_base_movies.merge(
+    df_mojo,
+    left_on=<span class="str">"original_title"</span>,
+    right_on=<span class="str">"release"</span>
+    <span class="cm"># how="inner" es el valor por defecto</span>
+)
+
+<span class="cm"># 4. Comparar rankings visualmente</span>
+df_total_inner.sort_values(<span class="str">"rank_pop"</span>, inplace=<span class="kw">True</span>, ascending=<span class="kw">False</span>)
+df_total_inner[[<span class="str">"release"</span>, <span class="str">"rank_pop"</span>, <span class="str">"rank_ingresos"</span>]]</code></pre>
+          </div>
+        </div>
+
+        <div class="output-wrap">
+          <div class="output-label">Resultado: 6 películas con ambos rankings</div>
+          <table>
+            <tr><th>release</th><th>rank_pop (TMDb)</th><th>rank_ingresos (BoxOffice)</th></tr>
+            <tr><td>Five Nights at Freddy's</td><td>20</td><td>22</td></tr>
+            <tr><td>The Super Mario Bros. Movie</td><td>14</td><td>2</td></tr>
+            <tr><td>Mari(dos)</td><td>14</td><td>32</td></tr>
+            <tr><td>Robot Dreams</td><td>12</td><td>165</td></tr>
+            <tr><td>Avatar: The Way of Water</td><td>7</td><td>3</td></tr>
+            <tr><td>La Navidad en sus manos</td><td>7</td><td>36</td></tr>
+          </table>
+        </div>
+
+        <div class="answer" style="margin-top:1rem;">
+          <strong>Conclusión visual:</strong> La correlación no es perfecta. Mario Bros. es #14 en popularidad TMDb pero #2 en ingresos en España. Robot Dreams es #12 en popularidad pero solo #165 en ingresos, probablemente porque es un film de animación con gran audiencia online pero menor distribución en salas.
+        </div>
+
+        <div class="callout tip"><strong>Punto clave en corrección:</strong> Que el alumno proponga una interpretación del resultado, aunque sea breve. El objetivo del ejercicio es reflexionar sobre la relación entre popularidad online e ingresos en taquilla.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function switchTab(btn, targetId) {
+    const group = btn.closest('.tabs');
+    group.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    group.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(targetId).classList.add('active');
+  }
+</script>
+</body>
+</html>
