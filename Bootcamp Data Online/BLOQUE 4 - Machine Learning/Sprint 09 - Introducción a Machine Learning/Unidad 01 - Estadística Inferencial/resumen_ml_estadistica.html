@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadística para ML — Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --card: #141417;
+    --card2: #111114;
+    --border: #222228;
+    --border2: #2a2a32;
+    --accent: #e8ff47;
+    --accent2: #ff4d6d;
+    --accent3: #47c8ff;
+    --text: #e8e8ec;
+    --muted: #7a7a8c;
+    --muted2: #9a9aac;
+    --pill: #1e1e26;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.75;
+    padding: 2.5rem 1.5rem 6rem;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  /* ── HEADER ── */
+  header {
+    margin-bottom: 3.5rem;
+    position: relative;
+    padding-left: 1.6rem;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+  }
+  header .label {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5.5vw, 3rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 1rem;
+  }
+  header p {
+    color: var(--muted2);
+    font-size: 0.95rem;
+    max-width: 560px;
+    line-height: 1.65;
+  }
+
+  /* ── PROGRESS NAV ── */
+  .nav-pills {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+  .nav-pill {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    cursor: default;
+  }
+  .nav-pill.y { border-color: rgba(232,255,71,0.3); color: var(--accent); background: rgba(232,255,71,0.05); }
+  .nav-pill.p { border-color: rgba(255,77,109,0.3); color: var(--accent2); background: rgba(255,77,109,0.05); }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    margin-top: 3rem;
+  }
+  .section-title:first-of-type { margin-top: 0; }
+  .section-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .section-icon.y { background: rgba(232,255,71,0.1); border: 1px solid rgba(232,255,71,0.2); }
+  .section-icon.p { background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.2); }
+  .section-title h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+  .section-title .section-sub {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.1rem;
+    font-weight: 300;
+  }
+  .section-time {
+    margin-left: auto;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.72rem;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  /* ── CONTEXT BOX ── */
+  .context-box {
+    border-left: 2px solid var(--accent);
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 2rem;
+    background: rgba(232,255,71,0.03);
+    border-radius: 0 8px 8px 0;
+    font-size: 0.87rem;
+    color: var(--muted2);
+    line-height: 1.65;
+  }
+  .context-box.pink {
+    border-left-color: var(--accent2);
+    background: rgba(255,77,109,0.03);
+  }
+
+  /* ── TOPIC CARD ── */
+  .topic-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    margin-bottom: 1.2rem;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .topic-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-1px);
+  }
+
+  .topic-head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.3rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .topic-head:hover { background: rgba(255,255,255,0.02); }
+
+  .topic-num-badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 9px;
+    border-radius: 5px;
+    flex-shrink: 0;
+  }
+  .topic-num-badge.y { background: rgba(232,255,71,0.12); color: var(--accent); }
+  .topic-num-badge.p { background: rgba(255,77,109,0.12); color: var(--accent2); }
+
+  .topic-head-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.92rem;
+    flex: 1;
+  }
+  .topic-head-time {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .chevron {
+    font-size: 0.7rem;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+  .topic-card.open .chevron { transform: rotate(180deg); }
+
+  .topic-body {
+    display: none;
+    padding: 1.2rem 1.3rem;
+    gap: 1.2rem;
+    flex-direction: column;
+  }
+  .topic-card.open .topic-body { display: flex; }
+
+  /* ── CONCEPT GRID ── */
+  .concept-intro {
+    font-size: 0.88rem;
+    color: var(--muted2);
+    line-height: 1.7;
+  }
+  .concept-intro strong { color: var(--text); font-weight: 500; }
+  .concept-intro em { font-style: italic; }
+
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+  @media (max-width: 520px) { .concept-grid { grid-template-columns: 1fr; } }
+
+  .concept-item {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+  }
+  .concept-item-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.35rem;
+    color: var(--text);
+  }
+  .concept-item p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  /* ── ANALOGY BOX ── */
+  .analogy {
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+  }
+  .analogy-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+  .analogy p {
+    font-size: 0.82rem;
+    color: var(--muted2);
+    line-height: 1.6;
+  }
+  .analogy strong { color: var(--text); font-weight: 500; }
+
+  /* ── ML PILL ── */
+  .ml-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .ml-pill {
+    font-size: 0.72rem;
+    font-family: 'Syne', sans-serif;
+    padding: 3px 10px;
+    border-radius: 5px;
+    letter-spacing: 0.04em;
+  }
+  .ml-pill.y { background: rgba(232,255,71,0.08); color: var(--accent); border: 1px solid rgba(232,255,71,0.2); }
+  .ml-pill.p { background: rgba(255,77,109,0.08); color: var(--accent2); border: 1px solid rgba(255,77,109,0.2); }
+  .ml-pill.b { background: rgba(71,200,255,0.08); color: var(--accent3); border: 1px solid rgba(71,200,255,0.2); }
+
+  .ml-section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--border2), transparent);
+    margin: 3rem 0;
+  }
+
+  /* ── SUMMARY BOX ── */
+  .summary-box {
+    border: 1px solid rgba(232,255,71,0.2);
+    border-radius: 14px;
+    padding: 1.8rem 2rem;
+    background: rgba(232,255,71,0.025);
+    margin-bottom: 2rem;
+  }
+  .summary-box .s-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .summary-box h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+  }
+  .summary-box p {
+    font-size: 0.88rem;
+    color: var(--muted2);
+    line-height: 1.75;
+  }
+  .summary-box p + p { margin-top: 0.8rem; }
+  .summary-box strong { color: var(--text); font-weight: 500; }
+
+  /* ── ROADMAP ── */
+  .roadmap {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 2rem;
+  }
+  .roadmap-step {
+    display: flex;
+    gap: 1.2rem;
+    align-items: flex-start;
+    position: relative;
+  }
+  .roadmap-step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 28px;
+    bottom: -20px;
+    width: 1px;
+    background: var(--border2);
+  }
+  .roadmap-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    background: var(--card2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .roadmap-content {
+    padding-bottom: 1.5rem;
+    flex: 1;
+  }
+  .roadmap-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+  }
+  .roadmap-desc {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  footer {
+    margin-top: 3rem;
+    font-size: 0.72rem;
+    color: #2e2e3a;
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="label">Bootcamp · Intro a Machine Learning</div>
+  <h1>Estadística que<br>necesitas saber</h1>
+  <p>Todo el contenido del curso explicado en lenguaje humano, con ejemplos concretos y su conexión directa con los algoritmos de ML que vas a usar.</p>
+</header>
+
+<div class="nav-pills">
+  <span class="nav-pill y">📊 Bloque 1 — Inferencial</span>
+  <span class="nav-pill p">🎲 Bloque 2 — Probabilidad</span>
+  <span class="nav-pill">Sin fórmulas</span>
+  <span class="nav-pill">Con ejemplos reales</span>
+</div>
+
+<!-- ═══════════════════════════════ BLOQUE 1 ═══════════════════════════════ -->
+
+<div class="section-title">
+  <div class="section-icon y">📊</div>
+  <div>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;">Estadística Inferencial</div>
+    <div class="section-sub">Cómo sacar conclusiones de datos parciales</div>
+  </div>
+  <span class="section-time">⏱ 1h 53min</span>
+</div>
+
+<div class="context-box">
+  <strong>¿Qué significa "inferir"?</strong> Es sacar conclusiones sobre algo grande a partir de algo pequeño. Si quieres saber qué piensan los españoles de un producto, no puedes preguntar a los 47 millones — preguntas a 1.000 y <em>infières</em>. Eso es exactamente lo que hace un modelo de ML: aprende de miles de ejemplos y generaliza a millones.
+</div>
+
+<!-- TEMA 1 -->
+<div class="topic-card open">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge y">01</span>
+    <span class="topic-head-title">Población, Muestra y Sesgo</span>
+    <span class="topic-head-time">24:00</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      <strong>Población</strong> es el universo total de datos que te interesa: todos los emails que recibe una empresa, todos los clientes de un banco, todas las imágenes de tumores de un hospital. <strong>Muestra</strong> es el subconjunto con el que realmente trabajas — porque es imposible o muy caro tener todos los datos.
+    </p>
+    <div class="concept-grid">
+      <div class="concept-item">
+        <div class="concept-item-title">Representatividad</div>
+        <p>Una muestra es buena si refleja la diversidad de la población. Si solo tienes datos de usuarios de Madrid, tu modelo no funcionará bien en Sevilla.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Sesgo muestral</div>
+        <p>Ocurre cuando ciertos grupos están sobre o infra-representados. Es el origen número 1 de modelos injustos o que fallan en la vida real.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Sesgo de superviviente</div>
+        <p>Solo ves los datos de los que "sobrevivieron" (clientes que no se fueron, proyectos que tuvieron éxito). Lo que falta también importa.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Tamaño de muestra</div>
+        <p>Más datos → conclusiones más fiables. Pero hay un umbral: duplicar datos no duplica la precisión. La calidad importa más que la cantidad.</p>
+      </div>
+    </div>
+    <div class="analogy">
+      <span class="analogy-icon">🍲</span>
+      <p><strong>Analogía:</strong> Es como probar un plato. No necesitas comer todo el puchero para saber si le falta sal — con una cucharada basta… siempre que hayas removido bien. Si no removiste, puede que una parte tenga toda la sal y otra ninguna (eso es sesgo).</p>
+    </div>
+    <div>
+      <div class="ml-section-label">Conexión con ML</div>
+      <div class="ml-pills">
+        <span class="ml-pill y">Train/Test split</span>
+        <span class="ml-pill y">Data augmentation</span>
+        <span class="ml-pill y">Sesgo algorítmico</span>
+        <span class="ml-pill b">Fairness en modelos</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMA 2 -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge y">02</span>
+    <span class="topic-head-title">Media Muestral I — Qué es y cómo se comporta</span>
+    <span class="topic-head-time">15:00</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      La <strong>media</strong> (promedio) es la medida de "centro" más común. Si tienes los salarios de 10 empleados, la media te dice cuánto gana "un empleado típico"... aunque puede engañarte si hay uno que gana muchísimo más que los demás (outlier).
+    </p>
+    <div class="concept-grid">
+      <div class="concept-item">
+        <div class="concept-item-title">Media vs Mediana</div>
+        <p>La media se ve muy afectada por valores extremos. La mediana (el valor del medio) es más robusta. En ML se elige según el tipo de dato y los outliers.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Varianza y desviación típica</div>
+        <p>¿Cuánto se alejan los datos de la media? Si todos los salarios son similares, la varianza es baja. Si hay mucha dispersión, es alta. Clave para normalizar datos.</p>
+      </div>
+    </div>
+    <div class="analogy">
+      <span class="analogy-icon">🎯</span>
+      <p><strong>Analogía:</strong> Imagina que lanzas dardos. La media te dice dónde caen "en promedio". La varianza te dice si tus lanzamientos están concentrados o dispersos. Un modelo quiere tener sus predicciones con poca varianza alrededor del valor real.</p>
+    </div>
+    <div>
+      <div class="ml-section-label">Conexión con ML</div>
+      <div class="ml-pills">
+        <span class="ml-pill y">Normalización (StandardScaler)</span>
+        <span class="ml-pill y">Imputación de valores faltantes</span>
+        <span class="ml-pill b">Feature engineering</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMA 3 -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge y">03</span>
+    <span class="topic-head-title">Media Muestral II — Distribución de la media</span>
+    <span class="topic-head-time">22:31</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      Si coges 100 muestras distintas de la misma población y calculas la media de cada una, ¿todas darán el mismo resultado? No exactamente. Este bloque explora cómo varía la media de muestra en muestra — y por qué eso importa para evaluar modelos.
+    </p>
+    <div class="concept-grid">
+      <div class="concept-item">
+        <div class="concept-item-title">Error estándar</div>
+        <p>Mide cuánto varía la media entre diferentes muestras. Cuanto mayor es la muestra, menor es el error estándar — más confianza puedes tener en tu estimación.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Intervalos de confianza</div>
+        <p>"Con un 95% de confianza, el valor real está entre X e Y." No es certeza absoluta — es un rango razonable dado los datos que tienes.</p>
+      </div>
+    </div>
+    <div class="analogy">
+      <span class="analogy-icon">🗳️</span>
+      <p><strong>Analogía:</strong> Las encuestas electorales hacen esto constantemente. "El partido A tiene un 34% ± 2,5%". Ese ±2,5% es el error estándar — un rango dentro del cual está el valor real con alta probabilidad.</p>
+    </div>
+    <div>
+      <div class="ml-section-label">Conexión con ML</div>
+      <div class="ml-pills">
+        <span class="ml-pill y">Cross-validation</span>
+        <span class="ml-pill y">Métricas con intervalos</span>
+        <span class="ml-pill b">Evaluación de modelos</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMA 4 -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge y">04</span>
+    <span class="topic-head-title">Media Muestral III — Teorema Central del Límite</span>
+    <span class="topic-head-time">14:31</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      El <strong>Teorema Central del Límite (TCL)</strong> es uno de los resultados más poderosos de toda la estadística: si tomas muestras suficientemente grandes, la distribución de las medias siempre tiende a una campana de Gauss, sin importar cómo estaban distribuidos los datos originales.
+    </p>
+    <div class="concept-grid">
+      <div class="concept-item">
+        <div class="concept-item-title">¿Por qué importa?</div>
+        <p>Justifica por qué tantos algoritmos asumen distribuciones normales. Con suficientes datos, esa suposición se vuelve razonable incluso si los datos originales son raros.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Cuándo aplica</div>
+        <p>En general con n > 30 ya funciona. Pero si los datos tienen colas muy largas (precios, salarios extremos) necesitas más muestras para que se estabilice.</p>
+      </div>
+    </div>
+    <div class="analogy">
+      <span class="analogy-icon">🎰</span>
+      <p><strong>Analogía:</strong> Lanza un dado 1 vez: resultado random entre 1 y 6. Lanza 100 dados y suma: el total siempre se centrará alrededor de 350, con forma de campana. El caos individual se convierte en orden estadístico a escala.</p>
+    </div>
+    <div>
+      <div class="ml-section-label">Conexión con ML</div>
+      <div class="ml-pills">
+        <span class="ml-pill y">Supuestos de regresión lineal</span>
+        <span class="ml-pill y">Distribución de errores</span>
+        <span class="ml-pill b">Bootstrapping</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMA 5 -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge y">05</span>
+    <span class="topic-head-title">Frecuencias Muestrales</span>
+    <span class="topic-head-time">17:00</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      Antes de entrenar cualquier modelo, necesitas <em>entender</em> tus datos. Las frecuencias te dicen cuántas veces aparece cada valor — y con eso puedes construir histogramas, detectar anomalías y ver si las clases están balanceadas.
+    </p>
+    <div class="concept-grid">
+      <div class="concept-item">
+        <div class="concept-item-title">Histogramas</div>
+        <p>Visualizan la distribución de una variable. ¿Es simétrica? ¿Tiene dos picos? ¿Hay outliers muy alejados? Todo esto afecta qué algoritmo usar.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Desbalanceo de clases</div>
+        <p>Si el 99% de tus emails son legítimos y el 1% spam, un modelo que diga siempre "no spam" acertaría el 99%. Las frecuencias te alertan de esto.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Frecuencia relativa</div>
+        <p>El porcentaje que representa cada valor. Es la base de las probabilidades empíricas: "el 30% de los clientes cancela en el primer mes".</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Outliers</div>
+        <p>Valores extremos que se alejan mucho del resto. Pueden ser errores de datos o señales muy valiosas. Ignorarlos o incluirlos cambia el modelo radicalmente.</p>
+      </div>
+    </div>
+    <div class="analogy">
+      <span class="analogy-icon">🔍</span>
+      <p><strong>Analogía:</strong> Es el "reconocimiento del terreno" antes de la batalla. No empezarías a construir un puente sin estudiar el río primero. El EDA (Exploratory Data Analysis) con frecuencias es estudiar el río de tus datos.</p>
+    </div>
+    <div>
+      <div class="ml-section-label">Conexión con ML</div>
+      <div class="ml-pills">
+        <span class="ml-pill y">EDA (Análisis Exploratorio)</span>
+        <span class="ml-pill y">SMOTE / class weighting</span>
+        <span class="ml-pill b">Detección de anomalías</span>
+        <span class="ml-pill b">Preprocesado de datos</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMA 6 -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge y">06</span>
+    <span class="topic-head-title">Ejercicios Inferencial</span>
+    <span class="topic-head-time">20:00</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      La teoría se asienta cuando la aplicas. Estos ejercicios te van a pedir calcular medias, identificar sesgos en datasets reales y construir histogramas para tomar decisiones sobre qué hacer con los datos.
+    </p>
+    <div class="analogy">
+      <span class="analogy-icon">💡</span>
+      <p><strong>Qué practicar activamente:</strong> Intenta siempre preguntarte "¿esta muestra representa bien la realidad?" y "¿qué pasaría si hubiera más datos de X grupo?". Esa intuición vale más que saber hacer las fórmulas.</p>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════ BLOQUE 2 ═══════════════════════════════ -->
+
+<div class="section-title">
+  <div class="section-icon p">🎲</div>
+  <div>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;">Probabilidad</div>
+    <div class="section-sub">El lenguaje de la incertidumbre — y de los modelos de ML</div>
+  </div>
+  <span class="section-time">⏱ 1h 27min</span>
+</div>
+
+<div class="context-box pink">
+  <strong>¿Por qué probabilidad?</strong> Los modelos de ML no producen certezas — producen probabilidades. Un clasificador de imágenes no dice "esto es un gato": dice "hay un 94% de probabilidad de que sea un gato y un 6% de que sea un perro". Sin entender probabilidad, no puedes interpretar ningún output de ML.
+</div>
+
+<!-- TEMA 7 -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge p">01</span>
+    <span class="topic-head-title">Intro Probabilidad I — Fundamentos</span>
+    <span class="topic-head-time">17:31</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      La probabilidad mide qué tan probable es que ocurra algo, en una escala de 0 (imposible) a 1 (seguro). El 0,7 significa "ocurre 7 de cada 10 veces". Es el lenguaje universal de la incertidumbre.
+    </p>
+    <div class="concept-grid">
+      <div class="concept-item">
+        <div class="concept-item-title">Evento y espacio muestral</div>
+        <p>El espacio muestral son todos los resultados posibles (lanzar una moneda: {cara, cruz}). Un evento es un subconjunto de esos resultados.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Regla de la suma</div>
+        <p>P(A o B) = P(A) + P(B) − P(A y B). Si los eventos son mutuamente excluyentes, simplemente se suman las probabilidades.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Complementario</div>
+        <p>P(no A) = 1 − P(A). Si hay un 30% de lluvia, hay un 70% de que no llueva. Simple pero muy usado en clasificación binaria.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Probabilidad empírica</div>
+        <p>Calculada a partir de datos observados, no de teoría. "El 23% de los usuarios hacen clic" es una probabilidad empírica, no teórica.</p>
+      </div>
+    </div>
+    <div class="analogy">
+      <span class="analogy-icon">☔</span>
+      <p><strong>Analogía:</strong> La app del tiempo dice "70% de probabilidad de lluvia". No significa que lloverá el 70% del día — significa que en días con esas condiciones, ha llovido el 70% de las veces históricamente. Es probabilidad empírica en acción.</p>
+    </div>
+    <div>
+      <div class="ml-section-label">Conexión con ML</div>
+      <div class="ml-pills">
+        <span class="ml-pill p">Output de clasificadores</span>
+        <span class="ml-pill p">Función softmax</span>
+        <span class="ml-pill b">Calibración de modelos</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMA 8 -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge p">02</span>
+    <span class="topic-head-title">Intro Probabilidad II — Independencia y conjunta</span>
+    <span class="topic-head-time">17:00</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      Dos eventos son <strong>independientes</strong> si uno no afecta al otro. ¿Tiene sentido asumir independencia entre las variables de tu dataset? Esa pregunta cambia radicalmente qué algoritmo usar.
+    </p>
+    <div class="concept-grid">
+      <div class="concept-item">
+        <div class="concept-item-title">Probabilidad conjunta</div>
+        <p>P(A y B): la probabilidad de que ocurran ambos. Si son independientes: P(A y B) = P(A) × P(B). Si no lo son, necesitas la probabilidad condicionada.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Independencia en práctica</div>
+        <p>"La edad del cliente" y "si tiene hijos" son probablemente dependientes. Asumirlos independientes introduce error en el modelo.</p>
+      </div>
+    </div>
+    <div class="analogy">
+      <span class="analogy-icon">🃏</span>
+      <p><strong>Analogía:</strong> Tirar dos dados es independiente — el resultado del primero no cambia el del segundo. Pero extraer dos cartas de la misma baraja sin reponerlas no es independiente — la segunda depende de lo que salió en la primera.</p>
+    </div>
+    <div>
+      <div class="ml-section-label">Conexión con ML</div>
+      <div class="ml-pills">
+        <span class="ml-pill p">Naive Bayes (asume independencia)</span>
+        <span class="ml-pill p">Correlación entre features</span>
+        <span class="ml-pill b">Selección de variables</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMA 9 -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge p">03</span>
+    <span class="topic-head-title">Probabilidad Condicionada y Teorema de Bayes</span>
+    <span class="topic-head-time">20:31</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      <strong>P(A | B)</strong> se lee "probabilidad de A dado que B ya ocurrió". Es la idea de que nueva información actualiza tus creencias. El <strong>Teorema de Bayes</strong> formaliza esto: te dice cómo revisar una probabilidad inicial cuando recibes evidencia nueva.
+    </p>
+    <div class="concept-grid">
+      <div class="concept-item">
+        <div class="concept-item-title">Prior y posterior</div>
+        <p>El <em>prior</em> es lo que crees antes de ver datos. El <em>posterior</em> es lo que crees después. Bayes te da la fórmula para actualizarlo.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Verosimilitud (likelihood)</div>
+        <p>¿Cuán probable es observar estos datos si la hipótesis es verdadera? Es el puente entre los datos y la probabilidad revisada.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Falsos positivos</div>
+        <p>Una prueba médica con 99% de precisión puede dar muchos falsos positivos si la enfermedad es muy rara. Bayes explica por qué y cómo calcularlo.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Razonamiento bayesiano</div>
+        <p>Un email contiene "¡OFERTA GRATIS URGENTE!". Eso actualiza la probabilidad de que sea spam. Cada palabra aporta evidencia. Así funciona un filtro de spam.</p>
+      </div>
+    </div>
+    <div class="analogy">
+      <span class="analogy-icon">🏥</span>
+      <p><strong>Analogía:</strong> Tienes fiebre. La probabilidad de tener gripe sube. Luego ves que también tienes tos y dolor muscular. Cada síntoma es evidencia que actualiza tu estimación. Eso es razonamiento bayesiano: empezar con una creencia y actualizarla con datos.</p>
+    </div>
+    <div>
+      <div class="ml-section-label">Conexión con ML</div>
+      <div class="ml-pills">
+        <span class="ml-pill p">Clasificador Naive Bayes</span>
+        <span class="ml-pill p">Filtros de spam</span>
+        <span class="ml-pill p">Diagnóstico médico con IA</span>
+        <span class="ml-pill b">Inferencia bayesiana</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMA 10 -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge p">04</span>
+    <span class="topic-head-title">Probabilidad con Variables Continuas</span>
+    <span class="topic-head-time">12:31</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      Cuando los valores son continuos (precio de una casa, temperatura, tiempo de carga), no podemos listar probabilidades para cada valor — hay infinitos. Usamos <strong>funciones de densidad de probabilidad</strong> que describen la "forma" de cómo se distribuyen los datos.
+    </p>
+    <div class="concept-grid">
+      <div class="concept-item">
+        <div class="concept-item-title">Distribución Normal (Gaussiana)</div>
+        <p>La famosa "campana". La mayoría de fenómenos naturales la siguen aproximadamente. Definida solo por dos parámetros: media (dónde está el centro) y desviación típica (cuán ancha es).</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Regla 68-95-99.7</div>
+        <p>En una normal: el 68% de datos está a 1σ de la media, el 95% a 2σ, el 99.7% a 3σ. Si un dato está a más de 3σ, es casi con certeza un outlier.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Otras distribuciones</div>
+        <p>Uniforme (todo igual de probable), exponencial (tiempo entre eventos), binomial (éxito/fallo). Elegir la distribución correcta para modelar un fenómeno es una habilidad clave.</p>
+      </div>
+      <div class="concept-item">
+        <div class="concept-item-title">Por qué normalizar en ML</div>
+        <p>Muchos algoritmos asumen que los datos siguen cierta distribución, o funcionan peor cuando las variables tienen escalas muy distintas (0–1 vs 0–1.000.000).</p>
+      </div>
+    </div>
+    <div class="analogy">
+      <span class="analogy-icon">📏</span>
+      <p><strong>Analogía:</strong> La altura de las personas sigue una normal. Casi todos están entre 150cm y 195cm. Es rarísimo ver alguien de 220cm o de 130cm. La distribución te dice dónde "viven" los datos y qué valores deberían sorprenderte.</p>
+    </div>
+    <div>
+      <div class="ml-section-label">Conexión con ML</div>
+      <div class="ml-pills">
+        <span class="ml-pill p">Regresión lineal (supuesto de normalidad)</span>
+        <span class="ml-pill p">StandardScaler / MinMaxScaler</span>
+        <span class="ml-pill b">Modelos generativos (GANs, VAE)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMA 11 -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="topic-num-badge p">05</span>
+    <span class="topic-head-title">Ejercicios Probabilidad</span>
+    <span class="topic-head-time">20:00</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="concept-intro">
+      El objetivo de estos ejercicios no es calcular probabilidades a mano — es desarrollar <em>intuición probabilística</em>: la capacidad de razonar sobre incertidumbre sin necesidad de fórmulas en cada paso.
+    </p>
+    <div class="analogy">
+      <span class="analogy-icon">🧠</span>
+      <p><strong>Qué practicar activamente:</strong> Cuando un modelo te dé un output con probabilidades, pregúntate: "¿Qué asunciones está haciendo? ¿Son razonables para este dataset?" y "¿Estoy interpretando bien el 0,7 de confianza?". Esa lectura crítica distingue al ML engineer del que solo ejecuta código.</p>
+    </div>
+    <div>
+      <div class="ml-section-label">Habilidades que desarrolla</div>
+      <div class="ml-pills">
+        <span class="ml-pill p">Interpretar salidas probabilísticas</span>
+        <span class="ml-pill p">Elegir umbral de decisión</span>
+        <span class="ml-pill b">Métricas: ROC, AUC, precision/recall</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════ ROADMAP ═══════════════════════════════ -->
+<div class="summary-box">
+  <div class="s-label">Cierre del módulo</div>
+  <h3>De aquí a Machine Learning: el camino</h3>
+  <p>Este módulo construye los cimientos. Cada concepto que has visto reaparecerá de forma práctica cuando empieces con algoritmos reales.</p>
+
+  <div class="roadmap" style="margin-top:1.5rem;">
+    <div class="roadmap-step">
+      <div class="roadmap-dot">1</div>
+      <div class="roadmap-content">
+        <div class="roadmap-title">Tienes datos → Estadística inferencial</div>
+        <div class="roadmap-desc">Analizas tu muestra, detectas sesgos, calculas medias y distribuciones. Antes de entrenar un modelo, siempre haces EDA.</div>
+      </div>
+    </div>
+    <div class="roadmap-step">
+      <div class="roadmap-dot">2</div>
+      <div class="roadmap-content">
+        <div class="roadmap-title">Entrenas un modelo → El modelo aprende probabilidades</div>
+        <div class="roadmap-desc">Internamente, la mayoría de algoritmos maximizan una probabilidad o minimizan una función de pérdida derivada de probabilidades (log-loss, cross-entropy).</div>
+      </div>
+    </div>
+    <div class="roadmap-step">
+      <div class="roadmap-dot">3</div>
+      <div class="roadmap-content">
+        <div class="roadmap-title">El modelo predice → Output probabilístico</div>
+        <div class="roadmap-desc">El modelo no decide solo — te da una probabilidad y tú decides el umbral. "Si P > 0,5, clasifica como spam." Ese umbral tiene consecuencias reales.</div>
+      </div>
+    </div>
+    <div class="roadmap-step">
+      <div class="roadmap-dot">4</div>
+      <div class="roadmap-content">
+        <div class="roadmap-title">Evalúas el modelo → Métricas estadísticas</div>
+        <div class="roadmap-desc">Accuracy, precisión, recall, F1, AUC-ROC… todas son métricas estadísticas que miden cuán bien el modelo estima probabilidades sobre datos nuevos.</div>
+      </div>
+    </div>
+  </div>
+
+  <p style="margin-top:1.5rem;"><strong>Conclusión:</strong> No necesitas ser matemático para trabajar con ML — pero sí necesitas esta intuición estadística. El objetivo no es derivar fórmulas, es saber <em>cuándo</em> y <em>por qué</em> aplicar cada herramienta.</p>
+</div>
+
+<footer>Bootcamp · Estadística → Machine Learning · Generado con Claude</footer>
+
+<script>
+  function toggle(head) {
+    const card = head.closest('.topic-card');
+    card.classList.toggle('open');
+  }
+</script>
+
+</body>
+</html>
