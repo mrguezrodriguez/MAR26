@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadística Inferencial & Probabilidad — Guía Bootcamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0d0f; --card:#141417; --card2:#111114; --border:#222228; --border2:#2a2a32;
+  --y:#e8ff47; --p:#ff4d6d; --b:#47c8ff; --g:#7cffcb;
+  --text:#e8e8ec; --muted:#7a7a8c; --muted2:#9a9aac;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;line-height:1.75;padding:2.5rem 1.5rem 6rem;max-width:860px;margin:0 auto;}
+
+/* HEADER */
+header{margin-bottom:3rem;position:relative;padding-left:1.6rem;}
+header::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--y),var(--p));border-radius:2px;}
+.label{font-family:'Syne',sans-serif;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--y);margin-bottom:.5rem;}
+h1{font-family:'Syne',sans-serif;font-size:clamp(1.9rem,5vw,2.9rem);font-weight:800;line-height:1.05;margin-bottom:.9rem;}
+header p{color:var(--muted2);font-size:.93rem;max-width:560px;}
+
+/* NAV */
+.nav-pills{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:2.5rem;}
+.np{font-family:'Syne',sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:5px 14px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);cursor:pointer;transition:all .2s;}
+.np.y{border-color:rgba(232,255,71,.3);color:var(--y);background:rgba(232,255,71,.05);}
+.np.p{border-color:rgba(255,77,109,.3);color:var(--p);background:rgba(255,77,109,.05);}
+.np.b{border-color:rgba(71,200,255,.3);color:var(--b);background:rgba(71,200,255,.05);}
+.np:hover{opacity:.7;}
+
+/* SECTION TITLE */
+.sec-title{display:flex;align-items:center;gap:1rem;margin:3rem 0 1.4rem;padding-bottom:.8rem;border-bottom:1px solid var(--border2);}
+.sec-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.sec-icon.y{background:rgba(232,255,71,.1);border:1px solid rgba(232,255,71,.2);}
+.sec-icon.p{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.2);}
+.sec-icon.b{background:rgba(71,200,255,.1);border:1px solid rgba(71,200,255,.2);}
+.sec-icon.g{background:rgba(124,255,203,.1);border:1px solid rgba(124,255,203,.2);}
+.sec-h{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;}
+.sec-sub{font-size:.78rem;color:var(--muted);margin-top:.1rem;}
+
+/* CARDS */
+.topic-card{border:1px solid var(--border);border-radius:12px;background:var(--card);margin-bottom:1.2rem;overflow:hidden;transition:border-color .2s;}
+.topic-card:hover{border-color:var(--border2);}
+.topic-head{display:flex;align-items:center;gap:1rem;padding:1rem 1.3rem;cursor:pointer;user-select:none;}
+.topic-head:hover{background:rgba(255,255,255,.02);}
+.badge{font-family:'Syne',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.08em;padding:3px 9px;border-radius:5px;flex-shrink:0;}
+.badge.y{background:rgba(232,255,71,.12);color:var(--y);}
+.badge.p{background:rgba(255,77,109,.12);color:var(--p);}
+.badge.b{background:rgba(71,200,255,.12);color:var(--b);}
+.badge.g{background:rgba(124,255,203,.12);color:var(--g);}
+.topic-head-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;flex:1;}
+.chevron{font-size:.7rem;color:var(--muted);transition:transform .2s;}
+.topic-card.open .chevron{transform:rotate(180deg);}
+.topic-body{display:none;padding:1.3rem;gap:1.2rem;flex-direction:column;}
+.topic-card.open .topic-body{display:flex;}
+
+/* TEXT */
+.ci{font-size:.87rem;color:var(--muted2);line-height:1.7;}
+.ci strong{color:var(--text);font-weight:500;}
+.ci code{font-family:'DM Mono',monospace;font-size:.8rem;background:rgba(255,255,255,.07);padding:1px 6px;border-radius:3px;color:var(--b);}
+
+/* GRID */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+@media(max-width:520px){.cg{grid-template-columns:1fr;}}
+.ci2{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;}
+.ci2-title{font-family:'Syne',sans-serif;font-size:.73rem;font-weight:700;letter-spacing:.04em;margin-bottom:.3rem;}
+.ci2 p{font-size:.77rem;color:var(--muted);line-height:1.55;}
+.ci2 p strong{color:var(--muted2);}
+
+/* ANALOGY */
+.analogy{background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:.9rem 1.1rem;display:flex;gap:.7rem;align-items:flex-start;}
+.analogy p{font-size:.82rem;color:var(--muted2);line-height:1.6;}
+.analogy strong{color:var(--text);font-weight:500;}
+
+/* PILLS */
+.ml-pills{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.3rem;}
+.ml-label{font-family:'Syne',sans-serif;font-size:.63rem;text-transform:uppercase;letter-spacing:.13em;color:var(--muted);margin-bottom:.35rem;}
+.pill{font-size:.7rem;font-family:'Syne',sans-serif;padding:3px 10px;border-radius:5px;letter-spacing:.03em;}
+.pill.y{background:rgba(232,255,71,.08);color:var(--y);border:1px solid rgba(232,255,71,.2);}
+.pill.p{background:rgba(255,77,109,.08);color:var(--p);border:1px solid rgba(255,77,109,.2);}
+.pill.b{background:rgba(71,200,255,.08);color:var(--b);border:1px solid rgba(71,200,255,.2);}
+.pill.g{background:rgba(124,255,203,.08);color:var(--g);border:1px solid rgba(124,255,203,.2);}
+
+/* FORMULA BOX */
+.formula-box{background:var(--card2);border:1px solid rgba(232,255,71,.18);border-radius:10px;padding:1rem 1.3rem;}
+.formula-label{font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--y);margin-bottom:.6rem;}
+.formula-main{font-family:'DM Mono',monospace;font-size:1.05rem;color:#fff;text-align:center;padding:.5rem 0;letter-spacing:.04em;}
+.formula-parts{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;margin-top:.7rem;}
+.fp{font-size:.75rem;color:var(--muted2);display:flex;gap:.4rem;align-items:flex-start;}
+.fp code{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--y);background:rgba(232,255,71,.07);padding:0 5px;border-radius:3px;}
+
+/* SVG CHART containers */
+.chart-wrap{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:1rem;overflow:hidden;}
+.chart-wrap svg{width:100%;height:auto;display:block;}
+.chart-title{font-family:'Syne',sans-serif;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.7rem;}
+
+/* INTERACTIVE CANVAS */
+canvas{border-radius:8px;display:block;width:100% !important;}
+
+/* DIVIDER */
+.divider{height:1px;background:linear-gradient(90deg,var(--border2),transparent);margin:3rem 0;}
+
+/* CONTEXT BOX */
+.ctx{border-left:2px solid var(--y);padding:.8rem 1.1rem;margin-bottom:1.8rem;background:rgba(232,255,71,.03);border-radius:0 8px 8px 0;font-size:.86rem;color:var(--muted2);}
+.ctx.p{border-left-color:var(--p);background:rgba(255,77,109,.03);}
+.ctx strong{color:var(--text);font-weight:500;}
+
+/* PRACTICE SECTION */
+.practice-block{border:1px solid rgba(71,200,255,.2);border-radius:12px;background:rgba(71,200,255,.03);padding:1.3rem;}
+.practice-title{font-family:'Syne',sans-serif;font-size:.75rem;text-transform:uppercase;letter-spacing:.13em;color:var(--b);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;}
+.practice-q{font-size:.85rem;color:var(--text);margin-bottom:.5rem;font-weight:500;}
+.practice-code{background:#0a0a0e;border:1px solid var(--border);border-radius:7px;padding:.8rem 1rem;font-family:'DM Mono',monospace;font-size:.75rem;color:#c8d8e8;line-height:1.65;overflow-x:auto;white-space:pre;}
+.practice-answer{background:rgba(124,255,203,.05);border:1px solid rgba(124,255,203,.15);border-radius:7px;padding:.7rem 1rem;font-size:.8rem;color:var(--g);margin-top:.6rem;display:none;}
+.show-answer{font-family:'Syne',sans-serif;font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;background:transparent;border:1px solid rgba(71,200,255,.25);color:var(--b);padding:4px 12px;border-radius:5px;cursor:pointer;margin-top:.5rem;transition:all .2s;}
+.show-answer:hover{background:rgba(71,200,255,.07);}
+.pq+.pq{margin-top:1.2rem;padding-top:1.2rem;border-top:1px solid var(--border);}
+
+/* MONTY HALL GAME */
+.mh-game{background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:1.2rem;}
+.mh-doors{display:flex;gap:.8rem;justify-content:center;margin:1rem 0;}
+.mh-door{width:80px;height:100px;border:2px solid var(--border2);border-radius:8px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;transition:all .2s;flex-direction:column;gap:.3rem;}
+.mh-door:hover:not(.disabled){border-color:var(--y);transform:translateY(-3px);}
+.mh-door.selected{border-color:var(--y);background:rgba(232,255,71,.06);}
+.mh-door.revealed{border-color:var(--p);opacity:.6;cursor:default;}
+.mh-door.winner{border-color:var(--g);background:rgba(124,255,203,.08);}
+.mh-door.loser{border-color:var(--p);background:rgba(255,77,109,.08);}
+.mh-door.disabled{cursor:default;}
+.mh-door span{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);}
+.mh-status{font-size:.82rem;color:var(--muted2);text-align:center;min-height:1.4rem;margin:.5rem 0;}
+.mh-btn{font-family:'Syne',sans-serif;font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;padding:6px 16px;border-radius:6px;cursor:pointer;border:none;transition:all .2s;}
+.mh-btn.stay{background:rgba(255,77,109,.15);color:var(--p);border:1px solid rgba(255,77,109,.3);}
+.mh-btn.switch{background:rgba(124,255,203,.15);color:var(--g);border:1px solid rgba(124,255,203,.3);}
+.mh-btn.stay:hover{background:rgba(255,77,109,.25);}
+.mh-btn.switch:hover{background:rgba(124,255,203,.25);}
+.mh-btn.reset{background:rgba(232,255,71,.1);color:var(--y);border:1px solid rgba(232,255,71,.25);}
+.mh-btns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;}
+.mh-stats{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.8rem;}
+.mh-stat{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:.6rem .8rem;text-align:center;}
+.mh-stat-label{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.mh-stat-val{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-top:.2rem;}
+
+/* BIRTHDAY */
+.bday-slider{width:100%;accent-color:var(--y);margin:.5rem 0;}
+.bday-display{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--muted2);}
+
+/* IC CALCULATOR */
+.ic-input{background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text);width:100%;outline:none;transition:border-color .2s;}
+.ic-input:focus{border-color:var(--y);}
+.ic-result{font-family:'DM Mono',monospace;font-size:.9rem;color:var(--g);background:rgba(124,255,203,.06);border:1px solid rgba(124,255,203,.15);border-radius:7px;padding:.7rem 1rem;margin-top:.7rem;}
+
+/* ROADMAP */
+.roadmap{display:flex;flex-direction:column;gap:0;margin-top:1.5rem;}
+.rs{display:flex;gap:1.2rem;align-items:flex-start;position:relative;}
+.rs:not(:last-child)::before{content:'';position:absolute;left:14px;top:28px;bottom:-20px;width:1px;background:var(--border2);}
+.rd{width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:.1rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--y);}
+.rc{padding-bottom:1.5rem;flex:1;}
+.rt{font-family:'Syne',sans-serif;font-size:.83rem;font-weight:700;margin-bottom:.2rem;}
+.rdesc{font-size:.78rem;color:var(--muted);line-height:1.55;}
+
+footer{margin-top:3rem;font-size:.7rem;color:#2a2a38;text-align:center;letter-spacing:.05em;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="label">Bootcamp · Estadística Inferencial &amp; Probabilidad</div>
+  <h1>Estadística que<br>necesitas saber</h1>
+  <p>Fórmulas visuales, gráficas interactivas y los ejercicios de la práctica obligatoria explicados paso a paso.</p>
+</header>
+
+<div class="nav-pills">
+  <span class="np y">📊 Bloque 1 — Inferencial</span>
+  <span class="np p">🎲 Bloque 2 — Probabilidad</span>
+  <span class="np b">🧪 Práctica Titanic</span>
+  <span class="np b">📈 Práctica Life Sat</span>
+  <span class="np">Con fórmulas + gráficas</span>
+</div>
+
+<!-- ═══════════ BLOQUE 1 ═══════════ -->
+<div class="sec-title">
+  <div class="sec-icon y">📊</div>
+  <div><div class="sec-h">Estadística Inferencial</div><div class="sec-sub">Sacar conclusiones de datos parciales</div></div>
+</div>
+
+<div class="ctx"><strong>¿Qué significa inferir?</strong> Sacar conclusiones sobre algo grande a partir de algo pequeño. Si quieres saber qué piensan los españoles de un producto no puedes preguntar a 47M — preguntas a 1.000 y <em>inferres</em>. Eso hace un modelo de ML: aprende de miles de ejemplos y generaliza a millones.</div>
+
+<!-- 01 POBLACIÓN Y MUESTRA -->
+<div class="topic-card open">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="badge y">01</span>
+    <span class="topic-head-title">Población, Muestra y Sesgo</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="ci"><strong>Población</strong> = universo total. <strong>Muestra</strong> = subconjunto con el que trabajas. El objetivo es que la muestra represente fielmente a la población.</p>
+    <div class="cg">
+      <div class="ci2"><div class="ci2-title" style="color:var(--y)">Representatividad</div><p>La muestra debe reflejar la diversidad de la población. Si solo tienes usuarios de Madrid, tu modelo fallará en Sevilla.</p></div>
+      <div class="ci2"><div class="ci2-title" style="color:var(--p)">Sesgo muestral</div><p>Ciertos grupos sobre/infra-representados. Es el origen nº 1 de modelos injustos o que fallan en producción.</p></div>
+      <div class="ci2"><div class="ci2-title" style="color:var(--b)">Sesgo de superviviente</div><p>Solo ves los datos de los que "sobrevivieron". Lo que falta también importa: clientes que se fueron, proyectos fallidos.</p></div>
+      <div class="ci2"><div class="ci2-title" style="color:var(--g)">Tamaño de muestra</div><p>Más datos → conclusiones más fiables. Pero la calidad importa más que la cantidad.</p></div>
+    </div>
+
+    <!-- GRÁFICA: MUESTRA VS POBLACIÓN -->
+    <div class="chart-wrap">
+      <div class="chart-title">Representatividad: muestra bien extraída vs sesgada</div>
+      <svg viewBox="0 0 520 160" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="popGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#2a2a3a"/>
+            <stop offset="100%" stop-color="#14141a"/>
+          </radialGradient>
+        </defs>
+        <!-- Población izq -->
+        <ellipse cx="130" cy="80" rx="110" ry="65" fill="url(#popGrad)" stroke="#2a2a32" stroke-width="1.5"/>
+        <text x="130" y="24" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" fill="#7a7a8c" letter-spacing="1">POBLACIÓN</text>
+        <!-- puntos random en población -->
+        <circle cx="90" cy="60" r="5" fill="#e8ff47" opacity=".8"/>
+        <circle cx="120" cy="50" r="5" fill="#e8ff47" opacity=".8"/>
+        <circle cx="155" cy="65" r="5" fill="#e8ff47" opacity=".8"/>
+        <circle cx="100" cy="85" r="5" fill="#ff4d6d" opacity=".8"/>
+        <circle cx="140" cy="90" r="5" fill="#47c8ff" opacity=".8"/>
+        <circle cx="160" cy="75" r="5" fill="#7cffcb" opacity=".8"/>
+        <circle cx="80" cy="100" r="5" fill="#ff4d6d" opacity=".8"/>
+        <circle cx="115" cy="110" r="5" fill="#47c8ff" opacity=".8"/>
+        <circle cx="148" cy="108" r="5" fill="#e8ff47" opacity=".8"/>
+        <circle cx="170" cy="55" r="5" fill="#7cffcb" opacity=".8"/>
+        <!-- Muestra bien extraída -->
+        <rect x="220" y="35" width="90" height="90" rx="8" fill="none" stroke="#e8ff47" stroke-width="1.2" stroke-dasharray="4,3"/>
+        <text x="265" y="28" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" fill="#e8ff47" letter-spacing="1">MUESTRA OK</text>
+        <circle cx="240" cy="60" r="5" fill="#e8ff47" opacity=".9"/>
+        <circle cx="270" cy="55" r="5" fill="#ff4d6d" opacity=".9"/>
+        <circle cx="250" cy="85" r="5" fill="#47c8ff" opacity=".9"/>
+        <circle cx="285" cy="90" r="5" fill="#7cffcb" opacity=".9"/>
+        <circle cx="262" cy="108" r="5" fill="#e8ff47" opacity=".9"/>
+        <text x="265" y="140" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="#7a7a8c">todos los colores representados</text>
+        <!-- Muestra sesgada -->
+        <rect x="380" y="35" width="90" height="90" rx="8" fill="none" stroke="#ff4d6d" stroke-width="1.2" stroke-dasharray="4,3"/>
+        <text x="425" y="28" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" fill="#ff4d6d" letter-spacing="1">MUESTRA SESGADA</text>
+        <circle cx="400" cy="60" r="5" fill="#e8ff47" opacity=".9"/>
+        <circle cx="425" cy="55" r="5" fill="#e8ff47" opacity=".9"/>
+        <circle cx="410" cy="85" r="5" fill="#e8ff47" opacity=".9"/>
+        <circle cx="445" cy="70" r="5" fill="#e8ff47" opacity=".9"/>
+        <circle cx="430" cy="100" r="5" fill="#e8ff47" opacity=".9"/>
+        <text x="425" y="140" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="#ff4d6d">solo un grupo representado</text>
+      </svg>
+    </div>
+
+    <div class="analogy"><span>🍲</span><p><strong>Analogía:</strong> Es como probar un puchero. No necesitas comerlo todo — con una cucharada basta, siempre que hayas removido bien. Si no removiste, puede que toda la sal esté en un lado (eso es sesgo).</p></div>
+    <div><div class="ml-label">Conexión con ML</div><div class="ml-pills"><span class="pill y">Train/Test split</span><span class="pill y">Data augmentation</span><span class="pill b">Fairness en modelos</span></div></div>
+  </div>
+</div>
+
+<!-- 02 MEDIA, VARIANZA -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="badge y">02</span>
+    <span class="topic-head-title">Media, Varianza y Desviación Típica</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="ci">Las tres medidas más usadas para <strong>resumir un conjunto de datos</strong>. La media te dice dónde está el centro; la varianza/desviación te dice cuánto se dispersan los datos alrededor de ese centro.</p>
+
+    <!-- FÓRMULAS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+      <div class="formula-box">
+        <div class="formula-label">Media muestral</div>
+        <div class="formula-main">x̄ = (1/n) Σ xᵢ</div>
+        <div class="formula-parts">
+          <div class="fp"><code>x̄</code> media de la muestra</div>
+          <div class="fp"><code>n</code> número de observaciones</div>
+          <div class="fp"><code>xᵢ</code> cada valor individual</div>
+        </div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-label">Desviación típica</div>
+        <div class="formula-main">s = √[ Σ(xᵢ-x̄)² / (n-1) ]</div>
+        <div class="formula-parts">
+          <div class="fp"><code>s</code> desviación muestral</div>
+          <div class="fp"><code>n-1</code> corrección de Bessel</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART INTERACTIVO: distribución con slider -->
+    <div class="chart-wrap">
+      <div class="chart-title">Distribución normal — ajusta media y desviación típica</div>
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:.8rem;">
+        <label style="font-size:.75rem;color:var(--muted2);font-family:'DM Mono',monospace;">
+          Media (μ): <span id="muVal" style="color:var(--y)">0</span>
+          <br><input type="range" class="bday-slider" id="muSlider" min="-3" max="3" step="0.1" value="0" oninput="drawNormal()">
+        </label>
+        <label style="font-size:.75rem;color:var(--muted2);font-family:'DM Mono',monospace;">
+          Desv. típica (σ): <span id="sigmaVal" style="color:var(--p)">1</span>
+          <br><input type="range" class="bday-slider" id="sigmaSlider" min="0.3" max="2.5" step="0.1" value="1" oninput="drawNormal()">
+        </label>
+      </div>
+      <canvas id="normalCanvas" height="160"></canvas>
+    </div>
+
+    <div class="cg">
+      <div class="ci2"><div class="ci2-title" style="color:var(--y)">Media vs Mediana</div><p>La media se distorsiona con outliers. Si Bill Gates entra a un bar, la media de riqueza se dispara, pero la mediana apenas cambia. En ML se elige según el tipo de dato.</p></div>
+      <div class="ci2"><div class="ci2-title" style="color:var(--b)">Regla 68-95-99.7</div><p>En una normal: 68% de datos a ±1σ, 95% a ±2σ, 99.7% a ±3σ. Un valor a más de 3σ casi siempre es un outlier.</p></div>
+    </div>
+    <div><div class="ml-label">Conexión con ML</div><div class="ml-pills"><span class="pill y">StandardScaler</span><span class="pill y">Imputación de nulos</span><span class="pill b">Detección de outliers</span></div></div>
+  </div>
+</div>
+
+<!-- 03 ERROR ESTÁNDAR E IC -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="badge y">03</span>
+    <span class="topic-head-title">Error Estándar e Intervalos de Confianza</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="ci">El <strong>error estándar</strong> mide cuánto varía la media de muestra en muestra. Un <strong>intervalo de confianza</strong> es el rango donde está el valor real de la población con cierta probabilidad.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+      <div class="formula-box">
+        <div class="formula-label">Error estándar (SE)</div>
+        <div class="formula-main">SE = σ / √n</div>
+        <div class="formula-parts">
+          <div class="fp"><code>σ</code> desviación típica</div>
+          <div class="fp"><code>n</code> tamaño de muestra</div>
+          <div class="fp" style="width:100%;color:var(--y);font-size:.72rem;">↑ n  →  ↓ SE  →  más precisión</div>
+        </div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-label">IC para proporción (95%)</div>
+        <div class="formula-main">p̂ ± 1.96 × √(p̂(1-p̂)/n)</div>
+        <div class="formula-parts">
+          <div class="fp"><code>p̂</code> proporción muestral</div>
+          <div class="fp"><code>1.96</code> z al 95% confianza</div>
+          <div class="fp"><code>n</code> tamaño de muestra</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALCULADORA IC INTERACTIVA -->
+    <div class="chart-wrap">
+      <div class="chart-title">🧮 Calculadora de intervalo de confianza para proporciones</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:.6rem;">
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:.3rem;font-family:'DM Mono',monospace;">Éxitos (x)</div>
+          <input type="number" class="ic-input" id="icX" value="219" min="0" oninput="calcIC()">
+        </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:.3rem;font-family:'DM Mono',monospace;">Total (n)</div>
+          <input type="number" class="ic-input" id="icN" value="537" min="1" oninput="calcIC()">
+        </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:.3rem;font-family:'DM Mono',monospace;">Confianza %</div>
+          <input type="number" class="ic-input" id="icConf" value="95" min="50" max="99" oninput="calcIC()">
+        </div>
+      </div>
+      <div class="ic-result" id="icResult">—</div>
+      <div style="margin-top:.6rem;font-size:.7rem;color:var(--muted);font-family:'DM Mono',monospace;">Datos precargados: pasajeros solos en el Titanic (n=537, supervivientes solos=219)</div>
+    </div>
+
+    <div class="analogy"><span>🗳️</span><p><strong>Analogía:</strong> Las encuestas electorales: "Partido A tiene 34% ± 2.5%". Ese ±2.5% es el error estándar — un rango dentro del cual está el valor real con alta probabilidad.</p></div>
+    <div><div class="ml-label">Conexión con ML</div><div class="ml-pills"><span class="pill y">Cross-validation</span><span class="pill y">Métricas con intervalos</span><span class="pill b">Bootstrapping</span></div></div>
+  </div>
+</div>
+
+<!-- 04 TCL -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="badge y">04</span>
+    <span class="topic-head-title">Teorema Central del Límite</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="ci">Si tomas muestras suficientemente grandes, la distribución de las medias <strong>siempre tiende a una normal</strong>, sin importar cómo estaban distribuidos los datos originales. Es el resultado más poderoso de la estadística.</p>
+
+    <!-- CHART TCL: distribución original vs distribución de medias -->
+    <div class="chart-wrap">
+      <div class="chart-title">TCL: distribución sesgada original → distribución de medias → normal</div>
+      <canvas id="tclCanvas" height="150"></canvas>
+      <div style="display:flex;gap:1rem;margin-top:.6rem;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted2);font-family:'DM Mono',monospace;"><div style="width:10px;height:3px;background:var(--p);border-radius:2px;"></div>distribución original (sesgada)</div>
+        <div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted2);font-family:'DM Mono',monospace;"><div style="width:10px;height:3px;background:var(--y);border-radius:2px;"></div>distribución de medias muestrales</div>
+      </div>
+    </div>
+
+    <div class="cg">
+      <div class="ci2"><div class="ci2-title" style="color:var(--y)">¿Por qué importa?</div><p>Justifica por qué tantos algoritmos asumen distribuciones normales. Con n &gt; 30 suele ser suficiente.</p></div>
+      <div class="ci2"><div class="ci2-title" style="color:var(--b)">Condición</div><p>Los datos deben ser independientes e idénticamente distribuidos (i.i.d.). Eso es precisamente lo que garantiza el train/test split.</p></div>
+    </div>
+    <div class="analogy"><span>🎰</span><p><strong>Analogía:</strong> Lanza 1 dado: resultado entre 1 y 6, distribución uniforme. Suma 100 dados: siempre se centra en ~350 con forma de campana. El caos individual se convierte en orden estadístico a escala.</p></div>
+    <div><div class="ml-label">Conexión con ML</div><div class="ml-pills"><span class="pill y">Supuestos regresión lineal</span><span class="pill y">Distribución de errores</span><span class="pill b">Bootstrapping</span></div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ BLOQUE 2 PROBABILIDAD ═══════════ -->
+<div class="sec-title">
+  <div class="sec-icon p">🎲</div>
+  <div><div class="sec-h">Probabilidad</div><div class="sec-sub">El lenguaje de la incertidumbre — y de los modelos de ML</div></div>
+</div>
+
+<div class="ctx p"><strong>¿Por qué probabilidad?</strong> Los modelos de ML no producen certezas: producen probabilidades. Un clasificador no dice "esto es spam" — dice "94% de probabilidad de spam". Sin entender probabilidad, no puedes interpretar ningún output.</div>
+
+<!-- P1 FUNDAMENTOS -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="badge p">P1</span>
+    <span class="topic-head-title">Fundamentos: Eventos, Regla de la Suma y Complementario</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+      <div class="formula-box" style="border-color:rgba(255,77,109,.18);">
+        <div class="formula-label" style="color:var(--p)">Regla de la suma</div>
+        <div class="formula-main">P(A∪B) = P(A) + P(B) - P(A∩B)</div>
+        <div class="formula-parts">
+          <div class="fp"><code style="color:var(--p)">A∪B</code> A o B ocurre</div>
+          <div class="fp"><code style="color:var(--p)">A∩B</code> A y B ocurren</div>
+          <div class="fp" style="width:100%;color:#9a9aac;font-size:.71rem;">Si mutuamente excluyentes: P(A∪B) = P(A) + P(B)</div>
+        </div>
+      </div>
+      <div class="formula-box" style="border-color:rgba(255,77,109,.18);">
+        <div class="formula-label" style="color:var(--p)">Complementario</div>
+        <div class="formula-main">P(Aᶜ) = 1 - P(A)</div>
+        <div class="formula-parts">
+          <div class="fp"><code style="color:var(--p)">Aᶜ</code> "A no ocurre"</div>
+          <div class="fp" style="width:100%;color:#9a9aac;font-size:.71rem;">P(lluvia) = 0.3 → P(no lluvia) = 0.7</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENN INTERACTIVO SVG -->
+    <div class="chart-wrap">
+      <div class="chart-title">Diagrama de Venn — probabilidad conjunta, unión y complementario</div>
+      <svg viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="circleA"><circle cx="155" cy="80" r="60"/></clipPath>
+          <clipPath id="circleB"><circle cx="245" cy="80" r="60"/></clipPath>
+        </defs>
+        <!-- fondo universo -->
+        <rect x="20" y="20" width="360" height="120" rx="8" fill="#0a0a0e" stroke="#222228" stroke-width="1"/>
+        <text x="370" y="35" text-anchor="end" font-family="DM Mono,monospace" font-size="8" fill="#3a3a4a">Ω</text>
+        <!-- círculos -->
+        <circle cx="155" cy="80" r="60" fill="rgba(255,77,109,.15)" stroke="var(--p)" stroke-width="1.5"/>
+        <circle cx="245" cy="80" r="60" fill="rgba(71,200,255,.15)" stroke="var(--b)" stroke-width="1.5"/>
+        <!-- intersección más brillante -->
+        <circle cx="155" cy="80" r="60" fill="rgba(232,255,71,.18)" clip-path="url(#circleB)"/>
+        <!-- labels -->
+        <text x="125" y="78" text-anchor="middle" font-family="Syne,sans-serif" font-size="11" font-weight="700" fill="var(--p)">A</text>
+        <text x="275" y="78" text-anchor="middle" font-family="Syne,sans-serif" font-size="11" font-weight="700" fill="var(--b)">B</text>
+        <text x="200" y="74" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="var(--y)">A∩B</text>
+        <text x="200" y="83" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="var(--y)">P(A)×P(B)</text>
+        <text x="200" y="145" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="#5a5a7a">todo fuera = P(Aᶜ∩Bᶜ)</text>
+        <!-- arrows -->
+        <text x="90" y="115" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(255,77,109,.6)">solo A</text>
+        <text x="310" y="115" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(71,200,255,.6)">solo B</text>
+      </svg>
+    </div>
+    <div><div class="ml-label">Conexión con ML</div><div class="ml-pills"><span class="pill p">Output clasificadores</span><span class="pill p">Softmax</span><span class="pill b">Calibración de modelos</span></div></div>
+  </div>
+</div>
+
+<!-- P2 BAYES -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="badge p">P2</span>
+    <span class="topic-head-title">Probabilidad Condicionada y Teorema de Bayes</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="ci"><strong>P(A|B)</strong> = "probabilidad de A dado que B ocurrió". El <strong>Teorema de Bayes</strong> formaliza cómo actualizar una creencia cuando llega nueva evidencia.</p>
+
+    <div class="formula-box" style="border-color:rgba(255,77,109,.25);">
+      <div class="formula-label" style="color:var(--p)">Teorema de Bayes</div>
+      <div class="formula-main">P(A|B) = P(B|A) × P(A) / P(B)</div>
+      <div class="formula-parts">
+        <div class="fp"><code style="color:var(--p)">P(A|B)</code> posterior: lo que creemos después de ver B</div>
+        <div class="fp"><code style="color:var(--p)">P(A)</code> prior: lo que creíamos antes</div>
+        <div class="fp"><code style="color:var(--p)">P(B|A)</code> likelihood: P de ver B si A es cierto</div>
+        <div class="fp"><code style="color:var(--p)">P(B)</code> evidencia: normalización</div>
+      </div>
+    </div>
+
+    <!-- EJEMPLO VISUAL SPAM -->
+    <div class="chart-wrap">
+      <div class="chart-title">Ejemplo: filtro de spam con Bayes</div>
+      <svg viewBox="0 0 500 130" xmlns="http://www.w3.org/2000/svg">
+        <!-- Prior -->
+        <rect x="10" y="30" width="90" height="70" rx="6" fill="rgba(255,77,109,.08)" stroke="rgba(255,77,109,.25)" stroke-width="1"/>
+        <text x="55" y="22" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="var(--muted)">PRIOR</text>
+        <text x="55" y="58" text-anchor="middle" font-family="Syne,sans-serif" font-size="11" font-weight="700" fill="var(--p)">P(spam)</text>
+        <text x="55" y="74" text-anchor="middle" font-family="DM Mono,monospace" font-size="13" fill="#fff">20%</text>
+        <text x="55" y="90" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="var(--muted)">antes del email</text>
+        <!-- arrow -->
+        <text x="115" y="68" font-size="14" fill="var(--muted)">+</text>
+        <!-- Evidence -->
+        <rect x="130" y="30" width="110" height="70" rx="6" fill="rgba(71,200,255,.06)" stroke="rgba(71,200,255,.2)" stroke-width="1"/>
+        <text x="185" y="22" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="var(--muted)">EVIDENCIA</text>
+        <text x="185" y="54" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="700" fill="var(--b)">contiene "GRATIS"</text>
+        <text x="185" y="70" text-anchor="middle" font-family="DM Mono,monospace" font-size="9" fill="#fff">P(palabra|spam)</text>
+        <text x="185" y="84" text-anchor="middle" font-family="DM Mono,monospace" font-size="11" fill="var(--b)">= 0.85</text>
+        <text x="185" y="97" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="var(--muted)">likelihood</text>
+        <!-- arrow 2 -->
+        <text x="255" y="68" font-size="18" fill="var(--muted)">→</text>
+        <!-- Posterior -->
+        <rect x="280" y="20" width="110" height="90" rx="6" fill="rgba(232,255,71,.07)" stroke="rgba(232,255,71,.3)" stroke-width="1.5"/>
+        <text x="335" y="14" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="var(--y)">POSTERIOR</text>
+        <text x="335" y="52" text-anchor="middle" font-family="Syne,sans-serif" font-size="11" font-weight="700" fill="var(--y)">P(spam|email)</text>
+        <text x="335" y="70" text-anchor="middle" font-family="DM Mono,monospace" font-size="20" fill="#fff">73%</text>
+        <text x="335" y="88" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="var(--muted)">después de ver email</text>
+        <text x="335" y="103" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="var(--y)">→ marca como spam</text>
+        <!-- Naive Bayes label -->
+        <rect x="400" y="45" width="90" height="40" rx="5" fill="rgba(124,255,203,.05)" stroke="rgba(124,255,203,.2)" stroke-width="1"/>
+        <text x="445" y="62" text-anchor="middle" font-family="Syne,sans-serif" font-size="8" fill="var(--g)">Naive Bayes</text>
+        <text x="445" y="75" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="var(--muted)">hace esto con</text>
+        <text x="445" y="84" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="var(--muted)">miles de palabras</text>
+      </svg>
+    </div>
+
+    <div><div class="ml-label">Conexión con ML</div><div class="ml-pills"><span class="pill p">Naive Bayes classifier</span><span class="pill p">Filtros de spam</span><span class="pill b">Diagnóstico médico con IA</span></div></div>
+  </div>
+</div>
+
+<!-- P3 DISTRIBUCIÓN NORMAL -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="badge p">P3</span>
+    <span class="topic-head-title">Distribución Normal y Regla 68-95-99.7</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="ci">La <strong>distribución normal o gaussiana</strong> es la más importante en estadística. Completamente definida por <strong>μ</strong> (media) y <strong>σ</strong> (desviación típica). Muchos fenómenos naturales y errores de modelos la siguen.</p>
+
+    <!-- GRÁFICA REGLA 68-95-99.7 -->
+    <div class="chart-wrap">
+      <div class="chart-title">Regla empírica 68 — 95 — 99.7</div>
+      <canvas id="ruleCanvas" height="160"></canvas>
+    </div>
+
+    <div class="cg">
+      <div class="ci2"><div class="ci2-title" style="color:var(--y)">¿Por qué normalizar?</div><p>Muchos algoritmos asumen features en escala similar. Un feature de 0–1 y otro de 0–1.000.000 hará que el modelo ignore el primero. StandardScaler transforma a μ=0, σ=1.</p></div>
+      <div class="ci2"><div class="ci2-title" style="color:var(--p)">Test de normalidad</div><p>Shapiro-Wilk o K-S test comprueban si tus datos siguen una normal. Si no la siguen, algunos algoritmos (regresión) perderán parte de su validez teórica.</p></div>
+    </div>
+    <div><div class="ml-label">Conexión con ML</div><div class="ml-pills"><span class="pill p">StandardScaler / MinMaxScaler</span><span class="pill p">Regresión lineal</span><span class="pill b">Modelos generativos (VAE, GAN)</span></div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ PRÁCTICA OBLIGATORIA ═══════════ -->
+<div class="sec-title">
+  <div class="sec-icon b">🧪</div>
+  <div><div class="sec-h">Práctica: Titanic</div><div class="sec-sub">Probabilidad empírica e intervalos de confianza</div></div>
+</div>
+
+<div class="ctx" style="border-left-color:var(--b);background:rgba(71,200,255,.03);">
+  <strong>Contexto:</strong> Usamos el dataset Titanic para calcular probabilidades empíricas y aplicar inferencia estadística. La clave: diferencia entre probabilidad puntual (de la muestra) y rango poblacional (con IC).</div>
+
+<div class="practice-block">
+  <div class="practice-title">🚢 Ejercicios Titanic — Soluciones explicadas</div>
+
+  <div class="pq">
+    <div class="practice-q">1. ¿Cuál es la probabilidad de supervivencia de un niño?</div>
+    <div class="practice-code">sobrevive = df_titanic.alive == 'yes'
+es_child  = df_titanic.who == 'child'
+
+p = len(df_titanic[sobrevive & es_child]) / len(df_titanic[es_child])
+print(f"P(supervivencia | niño) = {p:.2%}")
+
+# Versión idiomática
+df_titanic.loc[es_child].alive.value_counts(True)['yes']</div>
+    <button class="show-answer" onclick="showAns(this)">Ver respuesta y lógica</button>
+    <div class="practice-answer">
+      <strong>Probabilidad ≈ 59.0%</strong> — Los niños tenían prioridad en los botes salvavidas ("mujeres y niños primero"). Esta es una <em>probabilidad empírica</em>: ratio directo en la muestra. La fórmula es simplemente P(A|B) = casos(A∩B) / casos(B), es decir, probabilidad condicionada.
+    </div>
+  </div>
+
+  <div class="pq">
+    <div class="practice-q">2. ¿Cuál es la probabilidad de que una mujer viajase sola?</div>
+    <div class="practice-code">es_mujer   = df_titanic.who == 'woman'
+viaja_sola = df_titanic.alone == True
+
+p = len(df_titanic[es_mujer & viaja_sola]) / len(df_titanic[es_mujer])
+print(f"P(sola | mujer) = {p:.2%}")</div>
+    <button class="show-answer" onclick="showAns(this)">Ver respuesta y lógica</button>
+    <div class="practice-answer">
+      <strong>Probabilidad ≈ 40.8%</strong> — De nuevo probabilidad condicionada: dado que es mujer, ¿cuántas van solas? Nota que la condición va en el denominador: el total de mujeres, no el total de pasajeros.
+    </div>
+  </div>
+
+  <div class="pq">
+    <div class="practice-q">3. ¿Probabilidad de supervivencia: hombre, 30–40 años, Southampton, billete gratuito?</div>
+    <div class="practice-code">condicion = (
+    (df_titanic.who == 'man') &
+    (df_titanic.age.between(30, 40)) &
+    (df_titanic.embark_town == 'Southampton') &
+    (df_titanic.fare == 0)
+)
+p = df_titanic.loc[condicion].alive.value_counts(True).get('yes', 0)
+print(f"P = {p:.2%}")</div>
+    <button class="show-answer" onclick="showAns(this)">Ver respuesta y lógica</button>
+    <div class="practice-answer">
+      <strong>Probabilidad = 0.0%</strong> — Ninguno de los hombres de ese perfil sobrevivió en la muestra. Importante: muestra muy pequeña → resultado poco fiable estadísticamente. Con muestras pequeñas, el IC será muy amplio.
+    </div>
+  </div>
+
+  <div class="pq">
+    <div class="practice-q">5. ¿Cuál sería el rango IC al 95% para P(supervivencia | viaja solo)?</div>
+    <div class="practice-code"># Cálculo manual (fórmula de Wilson simplificada)
+from statsmodels.stats.proportion import proportion_confint
+import numpy as np
+
+viaja_sola = df_titanic.alone == True
+n     = len(df_titanic[viaja_sola])
+x     = len(df_titanic[viaja_sola & (df_titanic.alive == 'yes')])
+p_hat = x / n
+
+# Método directo
+ic = proportion_confint(x, n, alpha=0.05, method='wilson')
+print(f"p̂ = {p_hat:.3f}")
+print(f"IC 95% = ({ic[0]:.3f}, {ic[1]:.3f})")
+
+# O a mano: p̂ ± 1.96 × √(p̂(1-p̂)/n)
+se  = np.sqrt(p_hat * (1 - p_hat) / n)
+ic2 = (p_hat - 1.96*se, p_hat + 1.96*se)
+print(f"IC manual ≈ {ic2}")</div>
+    <button class="show-answer" onclick="showAns(this)">Ver respuesta y lógica</button>
+    <div class="practice-answer">
+      <strong>IC 95% ≈ (0.367, 0.449)</strong> — El 1.96 es el valor z que deja el 2.5% en cada cola de una normal estándar. Interpretación correcta: "Si repitiésemos el muestreo 100 veces, en 95 de ellas el IC construido contendría la proporción real de la población". No significa "hay 95% de probabilidad de que el valor esté en este rango".
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ PRÁCTICA LIFE SAT ═══════════ -->
+<div class="sec-title">
+  <div class="sec-icon b">📈</div>
+  <div><div class="sec-h">Práctica: Life Satisfaction</div><div class="sec-sub">Tests de hipótesis con scipy</div></div>
+</div>
+
+<div class="ctx" style="border-left-color:var(--b);background:rgba(71,200,255,.03);">
+  <strong>Tests de hipótesis:</strong> Contrastan si una afirmación sobre la población es compatible con los datos. El <strong>p-value</strong> responde: "¿Qué probabilidad hay de obtener estos datos si la hipótesis nula (H₀) fuera cierta?"</div>
+
+<!-- FÓRMULAS TESTS -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="badge b">T</span>
+    <span class="topic-head-title">Tests de Hipótesis — Fórmulas y Lógica</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+      <div class="formula-box" style="border-color:rgba(71,200,255,.2);">
+        <div class="formula-label" style="color:var(--b)">T-test de una muestra</div>
+        <div class="formula-main">t = (x̄ - μ₀) / (s / √n)</div>
+        <div class="formula-parts">
+          <div class="fp"><code style="color:var(--b)">x̄</code> media muestral</div>
+          <div class="fp"><code style="color:var(--b)">μ₀</code> valor hipotético (H₀)</div>
+          <div class="fp"><code style="color:var(--b)">s</code> desviación típica muestral</div>
+          <div class="fp"><code style="color:var(--b)">n</code> tamaño de muestra</div>
+          <div class="fp" style="width:100%;color:var(--b);font-size:.71rem;">scipy: ttest_1samp(a=datos, popmean=μ₀, alternative='less')</div>
+        </div>
+      </div>
+      <div class="formula-box" style="border-color:rgba(71,200,255,.2);">
+        <div class="formula-label" style="color:var(--b)">Lógica del p-value</div>
+        <div style="margin-top:.5rem;">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;">
+            <div style="width:12px;height:12px;border-radius:50%;background:var(--g);flex-shrink:0;"></div>
+            <span style="font-size:.75rem;color:var(--muted2);">p &lt; α → <strong style="color:var(--g)">rechazar H₀</strong> (evidencia estadística)</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;">
+            <div style="width:12px;height:12px;border-radius:50%;background:var(--p);flex-shrink:0;"></div>
+            <span style="font-size:.75rem;color:var(--muted2);">p ≥ α → <strong style="color:var(--p)">no rechazar H₀</strong> (sin evidencia suficiente)</span>
+          </div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.6rem;">α típico: 0.05 (95% confianza) o 0.01 (99% confianza)</div>
+          <div style="font-size:.72rem;color:var(--p);margin-top:.4rem;">⚠️ No rechazar H₀ ≠ H₀ es verdad. Solo que no hay evidencia suficiente para rechazarla.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRÁFICA P-VALUE -->
+    <div class="chart-wrap">
+      <div class="chart-title">Visualización del p-value en un test unilateral (alternative='less')</div>
+      <canvas id="pvalCanvas" height="140"></canvas>
+    </div>
+
+    <div class="practice-block">
+      <div class="practice-title">📈 Life Satisfaction — Soluciones</div>
+
+      <div class="pq">
+        <div class="practice-q">1. ¿Podemos asegurar con 99% de confianza que la satisfacción media del mundo es menor de 7?</div>
+        <div class="practice-code">resultado = scipy.stats.ttest_1samp(
+    a         = df_lifesat['Life satisfaction'],
+    popmean   = 7,
+    alternative = "less"   # H₁: media < 7
+)
+# α = 0.01 para 99% de confianza
+if resultado.pvalue < 0.01:
+    print("Se rechaza H₀: media < 7 con 99% de confianza")
+else:
+    print("No hay evidencia suficiente al 99%")</div>
+        <button class="show-answer" onclick="showAns(this)">Ver respuesta y lógica</button>
+        <div class="practice-answer">
+          <strong>H₀: μ = 7 | H₁: μ &lt; 7</strong> (test unilateral por la izquierda). El resultado depende del dataset, pero con datos reales del mundo la media de satisfacción es ~5.4, muy por debajo de 7, por lo que p &lt; 0.01 y <strong>se rechaza H₀</strong>. α = 0.01 porque queremos 99% de confianza (1 - α = 0.99).
+        </div>
+      </div>
+
+      <div class="pq">
+        <div class="practice-q">2. ¿Qué satisfacción media esperaríamos para países con esperanza de vida &gt;65 y empleo &gt;60%?</div>
+        <div class="practice-code">subset = df_lifesat[
+    (df_lifesat['Life expectancy'] > 65) &
+    (df_lifesat['Employment rate'] > 60)
+]
+media = subset['Life satisfaction'].mean()
+print(f"Media esperada: {media:.2f}")</div>
+        <button class="show-answer" onclick="showAns(this)">Ver respuesta y lógica</button>
+        <div class="practice-answer">
+          <strong>Media ≈ 6.8 — 7.2</strong> (países desarrollados). Nota que son <em>umbrales</em>, no rangos: "mayor que 65" y "mayor que 60". El filtro con & requiere paréntesis en pandas porque el operador de comparación tiene menos precedencia que &.
+        </div>
+      </div>
+
+      <div class="pq">
+        <div class="practice-q">3. ¿Probabilidad de &gt;6 puntos para ese subconjunto de países?</div>
+        <div class="practice-code">probabilidad = (subset['Life satisfaction'] > 6).mean()
+# .mean() sobre booleanos = fracción de True = probabilidad empírica
+print(f"P(satisfacción > 6) = {probabilidad:.2%}")</div>
+        <button class="show-answer" onclick="showAns(this)">Ver respuesta y lógica</button>
+        <div class="practice-answer">
+          <strong>P ≈ 65–75%</strong>. El truco de <code>.mean()</code> sobre un booleano es elegante: suma los True (que valen 1) y divide entre n, dando directamente la proporción. Equivalente a <code>len(subset[cond]) / len(subset)</code>.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ EXTRA CONTRINTUITIVIDAD ═══════════ -->
+<div class="sec-title">
+  <div class="sec-icon g">🎯</div>
+  <div><div class="sec-h">Extra: La Contraintuitividad de la Probabilidad</div><div class="sec-sub">Cumpleaños y Monty Hall</div></div>
+</div>
+
+<!-- BIRTHDAY PARADOX -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="badge g">E1</span>
+    <span class="topic-head-title">Paradoja del Cumpleaños — ¿Aceptas la apuesta?</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="ci">En una fiesta de 50 personas, ¿hay al menos 2 con el mismo cumpleaños? Tu amigo apuesta que sí. ¿Deberías aceptar la apuesta?</p>
+
+    <div class="formula-box">
+      <div class="formula-label">P(al menos 2 coincidan) = 1 - P(todos distintos)</div>
+      <div class="formula-main">P(coincidencia) = 1 - (365/365 × 364/365 × … × (365-n+1)/365)</div>
+      <div class="formula-parts">
+        <div class="fp" style="width:100%;color:#9a9aac;font-size:.73rem;">Con n=23 personas: P ≈ 50.7% · Con n=50 personas: P ≈ 97.0%</div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Probabilidad de coincidencia de cumpleaños según el número de personas</div>
+      <label style="font-size:.73rem;color:var(--muted2);font-family:'DM Mono',monospace;display:block;margin-bottom:.5rem;">
+        Personas en la fiesta: <span id="bdayN" style="color:var(--g);font-weight:bold;">50</span>
+        → P(coincidencia) = <span id="bdayP" style="color:var(--y);font-weight:bold;">—</span>
+      </label>
+      <input type="range" class="bday-slider" id="bdaySlider" min="2" max="70" value="50" oninput="updateBday()">
+      <canvas id="bdayCanvas" height="160" style="margin-top:.6rem;"></canvas>
+    </div>
+
+    <div class="analogy"><span>🎂</span><p><strong>Respuesta:</strong> Con 50 personas, la probabilidad de que haya coincidencia es ~97%. <strong>No deberías aceptar la apuesta</strong> — tu amigo tiene casi toda la ventaja. El umbral donde hay 50/50 es solo 23 personas, lo que sorprende a casi todo el mundo.</p></div>
+  </div>
+</div>
+
+<!-- MONTY HALL -->
+<div class="topic-card">
+  <div class="topic-head" onclick="toggle(this)">
+    <span class="badge g">E2</span>
+    <span class="topic-head-title">El Dilema de Monty Hall — ¿Cambias de puerta?</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="topic-body">
+    <p class="ci">3 puertas: 1 Ferrari, 2 cabras. Eliges una. El presentador abre una que tiene cabra. ¿Cambias de puerta o te quedas?</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.8rem;">
+      <div class="formula-box">
+        <div class="formula-label">Si te quedas</div>
+        <div class="formula-main" style="font-size:.9rem;">P(ganar) = 1/3</div>
+        <div class="formula-parts"><div class="fp" style="width:100%;color:#9a9aac;">La puerta original tenía 1/3 de probabilidad y no cambia.</div></div>
+      </div>
+      <div class="formula-box" style="border-color:rgba(124,255,203,.3);">
+        <div class="formula-label" style="color:var(--g)">Si cambias ← CORRECTO</div>
+        <div class="formula-main" style="font-size:.9rem;color:var(--g);">P(ganar) = 2/3</div>
+        <div class="formula-parts"><div class="fp" style="width:100%;color:var(--g);">La probabilidad de la puerta descartada "se traslada" a la que no elegiste.</div></div>
+      </div>
+    </div>
+
+    <!-- JUEGO INTERACTIVO -->
+    <div class="mh-game">
+      <div style="font-family:'Syne',sans-serif;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--g);margin-bottom:.7rem;">🎮 Juega y compruébalo</div>
+      <div style="font-size:.8rem;color:var(--muted2);margin-bottom:.5rem;" id="mhInstructions">Elige una puerta para empezar</div>
+      <div class="mh-doors" id="mhDoors">
+        <div class="mh-door" onclick="chooseDoor(0)" id="door0"><span id="d0Icon">🚪</span><span>#1</span></div>
+        <div class="mh-door" onclick="chooseDoor(1)" id="door1"><span id="d1Icon">🚪</span><span>#2</span></div>
+        <div class="mh-door" onclick="chooseDoor(2)" id="door2"><span id="d2Icon">🚪</span><span>#3</span></div>
+      </div>
+      <div class="mh-status" id="mhStatus"></div>
+      <div class="mh-btns" id="mhBtns"></div>
+      <div class="mh-stats">
+        <div class="mh-stat">
+          <div class="mh-stat-label">Quedándose</div>
+          <div class="mh-stat-val" id="stayStats" style="color:var(--p);">0/0</div>
+        </div>
+        <div class="mh-stat">
+          <div class="mh-stat-label">Cambiando</div>
+          <div class="mh-stat-val" id="switchStats" style="color:var(--g);">0/0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ROADMAP -->
+<div style="border:1px solid rgba(232,255,71,.18);border-radius:12px;padding:1.6rem;background:rgba(232,255,71,.02);margin-bottom:1rem;">
+  <div class="label">Cierre del módulo</div>
+  <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin:0.5rem 0 1rem;">De estadística a Machine Learning: el hilo conductor</div>
+  <div class="roadmap">
+    <div class="rs"><div class="rd">1</div><div class="rc"><div class="rt">Tienes datos → Estadística inferencial</div><div class="rdesc">EDA, detección de sesgos, medias, distribuciones. Antes de entrenar, siempre entiendes los datos.</div></div></div>
+    <div class="rs"><div class="rd">2</div><div class="rc"><div class="rt">Entrenas → El modelo aprende probabilidades</div><div class="rdesc">Internamente los algoritmos maximizan una probabilidad o minimizan una función de pérdida derivada de ella (cross-entropy, log-loss).</div></div></div>
+    <div class="rs"><div class="rd">3</div><div class="rc"><div class="rt">El modelo predice → Output probabilístico</div><div class="rdesc">El modelo no decide solo: te da una probabilidad y tú eliges el umbral. "Si P &gt; 0.5, marca como spam." Ese umbral tiene consecuencias reales (falsos positivos vs falsos negativos).</div></div></div>
+    <div class="rs"><div class="rd">4</div><div class="rc"><div class="rt">Evalúas → Métricas estadísticas</div><div class="rdesc">Accuracy, F1, AUC-ROC… todas son métricas estadísticas que miden cuán bien el modelo estima probabilidades sobre datos nuevos.</div></div></div>
+  </div>
+</div>
+
+<footer>Bootcamp · Estadística Inferencial & Probabilidad · Práctica Titanic & Life Satisfaction · Generado con Claude</footer>
+
+<script>
+// ── TOGGLE CARDS ──
+function toggle(head){head.closest('.topic-card').classList.toggle('open');}
+
+// ── SHOW ANSWER ──
+function showAns(btn){
+  const ans = btn.nextElementSibling;
+  ans.style.display = ans.style.display==='block'?'none':'block';
+  btn.textContent = ans.style.display==='block'?'Ocultar respuesta':'Ver respuesta y lógica';
+}
+
+// ── CANVAS UTILS ──
+function hex2rgba(hex, a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function normalPDF(x,mu,sigma){return Math.exp(-0.5*((x-mu)/sigma)**2)/(sigma*Math.sqrt(2*Math.PI));}
+
+// ── NORMAL DISTRIBUTION CANVAS ──
+function drawNormal(){
+  const canvas=document.getElementById('normalCanvas');
+  if(!canvas)return;
+  const W=canvas.offsetWidth||700, H=160;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  const mu=parseFloat(document.getElementById('muSlider').value);
+  const sigma=parseFloat(document.getElementById('sigmaSlider').value);
+  document.getElementById('muVal').textContent=mu.toFixed(1);
+  document.getElementById('sigmaVal').textContent=sigma.toFixed(1);
+  ctx.clearRect(0,0,W,H);
+  const xMin=-5,xMax=5,pad=30;
+  const sx=x=>(x-xMin)/(xMax-xMin)*(W-2*pad)+pad;
+  const sy=y=>H-10-y*(H-20)/0.6;
+  // fill area ±1σ
+  ctx.beginPath();
+  for(let i=0;i<=300;i++){const x=xMin+(xMax-xMin)*i/300;const y=normalPDF(x,mu,sigma);if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}
+  ctx.lineTo(sx(mu+sigma),sy(0));ctx.lineTo(sx(mu-sigma),sy(0));ctx.closePath();
+  ctx.fillStyle='rgba(232,255,71,0.12)'; ctx.fill();
+  // main curve
+  ctx.beginPath();ctx.strokeStyle='#e8ff47';ctx.lineWidth=2;
+  for(let i=0;i<=300;i++){const x=xMin+(xMax-xMin)*i/300;const y=normalPDF(x,mu,sigma);if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}
+  ctx.stroke();
+  // mean line
+  ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.moveTo(sx(mu),H-10);ctx.lineTo(sx(mu),10);ctx.stroke();ctx.setLineDash([]);
+  // labels
+  ctx.fillStyle='rgba(232,255,71,0.7)';ctx.font='11px DM Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('μ='+mu.toFixed(1),sx(mu),20);
+  ctx.fillStyle='rgba(255,77,109,0.7)';
+  if(sx(mu+sigma)<W-5) ctx.fillText('+σ',sx(mu+sigma),35);
+  if(sx(mu-sigma)>5) ctx.fillText('-σ',sx(mu-sigma),35);
+  // axis
+  ctx.beginPath();ctx.strokeStyle='#2a2a32';ctx.lineWidth=1;
+  ctx.moveTo(pad,H-10);ctx.lineTo(W-pad,H-10);ctx.stroke();
+  for(let v=-4;v<=4;v++){ctx.fillStyle='#5a5a6a';ctx.font='9px DM Mono,monospace';ctx.textAlign='center';ctx.fillText(v,sx(v),H-2);}
+}
+
+// ── 68-95-99.7 RULE CANVAS ──
+function drawRule(){
+  const canvas=document.getElementById('ruleCanvas');
+  if(!canvas)return;
+  const W=canvas.offsetWidth||700,H=160;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const mu=0,sigma=1,xMin=-4,xMax=4,pad=40;
+  const sx=x=>(x-xMin)/(xMax-xMin)*(W-2*pad)+pad;
+  const sy=y=>H-25-y*(H-45)/0.42;
+  // fills
+  const zones=[
+    {lo:-3,hi:3,color:'rgba(255,77,109,0.08)',label:'99.7%',y:H-8},
+    {lo:-2,hi:2,color:'rgba(71,200,255,0.10)',label:'95%',y:H-18},
+    {lo:-1,hi:1,color:'rgba(232,255,71,0.15)',label:'68%',y:H-28},
+  ];
+  zones.forEach(z=>{
+    ctx.beginPath();
+    for(let i=0;i<=200;i++){const x=z.lo+(z.hi-z.lo)*i/200;const y=normalPDF(x,mu,sigma);if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}
+    ctx.lineTo(sx(z.hi),sy(0));ctx.lineTo(sx(z.lo),sy(0));ctx.closePath();
+    ctx.fillStyle=z.color;ctx.fill();
+  });
+  // curve
+  ctx.beginPath();ctx.strokeStyle='#e8ff47';ctx.lineWidth=2;
+  for(let i=0;i<=300;i++){const x=xMin+(xMax-xMin)*i/300;const y=normalPDF(x,mu,sigma);if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}
+  ctx.stroke();
+  // labels
+  const zoneLabels=[
+    {x:0,text:'68%',color:'rgba(232,255,71,.9)',y:sy(normalPDF(0,0,1))+18},
+    {x:1.6,text:'95%',color:'rgba(71,200,255,.8)',y:55},
+    {x:2.7,text:'99.7%',color:'rgba(255,77,109,.8)',y:38},
+  ];
+  zoneLabels.forEach(l=>{ctx.fillStyle=l.color;ctx.font='bold 10px Syne,sans-serif';ctx.textAlign='center';ctx.fillText(l.text,sx(l.x),l.y);});
+  // sigma markers
+  [-3,-2,-1,0,1,2,3].forEach(v=>{
+    ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.moveTo(sx(v),10);ctx.lineTo(sx(v),H-25);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#6a6a8a';ctx.font='9px DM Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(v===0?'μ':v+'σ',sx(v),H-12);
+  });
+}
+
+// ── TCL CANVAS ──
+function drawTCL(){
+  const canvas=document.getElementById('tclCanvas');
+  if(!canvas)return;
+  const W=canvas.offsetWidth||700,H=150;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  // sesgada (exponencial)
+  const skewPDF=x=>x<0?0:Math.exp(-x*1.5)*1.5;
+  ctx.beginPath();ctx.strokeStyle='#ff4d6d';ctx.lineWidth=2;
+  for(let i=0;i<=200;i++){
+    const x=i/200*6;const y=skewPDF(x);
+    const px=30+i*(W/2-50)/200;const py=H-20-y*(H-40)/1.5;
+    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  // normal (TCL result)
+  const mu2=3,sig2=0.8;
+  ctx.beginPath();ctx.strokeStyle='#e8ff47';ctx.lineWidth=2.5;
+  for(let i=0;i<=200;i++){
+    const x=mu2-3.5*sig2+i*7*sig2/200;const y=normalPDF(x,mu2,sig2);
+    const px=W/2+10+i*(W/2-40)/200;const py=H-20-y*(H-40)/0.55;
+    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  // labels
+  ctx.fillStyle='rgba(255,77,109,.7)';ctx.font='10px Syne,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Distribución original',W/4,H-5);
+  ctx.fillStyle='rgba(232,255,71,.7)';
+  ctx.fillText('Distribución de medias (≥30 muestras)',W*3/4,H-5);
+  ctx.fillStyle='#3a3a5a';ctx.font='bold 14px sans-serif';ctx.textAlign='center';
+  ctx.fillText('→',W/2,H/2);
+  ctx.fillStyle='#5a5a8a';ctx.font='8px DM Mono,monospace';ctx.fillText('muestras repetidas',W/2,H/2+14);
+}
+
+// ── P-VALUE CANVAS ──
+function drawPVal(){
+  const canvas=document.getElementById('pvalCanvas');
+  if(!canvas)return;
+  const W=canvas.offsetWidth||700,H=140;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const mu=0,sigma=1,xMin=-4,xMax=4,pad=40;
+  const sx=x=>(x-xMin)/(xMax-xMin)*(W-2*pad)+pad;
+  const sy=y=>H-22-y*(H-38)/0.42;
+  // fill p-value area (left tail, t=-1.5 example)
+  const tStat=-1.8;
+  ctx.beginPath();
+  for(let i=0;i<=200;i++){const x=xMin+(tStat-xMin)*i/200;const y=normalPDF(x,mu,sigma);if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}
+  ctx.lineTo(sx(tStat),sy(0));ctx.lineTo(sx(xMin),sy(0));ctx.closePath();
+  ctx.fillStyle='rgba(255,77,109,.25)';ctx.fill();
+  // curve
+  ctx.beginPath();ctx.strokeStyle='#e8ff47';ctx.lineWidth=2;
+  for(let i=0;i<=300;i++){const x=xMin+(xMax-xMin)*i/300;const y=normalPDF(x,mu,sigma);if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}
+  ctx.stroke();
+  // t-stat line
+  ctx.beginPath();ctx.strokeStyle='#ff4d6d';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+  ctx.moveTo(sx(tStat),10);ctx.lineTo(sx(tStat),H-22);ctx.stroke();ctx.setLineDash([]);
+  // H0 line
+  ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.moveTo(sx(0),10);ctx.lineTo(sx(0),H-22);ctx.stroke();ctx.setLineDash([]);
+  // labels
+  ctx.fillStyle='#ff4d6d';ctx.font='bold 10px Syne,sans-serif';ctx.textAlign='center';ctx.fillText('t-stat',sx(tStat),H-10);
+  ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='9px DM Mono,monospace';ctx.fillText('H₀(μ₀)',sx(0),H-10);
+  ctx.fillStyle='rgba(255,77,109,.8)';ctx.font='9px Syne,sans-serif';ctx.textAlign='left';ctx.fillText('p-value = P(t < t-stat | H₀)',sx(-3.8),22);
+  ctx.fillStyle='rgba(124,255,203,.7)';ctx.font='9px DM Mono,monospace';ctx.textAlign='right';
+  ctx.fillText('Si p < α → rechazar H₀',W-pad+5,22);
+}
+
+// ── IC CALCULATOR ──
+function calcIC(){
+  const x=parseInt(document.getElementById('icX').value)||0;
+  const n=parseInt(document.getElementById('icN').value)||1;
+  const conf=parseFloat(document.getElementById('icConf').value)||95;
+  if(x<0||n<1||x>n){document.getElementById('icResult').textContent='Valores inválidos';return;}
+  const alpha=1-conf/100;
+  const z={90:1.645,95:1.96,99:2.576}[Math.round(conf)]||1.96;
+  const phat=x/n;
+  const se=Math.sqrt(phat*(1-phat)/n);
+  const lo=Math.max(0,phat-z*se).toFixed(4);
+  const hi=Math.min(1,phat+z*se).toFixed(4);
+  document.getElementById('icResult').innerHTML=
+    `p̂ = ${phat.toFixed(4)} (${(phat*100).toFixed(1)}%)\n`+
+    `IC ${conf}%  →  [${lo},  ${hi}]\n`+
+    `Interpretación: con ${conf}% de confianza, P(supervivencia | solo) ∈ [${(lo*100).toFixed(1)}%, ${(hi*100).toFixed(1)}%]`;
+}
+
+// ── BIRTHDAY PARADOX ──
+function birthdayProb(n){
+  let p=1;for(let i=0;i<n;i++) p*=(365-i)/365;
+  return 1-p;
+}
+function drawBirthday(){
+  const canvas=document.getElementById('bdayCanvas');
+  if(!canvas)return;
+  const W=canvas.offsetWidth||700,H=160;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const pad={l:35,r:15,t:10,b:22};
+  const nSel=parseInt(document.getElementById('bdaySlider').value);
+  // axes
+  ctx.strokeStyle='#2a2a32';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke();
+  // curve
+  ctx.beginPath();ctx.strokeStyle='#7cffcb';ctx.lineWidth=2;
+  for(let n=2;n<=70;n++){
+    const p=birthdayProb(n);
+    const px=pad.l+(n-2)/(70-2)*(W-pad.l-pad.r);
+    const py=H-pad.b-p*(H-pad.t-pad.b);
+    if(n===2)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  // 50% line
+  ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  const y50=H-pad.b-0.5*(H-pad.t-pad.b);
+  ctx.moveTo(pad.l,y50);ctx.lineTo(W-pad.r,y50);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='8px DM Mono,monospace';ctx.textAlign='left';ctx.fillText('50%',3,y50+3);
+  // selected point
+  const pSel=birthdayProb(nSel);
+  const pxSel=pad.l+(nSel-2)/(70-2)*(W-pad.l-pad.r);
+  const pySel=H-pad.b-pSel*(H-pad.t-pad.b);
+  ctx.beginPath();ctx.arc(pxSel,pySel,5,0,Math.PI*2);ctx.fillStyle='#e8ff47';ctx.fill();
+  ctx.beginPath();ctx.strokeStyle='rgba(232,255,71,.4)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.moveTo(pxSel,pySel);ctx.lineTo(pxSel,H-pad.b);ctx.stroke();ctx.setLineDash([]);
+  // x labels
+  [10,20,30,40,50,60,70].forEach(v=>{
+    const px=pad.l+(v-2)/(70-2)*(W-pad.l-pad.r);
+    ctx.fillStyle='#5a5a7a';ctx.font='8px DM Mono,monospace';ctx.textAlign='center';ctx.fillText(v,px,H-pad.b+10);
+  });
+  ctx.fillStyle='#5a5a7a';ctx.font='8px DM Mono,monospace';ctx.textAlign='center';ctx.fillText('número de personas',W/2,H-2);
+}
+function updateBday(){
+  const n=parseInt(document.getElementById('bdaySlider').value);
+  const p=birthdayProb(n);
+  document.getElementById('bdayN').textContent=n;
+  document.getElementById('bdayP').textContent=(p*100).toFixed(1)+'%';
+  drawBirthday();
+}
+
+// ── MONTY HALL GAME ──
+let mhState={ferrari:0,chosen:-1,revealed:-1,stayW:0,stayT:0,switchW:0,switchT:0,phase:'choose'};
+function resetMH(){
+  mhState.ferrari=Math.floor(Math.random()*3);
+  mhState.chosen=-1;mhState.revealed=-1;mhState.phase='choose';
+  for(let i=0;i<3;i++){
+    const d=document.getElementById('door'+i);
+    d.classList.remove('selected','revealed','winner','loser','disabled');
+    document.getElementById('d'+i+'Icon').textContent='🚪';
+  }
+  document.getElementById('mhInstructions').textContent='Elige una puerta para empezar';
+  document.getElementById('mhStatus').textContent='';
+  document.getElementById('mhBtns').innerHTML='';
+  updateMHStats();
+}
+function chooseDoor(i){
+  if(mhState.phase!=='choose')return;
+  mhState.chosen=i;mhState.phase='reveal';
+  document.getElementById('door'+i).classList.add('selected');
+  // reveal a goat door
+  let revealed=-1;
+  for(let j=0;j<3;j++){if(j!==i&&j!==mhState.ferrari){revealed=j;break;}}
+  mhState.revealed=revealed;
+  document.getElementById('door'+revealed).classList.add('revealed','disabled');
+  document.getElementById('d'+revealed+'Icon').textContent='🐐';
+  document.getElementById('mhStatus').textContent='El presentador abre la puerta #'+(revealed+1)+' (cabra). ¿Cambias de puerta?';
+  const other=[0,1,2].find(j=>j!==i&&j!==revealed);
+  const btns=document.getElementById('mhBtns');
+  btns.innerHTML=`<button class="mh-btn stay" onclick="decideMH('stay')">Quedarme (#${i+1})</button><button class="mh-btn switch" onclick="decideMH('switch',${other})">Cambiar (#${other+1})</button>`;
+}
+function decideMH(decision,other){
+  mhState.phase='done';
+  document.getElementById('mhBtns').innerHTML='';
+  let finalDoor=decision==='stay'?mhState.chosen:other;
+  const won=finalDoor===mhState.ferrari;
+  // reveal all
+  for(let i=0;i<3;i++){
+    const icon=document.getElementById('d'+i+'Icon');
+    icon.textContent=i===mhState.ferrari?'🏎️':'🐐';
+    const d=document.getElementById('door'+i);
+    d.classList.add('disabled');
+    if(i===finalDoor) d.classList.add(won?'winner':'loser');
+  }
+  if(decision==='stay'){mhState.stayT++;if(won)mhState.stayW++;}
+  else{mhState.switchT++;if(won)mhState.switchW++;}
+  document.getElementById('mhStatus').textContent=won?'🏆 ¡Has ganado el Ferrari!':'😢 Era una cabra. El Ferrari estaba en la puerta #'+(mhState.ferrari+1);
+  updateMHStats();
+  setTimeout(()=>{
+    document.getElementById('mhBtns').innerHTML='<button class="mh-btn reset" onclick="resetMH()">Jugar de nuevo</button>';
+  },800);
+}
+function updateMHStats(){
+  const s=mhState;
+  const stayPct=s.stayT>0?Math.round(s.stayW/s.stayT*100)+'%':'—';
+  const swPct=s.switchT>0?Math.round(s.switchW/s.switchT*100)+'%':'—';
+  document.getElementById('stayStats').textContent=`${s.stayW}/${s.stayT} (${stayPct})`;
+  document.getElementById('switchStats').textContent=`${s.switchW}/${s.switchT} (${swPct})`;
+}
+
+// ── INIT ──
+function initCharts(){
+  drawNormal(); drawRule(); drawTCL(); drawPVal();
+  updateBday(); calcIC(); resetMH();
+}
+
+// Delay to let canvas elements render
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',()=>setTimeout(initCharts,150));}
+else{setTimeout(initCharts,150);}
+window.addEventListener('resize',()=>{drawNormal();drawRule();drawTCL();drawPVal();drawBirthday();});
+</script>
+</body>
+</html>
