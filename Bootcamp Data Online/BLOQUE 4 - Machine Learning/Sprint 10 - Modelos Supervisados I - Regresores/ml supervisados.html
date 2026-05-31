@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Learning — Modelos de Aprendizaje Supervisado</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black: #0f0f0f;
+  --white: #f6f3ee;
+  --surface: #ffffff;
+  --gray-light: #eceae4;
+  --gray-mid: #c4c0b8;
+  --gray: #888580;
+  --red-mid: #E24B4A;
+  --red-light: #FCEBEB;
+  --red: #c8341a;
+  --blue-50: #E6F1FB;
+  --blue-800: #0C447C;
+  --blue-600: #185FA5;
+  --teal-50: #E1F5EE;
+  --teal-800: #085041;
+  --teal-600: #0F6E56;
+  --amber-50: #FAEEDA;
+  --amber-800: #633806;
+  --amber-600: #854F0B;
+  --purple-50: #EEEDFE;
+  --purple-800: #3C3489;
+  --purple-600: #534AB7;
+  --green-50: #EAF3DE;
+  --green-800: #27500A;
+  --green-600: #3B6D11;
+  --coral-50: #FAECE7;
+  --coral-800: #712B13;
+  --coral-600: #993C1D;
+}
+body { background: var(--white); color: var(--black); font-family: 'Syne', sans-serif; font-size: 15px; line-height: 1.6; }
+mono { font-family: 'DM Mono', monospace; }
+
+.hero {
+  background: var(--black); color: var(--white);
+  padding: 3.5rem 3rem 3rem; position: relative; overflow: hidden;
+}
+.hero::after {
+  content: 'SUP'; position: absolute; right: -1rem; bottom: -3rem;
+  font-size: 12rem; font-weight: 800; color: rgba(255,255,255,0.04);
+  line-height: 1; pointer-events: none; letter-spacing: -0.04em;
+}
+.eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red-mid); margin-bottom: 1rem; }
+.hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: .75rem; }
+.hero h1 em { color: var(--red-mid); font-style: normal; }
+.hero p { font-size: 14px; color: #aaa; max-width: 580px; line-height: 1.7; }
+
+/* NAV INDEX */
+.index-bar {
+  background: var(--gray-light); border-bottom: 1px solid var(--gray-mid);
+  padding: .75rem 3rem; display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;
+}
+.index-bar a {
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--gray); text-decoration: none;
+  padding: 4px 0; border-bottom: 2px solid transparent; transition: color .2s, border-color .2s;
+}
+.index-bar a:hover { color: var(--black); border-color: var(--black); }
+
+main { padding: 3rem; max-width: 940px; }
+
+/* SECTION */
+.section { margin-bottom: 3.5rem; scroll-margin-top: 2rem; }
+.section-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--gray); margin-bottom: .4rem; }
+.section h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: .75rem; padding-bottom: .75rem; border-bottom: 1.5px solid var(--black); }
+
+.intro { font-size: 14px; color: #333; line-height: 1.8; margin-bottom: 1.5rem; max-width: 720px; }
+
+/* TAG */
+.tag { display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; font-weight: 500; padding: 4px 10px; border-radius: 3px; margin-bottom: .75rem; }
+.tag-blue   { background: var(--blue-50);   color: var(--blue-800); }
+.tag-teal   { background: var(--teal-50);   color: var(--teal-800); }
+.tag-amber  { background: var(--amber-50);  color: var(--amber-800); }
+.tag-purple { background: var(--purple-50); color: var(--purple-800); }
+.tag-green  { background: var(--green-50);  color: var(--green-800); }
+.tag-coral  { background: var(--coral-50);  color: var(--coral-800); }
+.tag-red    { background: var(--red-light); color: var(--red); }
+
+/* CARDS */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--gray-mid); border: 1px solid var(--gray-mid); margin-bottom: 1.5rem; }
+.card { background: var(--surface); padding: 1.25rem; }
+.card-dark { background: var(--black); }
+.card-title { font-size: 13.5px; font-weight: 700; margin-bottom: .4rem; }
+.card-dark .card-title { color: var(--white); }
+.card-body { font-size: 12.5px; color: #555; line-height: 1.65; }
+.card-dark .card-body { color: #aaa; }
+.formula { display: inline-block; font-family: 'DM Mono', monospace; font-size: 11px; background: var(--gray-light); color: #333; padding: 4px 9px; border-radius: 3px; margin-top: .5rem; }
+.card-dark .formula { background: rgba(255,255,255,.08); color: #ddd; }
+
+/* CALLOUT */
+.callout { padding: 1rem 1.25rem; margin: 1rem 0; font-size: 13px; color: #333; line-height: 1.75; border-left: 3px solid var(--black); background: var(--gray-light); }
+.callout strong { font-weight: 700; }
+.callout-blue   { border-color: var(--blue-600);   background: var(--blue-50);   color: var(--blue-800); }
+.callout-teal   { border-color: var(--teal-600);   background: var(--teal-50);   color: var(--teal-800); }
+.callout-amber  { border-color: var(--amber-600);  background: var(--amber-50);  color: var(--amber-800); }
+.callout-purple { border-color: var(--purple-600); background: var(--purple-50); color: var(--purple-800); }
+.callout-green  { border-color: var(--green-600);  background: var(--green-50);  color: var(--green-800); }
+
+/* DIAGRAMS via SVG inline */
+.diagram-wrap { margin: 1.25rem 0; overflow-x: auto; }
+svg text { font-family: 'Syne', sans-serif; }
+
+/* TWO COL */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+@media(max-width:640px){ .two-col { grid-template-columns: 1fr; } }
+
+/* MODEL BLOCK */
+.model-block { border: 1px solid var(--gray-mid); background: var(--surface); margin-bottom: 1.5rem; overflow: hidden; }
+.model-header { padding: .85rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.model-name { font-size: 15px; font-weight: 700; }
+.model-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.badge { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; }
+.model-body { padding: 1.1rem 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.model-body-full { padding: 1.1rem 1.25rem; }
+@media(max-width:580px){ .model-body { grid-template-columns: 1fr; } }
+.cell-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--gray); margin-bottom: .3rem; }
+.cell-text { font-size: 12.5px; color: #444; line-height: 1.7; }
+.model-diagram { padding: 0 1.25rem 1.1rem; }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; margin: 1rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th { background: var(--black); color: var(--white); padding: 8px 12px; text-align: left; font-weight: 500; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--gray-light); color: #444; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: var(--gray-light); }
+td:first-child { font-weight: 600; color: var(--black); }
+
+/* HR */
+hr { border: none; border-top: 1.5px solid var(--black); margin: 3rem 0; }
+
+/* FOOTER */
+footer { background: var(--black); color: var(--white); padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+footer span { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--gray); }
+footer span b { color: var(--red-mid); font-weight: 500; }
+
+@media(max-width:640px){ .hero, main, .index-bar, footer { padding-left: 1.5rem; padding-right: 1.5rem; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <p class="eyebrow">Sprint 09–11 · The Bridge · Data Science</p>
+  <h1>Modelos de<br>aprendizaje <em>supervisado</em></h1>
+  <p>Guía completa de todos los modelos que vas a estudiar: qué hace cada uno, cuándo usarlo, cómo funciona por dentro y en qué se diferencia del anterior.</p>
+</header>
+
+<nav class="index-bar">
+  <a href="#intro">¿Qué es supervisado?</a>
+  <a href="#reglineal">Reg. Lineal</a>
+  <a href="#reglogistica">Reg. Logística</a>
+  <a href="#arboles">Árboles</a>
+  <a href="#rf">Random Forest</a>
+  <a href="#boosting">Boosting</a>
+  <a href="#svm">SVM</a>
+  <a href="#knn">K-NN</a>
+  <a href="#comparativa">Comparativa</a>
+</nav>
+
+<main>
+
+<!-- ══ INTRO ══ -->
+<div class="section" id="intro">
+  <div class="section-label">Concepto base</div>
+  <h2>¿Qué es el aprendizaje supervisado?</h2>
+  <p class="intro">En el aprendizaje supervisado, el modelo aprende a partir de ejemplos etiquetados: datos de entrada (features) con su respuesta correcta conocida (target). El objetivo es que, una vez entrenado, sea capaz de predecir el target para datos nuevos que nunca ha visto.</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="tag tag-blue" style="margin-bottom:.5rem">Regresión</div>
+      <div class="card-title">Predice un número continuo</div>
+      <div class="card-body">El target es un valor real. Ejemplos: precio de una casa, temperatura de mañana, salario esperado. El error se mide con MSE, RMSE o R².</div>
+    </div>
+    <div class="card">
+      <div class="tag tag-teal" style="margin-bottom:.5rem">Clasificación</div>
+      <div class="card-title">Predice una categoría</div>
+      <div class="card-body">El target es una clase discreta. Ejemplos: spam/no spam, diagnóstico médico, dígito 0–9. El error se mide con accuracy, F1, AUC-ROC.</div>
+    </div>
+    <div class="card card-dark">
+      <div class="card-title">Flujo siempre igual</div>
+      <div class="card-body">Datos etiquetados → EDA y selección de features → entrenamiento → evaluación → predicción en datos nuevos. Todos los modelos de esta guía siguen este flujo.</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 700 90" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:700px">
+      <rect x="0" y="20" width="120" height="48" rx="4" fill="#0f0f0f"/>
+      <text x="60" y="41" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Datos</text>
+      <text x="60" y="57" text-anchor="middle" font-size="10" fill="#888">con etiquetas</text>
+      <polygon points="128,44 144,44 136,54" fill="#c4c0b8"/>
+      <rect x="148" y="20" width="120" height="48" rx="4" fill="#E6F1FB"/>
+      <text x="208" y="41" text-anchor="middle" font-size="11" fill="#0C447C" font-weight="700">EDA + Features</text>
+      <text x="208" y="57" text-anchor="middle" font-size="10" fill="#185FA5">selección variables</text>
+      <polygon points="276,44 292,44 284,54" fill="#c4c0b8"/>
+      <rect x="296" y="20" width="120" height="48" rx="4" fill="#EEEDFE"/>
+      <text x="356" y="41" text-anchor="middle" font-size="11" fill="#3C3489" font-weight="700">Entrenamiento</text>
+      <text x="356" y="57" text-anchor="middle" font-size="10" fill="#534AB7">ajustar parámetros</text>
+      <polygon points="424,44 440,44 432,54" fill="#c4c0b8"/>
+      <rect x="444" y="20" width="120" height="48" rx="4" fill="#E1F5EE"/>
+      <text x="504" y="41" text-anchor="middle" font-size="11" fill="#085041" font-weight="700">Evaluación</text>
+      <text x="504" y="57" text-anchor="middle" font-size="10" fill="#0F6E56">métricas en test</text>
+      <polygon points="572,44 588,44 580,54" fill="#c4c0b8"/>
+      <rect x="592" y="20" width="108" height="48" rx="4" fill="#0f0f0f"/>
+      <text x="646" y="41" text-anchor="middle" font-size="11" fill="#E24B4A" font-weight="700">Predicción</text>
+      <text x="646" y="57" text-anchor="middle" font-size="10" fill="#888">datos nuevos</text>
+    </svg>
+  </div>
+</div>
+
+<hr>
+
+<!-- ══ REGRESIÓN LINEAL ══ -->
+<div class="section" id="reglineal">
+  <div class="section-label">Modelo 01</div>
+  <h2>Regresión Lineal</h2>
+  <p class="intro">El modelo más simple del aprendizaje supervisado. Asume que existe una relación lineal entre las features y el target: si subes una variable, el target sube o baja proporcionalmente. A pesar de su simplicidad, es la base matemática de casi todo lo demás.</p>
+
+  <div class="model-block">
+    <div class="model-header" style="background:var(--blue-50)">
+      <span class="model-name" style="color:var(--blue-800)">Regresión Lineal</span>
+      <div class="model-badges">
+        <span class="badge" style="background:var(--blue-800);color:#fff">Regresión</span>
+        <span class="badge" style="background:var(--blue-50);color:var(--blue-800);border:1px solid var(--blue-800)">Paramétrico</span>
+      </div>
+    </div>
+    <div class="model-body">
+      <div>
+        <div class="cell-label">Cómo funciona</div>
+        <div class="cell-text">Busca los coeficientes β₀, β₁… βₙ que mejor ajustan una recta (o hiperplano) a los datos. Lo hace minimizando la suma de los errores al cuadrado entre lo que predice y lo que es real.</div>
+        <div class="formula">ŷ = β₀ + β₁x₁ + β₂x₂ + … + βₙxₙ</div>
+      </div>
+      <div>
+        <div class="cell-label">Cuándo usarlo</div>
+        <div class="cell-text">Cuando la relación entre variables y target es aproximadamente lineal. Útil como primera aproximación. Muy interpretable: el coeficiente β₁ dice cuánto cambia y por cada unidad de x₁.</div>
+      </div>
+    </div>
+    <div class="model-diagram">
+      <svg viewBox="0 0 480 180" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:480px">
+        <rect x="0" y="0" width="480" height="180" rx="6" fill="#E6F1FB"/>
+        <line x1="40" y1="150" x2="440" y2="150" stroke="#185FA5" stroke-width="1.5"/>
+        <line x1="40" y1="20" x2="40" y2="155" stroke="#185FA5" stroke-width="1.5"/>
+        <text x="240" y="170" text-anchor="middle" font-size="11" fill="#185FA5">feature x</text>
+        <text x="16" y="90" text-anchor="middle" font-size="11" fill="#185FA5" transform="rotate(-90,16,90)">target y</text>
+        <circle cx="80" cy="130" r="4" fill="#0C447C" opacity=".7"/>
+        <circle cx="110" cy="120" r="4" fill="#0C447C" opacity=".7"/>
+        <circle cx="150" cy="110" r="4" fill="#0C447C" opacity=".7"/>
+        <circle cx="185" cy="100" r="4" fill="#0C447C" opacity=".7"/>
+        <circle cx="220" cy="88" r="4" fill="#0C447C" opacity=".7"/>
+        <circle cx="260" cy="80" r="4" fill="#0C447C" opacity=".7"/>
+        <circle cx="300" cy="68" r="4" fill="#0C447C" opacity=".7"/>
+        <circle cx="340" cy="58" r="4" fill="#0C447C" opacity=".7"/>
+        <circle cx="380" cy="48" r="4" fill="#0C447C" opacity=".7"/>
+        <circle cx="420" cy="38" r="4" fill="#0C447C" opacity=".7"/>
+        <circle cx="95" cy="112" r="4" fill="#0C447C" opacity=".5"/>
+        <circle cx="200" cy="105" r="4" fill="#0C447C" opacity=".5"/>
+        <circle cx="310" cy="75" r="4" fill="#0C447C" opacity=".5"/>
+        <line x1="60" y1="143" x2="430" y2="30" stroke="#E24B4A" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="340" y="26" font-size="11" fill="#E24B4A" font-weight="700">ŷ = β₀ + β₁x</text>
+        <line x1="220" y1="88" x2="220" y2="72" stroke="#E24B4A" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="228" y="68" font-size="10" fill="#c8341a">error (residuo)</text>
+      </svg>
+    </div>
+    <div style="padding:0 1.25rem 1.1rem">
+      <div class="callout callout-blue">
+        <strong>Regularización:</strong> si el modelo sobreajusta (memoriza el train y falla en test), se añade una penalización. Ridge (L2) encoge coeficientes. Lasso (L1) puede llevarlos a cero eliminando features. ElasticNet combina ambas.
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ══ REGRESIÓN LOGÍSTICA ══ -->
+<div class="section" id="reglogistica">
+  <div class="section-label">Modelo 02</div>
+  <h2>Regresión Logística</h2>
+  <p class="intro">A pesar del nombre, es un modelo de clasificación. Toma la salida lineal de la regresión y la aplasta con la función sigmoide para que el resultado sea una probabilidad entre 0 y 1. Con un umbral de decisión (por defecto 0.5) convierte esa probabilidad en una clase.</p>
+
+  <div class="model-block">
+    <div class="model-header" style="background:var(--teal-50)">
+      <span class="model-name" style="color:var(--teal-800)">Regresión Logística</span>
+      <div class="model-badges">
+        <span class="badge" style="background:var(--teal-800);color:#fff">Clasificación</span>
+        <span class="badge" style="background:var(--teal-50);color:var(--teal-800);border:1px solid var(--teal-800)">Binaria / Multiclase</span>
+      </div>
+    </div>
+    <div class="model-body">
+      <div>
+        <div class="cell-label">La clave: función sigmoide</div>
+        <div class="cell-text">La función sigmoide toma cualquier número real y lo comprime al rango (0, 1). El resultado se interpreta como la probabilidad de pertenecer a la clase positiva.</div>
+        <div class="formula">P(y=1) = 1 / (1 + e^−z)</div>
+        <div class="formula" style="margin-top:6px">donde z = β₀ + β₁x₁ + … + βₙxₙ</div>
+      </div>
+      <div>
+        <div class="cell-label">Cuándo usarlo</div>
+        <div class="cell-text">Clasificación binaria (sí/no) o multiclase con OvR o Softmax. Muy interpretable: los coeficientes indican la dirección e importancia de cada feature. Buen punto de partida antes de probar modelos más complejos.</div>
+      </div>
+    </div>
+    <div class="model-diagram">
+      <svg viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:480px">
+        <rect x="0" y="0" width="480" height="160" rx="6" fill="#E1F5EE"/>
+        <line x1="40" y1="130" x2="440" y2="130" stroke="#0F6E56" stroke-width="1.5"/>
+        <line x1="40" y1="15" x2="40" y2="135" stroke="#0F6E56" stroke-width="1.5"/>
+        <text x="240" y="148" text-anchor="middle" font-size="11" fill="#0F6E56">z (salida lineal)</text>
+        <text x="16" y="75" text-anchor="middle" font-size="11" fill="#0F6E56" transform="rotate(-90,16,75)">probabilidad</text>
+        <text x="44" y="130" font-size="9" fill="#0F6E56">0</text>
+        <text x="44" y="25" font-size="9" fill="#0F6E56">1</text>
+        <line x1="40" y1="73" x2="444" y2="73" stroke="#085041" stroke-width="1" stroke-dasharray="4,3" opacity=".4"/>
+        <text x="446" y="77" font-size="9" fill="#085041">0.5</text>
+        <path d="M60,126 C80,126 100,124 120,118 C150,108 170,90 200,73 C230,56 250,38 280,28 C310,18 330,16 360,15 C380,15 400,15 420,15" fill="none" stroke="#E24B4A" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="320" y="24" font-size="11" fill="#E24B4A" font-weight="700">sigmoide σ(z)</text>
+        <line x1="200" y1="73" x2="200" y2="130" stroke="#085041" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="195" y="143" text-anchor="middle" font-size="9" fill="#085041">umbral</text>
+        <rect x="60" y="100" width="136" height="16" rx="3" fill="rgba(14,110,86,0.15)"/>
+        <text x="128" y="112" text-anchor="middle" font-size="10" fill="#085041">predice clase 0</text>
+        <rect x="204" y="100" width="210" height="16" rx="3" fill="rgba(226,75,74,0.15)"/>
+        <text x="309" y="112" text-anchor="middle" font-size="10" fill="#c8341a">predice clase 1</text>
+      </svg>
+    </div>
+    <div style="padding:0 1.25rem 1.1rem">
+      <div class="callout callout-teal">
+        <strong>Métricas clave:</strong> en clasificación ya no usas R² ni RMSE. Usas accuracy (% de aciertos), precision y recall (cuando las clases están desbalanceadas), F1 (media armónica de ambas) y AUC-ROC (qué tan bien separa las clases para cualquier umbral).
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ══ ÁRBOLES DE DECISIÓN ══ -->
+<div class="section" id="arboles">
+  <div class="section-label">Modelo 03</div>
+  <h2>Árboles de decisión</h2>
+  <p class="intro">Un árbol de decisión aprende haciendo preguntas sobre las features, como un diagrama de flujo. Cada nodo es una pregunta (¿edad &gt; 30?), cada rama es una respuesta, y cada hoja es una predicción. Son muy fáciles de interpretar y no requieren escalar los datos.</p>
+
+  <div class="model-block">
+    <div class="model-header" style="background:var(--amber-50)">
+      <span class="model-name" style="color:var(--amber-800)">Árbol de decisión</span>
+      <div class="model-badges">
+        <span class="badge" style="background:var(--amber-800);color:#fff">Regresión</span>
+        <span class="badge" style="background:var(--amber-800);color:#fff">Clasificación</span>
+        <span class="badge" style="background:var(--amber-50);color:var(--amber-800);border:1px solid var(--amber-800)">Interpretable</span>
+      </div>
+    </div>
+    <div class="model-body">
+      <div>
+        <div class="cell-label">Cómo aprende</div>
+        <div class="cell-text">En cada nodo elige la feature y el umbral que mejor divide los datos, maximizando la "pureza" de cada subgrupo. Para clasificación usa Gini o Entropía. Para regresión minimiza la varianza.</div>
+        <div class="formula">Gini = 1 − Σ pᵢ²</div>
+      </div>
+      <div>
+        <div class="cell-label">Ventajas y límites</div>
+        <div class="cell-text">Muy interpretable, no necesita escalar datos, maneja bien variables mixtas. El gran problema es el overfitting: un árbol sin límite memoriza el training set. Se controla con max_depth, min_samples_leaf, etc.</div>
+      </div>
+    </div>
+    <div class="model-diagram">
+      <svg viewBox="0 0 480 210" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:480px">
+        <rect x="0" y="0" width="480" height="210" rx="6" fill="#FAEEDA"/>
+        <rect x="175" y="12" width="130" height="40" rx="5" fill="#633806"/>
+        <text x="240" y="29" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">¿edad &gt; 30?</text>
+        <text x="240" y="44" text-anchor="middle" font-size="10" fill="#FAC775">nodo raíz</text>
+        <line x1="175" y1="32" x2="100" y2="88" stroke="#854F0B" stroke-width="1.5"/>
+        <line x1="305" y1="32" x2="380" y2="88" stroke="#854F0B" stroke-width="1.5"/>
+        <text x="125" y="80" font-size="10" fill="#854F0B">No</text>
+        <text x="350" y="80" font-size="10" fill="#854F0B">Sí</text>
+        <rect x="38" y="88" width="124" height="40" rx="5" fill="#854F0B"/>
+        <text x="100" y="105" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">¿ingresos &gt; 2000?</text>
+        <text x="100" y="120" text-anchor="middle" font-size="10" fill="#FAC775">nodo interno</text>
+        <rect x="318" y="88" width="124" height="40" rx="5" fill="#854F0B"/>
+        <text x="380" y="105" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">¿estudios univ.?</text>
+        <text x="380" y="120" text-anchor="middle" font-size="10" fill="#FAC775">nodo interno</text>
+        <line x1="62" y1="128" x2="44" y2="172" stroke="#854F0B" stroke-width="1.5"/>
+        <line x1="138" y1="128" x2="156" y2="172" stroke="#854F0B" stroke-width="1.5"/>
+        <line x1="342" y1="128" x2="310" y2="172" stroke="#854F0B" stroke-width="1.5"/>
+        <line x1="418" y1="128" x2="436" y2="172" stroke="#854F0B" stroke-width="1.5"/>
+        <rect x="14" y="172" width="60" height="30" rx="4" fill="#EAF3DE"/>
+        <text x="44" y="191" text-anchor="middle" font-size="11" fill="#27500A" font-weight="700">Clase A</text>
+        <rect x="126" y="172" width="60" height="30" rx="4" fill="#FCEBEB"/>
+        <text x="156" y="191" text-anchor="middle" font-size="11" fill="#c8341a" font-weight="700">Clase B</text>
+        <rect x="280" y="172" width="60" height="30" rx="4" fill="#FCEBEB"/>
+        <text x="310" y="191" text-anchor="middle" font-size="11" fill="#c8341a" font-weight="700">Clase B</text>
+        <rect x="406" y="172" width="60" height="30" rx="4" fill="#EAF3DE"/>
+        <text x="436" y="191" text-anchor="middle" font-size="11" fill="#27500A" font-weight="700">Clase A</text>
+        <text x="44" y="206" text-anchor="middle" font-size="9" fill="#3B6D11">hoja</text>
+        <text x="156" y="206" text-anchor="middle" font-size="9" fill="#c8341a">hoja</text>
+        <text x="310" y="206" text-anchor="middle" font-size="9" fill="#c8341a">hoja</text>
+        <text x="436" y="206" text-anchor="middle" font-size="9" fill="#3B6D11">hoja</text>
+      </svg>
+    </div>
+    <div style="padding:0 1.25rem 1.1rem">
+      <div class="callout callout-amber">
+        <strong>Por qué son importantes:</strong> los árboles de decisión son los bloques de construcción de Random Forest y Boosting. Entender cómo funciona un árbol es entender la base de los modelos más potentes del sector.
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ══ RANDOM FOREST ══ -->
+<div class="section" id="rf">
+  <div class="section-label">Modelo 04 · Ensamblado</div>
+  <h2>Random Forest</h2>
+  <p class="intro">Random Forest es el primer modelo de ensamblado que estudiarás. La idea es simple y brillante: en lugar de confiar en un solo árbol (que puede equivocarse o sobreajustar), entrenas cientos de árboles distintos y dejas que voten. El resultado es mucho más robusto.</p>
+
+  <div class="model-block">
+    <div class="model-header" style="background:var(--green-50)">
+      <span class="model-name" style="color:var(--green-800)">Random Forest</span>
+      <div class="model-badges">
+        <span class="badge" style="background:var(--green-800);color:#fff">Regresión</span>
+        <span class="badge" style="background:var(--green-800);color:#fff">Clasificación</span>
+        <span class="badge" style="background:var(--green-50);color:var(--green-800);border:1px solid var(--green-800)">Bagging</span>
+      </div>
+    </div>
+    <div class="model-body">
+      <div>
+        <div class="cell-label">Cómo funciona (Bagging)</div>
+        <div class="cell-text">Crea N árboles entrenados sobre muestras aleatorias distintas del dataset (bootstrap). Además, cada árbol solo ve un subconjunto aleatorio de las features en cada nodo. Esto hace que los árboles sean distintos entre sí y que sus errores se cancelen.</div>
+      </div>
+      <div>
+        <div class="cell-label">Predicción final</div>
+        <div class="cell-text">Clasificación: voto mayoritario de todos los árboles. Regresión: media de las predicciones de todos los árboles. El resultado suele ser mucho más estable y preciso que cualquier árbol individual.</div>
+        <div class="formula">ŷ = mean(árbol₁, árbol₂, …, árbolₙ)</div>
+      </div>
+    </div>
+    <div class="model-diagram">
+      <svg viewBox="0 0 500 110" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:500px">
+        <rect x="0" y="0" width="500" height="110" rx="6" fill="#EAF3DE"/>
+        <rect x="10" y="20" width="80" height="36" rx="4" fill="#27500A"/>
+        <text x="50" y="36" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Dataset</text>
+        <text x="50" y="50" text-anchor="middle" font-size="10" fill="#9FE1CB">original</text>
+        <line x1="90" y1="38" x2="118" y2="24" stroke="#3B6D11" stroke-width="1.2"/>
+        <line x1="90" y1="38" x2="118" y2="38" stroke="#3B6D11" stroke-width="1.2"/>
+        <line x1="90" y1="38" x2="118" y2="52" stroke="#3B6D11" stroke-width="1.2"/>
+        <rect x="118" y="12" width="72" height="24" rx="3" fill="#3B6D11"/>
+        <text x="154" y="27" text-anchor="middle" font-size="10" fill="#fff">muestra 1</text>
+        <rect x="118" y="30" width="72" height="24" rx="3" fill="#3B6D11"/>
+        <text x="154" y="45" text-anchor="middle" font-size="10" fill="#fff">muestra 2</text>
+        <rect x="118" y="48" width="72" height="24" rx="3" fill="#3B6D11"/>
+        <text x="154" y="63" text-anchor="middle" font-size="10" fill="#fff">muestra 3</text>
+        <line x1="190" y1="24" x2="220" y2="24" stroke="#3B6D11" stroke-width="1.2"/>
+        <line x1="190" y1="42" x2="220" y2="42" stroke="#3B6D11" stroke-width="1.2"/>
+        <line x1="190" y1="60" x2="220" y2="60" stroke="#3B6D11" stroke-width="1.2"/>
+        <rect x="220" y="12" width="64" height="24" rx="3" fill="#639922"/>
+        <text x="252" y="27" text-anchor="middle" font-size="10" fill="#fff">árbol 1</text>
+        <rect x="220" y="30" width="64" height="24" rx="3" fill="#639922"/>
+        <text x="252" y="45" text-anchor="middle" font-size="10" fill="#fff">árbol 2</text>
+        <rect x="220" y="48" width="64" height="24" rx="3" fill="#639922"/>
+        <text x="252" y="63" text-anchor="middle" font-size="10" fill="#fff">árbol 3</text>
+        <text x="252" y="82" text-anchor="middle" font-size="10" fill="#3B6D11">+ N árboles más</text>
+        <line x1="284" y1="24" x2="314" y2="38" stroke="#3B6D11" stroke-width="1.2"/>
+        <line x1="284" y1="42" x2="314" y2="38" stroke="#3B6D11" stroke-width="1.2"/>
+        <line x1="284" y1="60" x2="314" y2="38" stroke="#3B6D11" stroke-width="1.2"/>
+        <rect x="314" y="20" width="80" height="36" rx="4" fill="#27500A"/>
+        <text x="354" y="36" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Votación</text>
+        <text x="354" y="50" text-anchor="middle" font-size="10" fill="#9FE1CB">o media</text>
+        <line x1="394" y1="38" x2="416" y2="38" stroke="#3B6D11" stroke-width="1.5"/>
+        <polygon points="414,33 424,38 414,43" fill="#3B6D11"/>
+        <rect x="424" y="20" width="68" height="36" rx="4" fill="#0f0f0f"/>
+        <text x="458" y="36" text-anchor="middle" font-size="11" fill="#E24B4A" font-weight="700">ŷ final</text>
+        <text x="458" y="50" text-anchor="middle" font-size="10" fill="#888">robusto</text>
+      </svg>
+    </div>
+    <div style="padding:0 1.25rem 1.1rem">
+      <div class="callout callout-green">
+        <strong>Ventaja clave:</strong> el overfitting desaparece casi por completo. Al promediar muchos árboles, los errores individuales se cancelan. Además ofrece feature importance: sabe decirte qué variables fueron más útiles para predecir.
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ══ BOOSTING ══ -->
+<div class="section" id="boosting">
+  <div class="section-label">Modelo 05 · Ensamblado</div>
+  <h2>Boosting: GBT, XGBoost, LightGBM, CatBoost</h2>
+  <p class="intro">Boosting es otra estrategia de ensamblado, pero con una filosofía diferente a Random Forest. En lugar de entrenar árboles independientes en paralelo, los entrena en secuencia: cada árbol nuevo se enfoca en corregir los errores del anterior. El resultado son los modelos con mejor rendimiento en tabular data en la práctica.</p>
+
+  <div class="model-block">
+    <div class="model-header" style="background:var(--purple-50)">
+      <span class="model-name" style="color:var(--purple-800)">Gradient Boosting (GBT)</span>
+      <div class="model-badges">
+        <span class="badge" style="background:var(--purple-800);color:#fff">Regresión</span>
+        <span class="badge" style="background:var(--purple-800);color:#fff">Clasificación</span>
+        <span class="badge" style="background:var(--purple-50);color:var(--purple-800);border:1px solid var(--purple-800)">Secuencial</span>
+      </div>
+    </div>
+    <div class="model-body">
+      <div>
+        <div class="cell-label">Cómo funciona</div>
+        <div class="cell-text">Empieza con una predicción base (la media del target). El árbol 1 aprende a predecir los residuos (errores). El árbol 2 aprende los residuos del árbol 1. Y así N veces. La suma de todos los árboles es la predicción final.</div>
+        <div class="formula">ŷ = árbol₁ + η·árbol₂ + η·árbol₃ + …</div>
+        <div style="font-size:11px;color:#555;margin-top:4px">η = learning rate (controla el paso)</div>
+      </div>
+      <div>
+        <div class="cell-label">Variantes y cuándo usarlas</div>
+        <div class="cell-text"><strong>XGBoost:</strong> añade regularización y es muy rápido. Estándar en competiciones Kaggle.<br><strong>LightGBM:</strong> más eficiente en memoria, ideal con datasets grandes.<br><strong>CatBoost:</strong> maneja variables categóricas directamente sin encoding previo.</div>
+      </div>
+    </div>
+    <div class="model-diagram">
+      <svg viewBox="0 0 500 90" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:500px">
+        <rect x="0" y="0" width="500" height="90" rx="6" fill="#EEEDFE"/>
+        <rect x="8" y="25" width="70" height="40" rx="4" fill="#3C3489"/>
+        <text x="43" y="43" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">Predicción</text>
+        <text x="43" y="57" text-anchor="middle" font-size="10" fill="#AFA9EC">base (media)</text>
+        <line x1="78" y1="45" x2="100" y2="45" stroke="#534AB7" stroke-width="1.5"/>
+        <polygon points="98,40 108,45 98,50" fill="#534AB7"/>
+        <rect x="108" y="25" width="70" height="40" rx="4" fill="#534AB7"/>
+        <text x="143" y="43" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">Árbol 1</text>
+        <text x="143" y="57" text-anchor="middle" font-size="10" fill="#CECBF6">aprende errores</text>
+        <line x1="178" y1="45" x2="200" y2="45" stroke="#534AB7" stroke-width="1.5"/>
+        <polygon points="198,40 208,45 198,50" fill="#534AB7"/>
+        <rect x="208" y="25" width="70" height="40" rx="4" fill="#534AB7"/>
+        <text x="243" y="43" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">Árbol 2</text>
+        <text x="243" y="57" text-anchor="middle" font-size="10" fill="#CECBF6">corrige árbol 1</text>
+        <line x1="278" y1="45" x2="300" y2="45" stroke="#534AB7" stroke-width="1.5"/>
+        <polygon points="298,40 308,45 298,50" fill="#534AB7"/>
+        <rect x="308" y="25" width="70" height="40" rx="4" fill="#534AB7"/>
+        <text x="343" y="43" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">Árbol N</text>
+        <text x="343" y="57" text-anchor="middle" font-size="10" fill="#CECBF6">corrige árbol N-1</text>
+        <line x1="378" y1="45" x2="400" y2="45" stroke="#534AB7" stroke-width="1.5"/>
+        <polygon points="398,40 408,45 398,50" fill="#534AB7"/>
+        <rect x="408" y="25" width="84" height="40" rx="4" fill="#0f0f0f"/>
+        <text x="450" y="43" text-anchor="middle" font-size="10" fill="#E24B4A" font-weight="700">ŷ = Σ árboles</text>
+        <text x="450" y="57" text-anchor="middle" font-size="10" fill="#888">suma ponderada</text>
+      </svg>
+    </div>
+    <div style="padding:0 1.25rem 1.1rem">
+      <div class="callout callout-purple">
+        <strong>Random Forest vs Boosting:</strong> RF entrena árboles en paralelo, independientes, para reducir varianza. Boosting los entrena en serie, cada uno aprendiendo del error anterior, para reducir sesgo. Boosting suele ganar en precisión, pero es más sensible al overfitting si no se ajusta bien el learning rate y el número de árboles.
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ══ SVM ══ -->
+<div class="section" id="svm">
+  <div class="section-label">Modelo 06</div>
+  <h2>Support Vector Machine (SVM)</h2>
+  <p class="intro">SVM busca el hiperplano que separa las clases con el mayor margen posible. En lugar de intentar clasificar bien todos los puntos, se centra en los más difíciles: los que están en el borde de cada clase, llamados vectores de soporte. Con el "kernel trick" puede resolver problemas no lineales.</p>
+
+  <div class="model-block">
+    <div class="model-header" style="background:var(--coral-50)">
+      <span class="model-name" style="color:var(--coral-800)">Support Vector Machine</span>
+      <div class="model-badges">
+        <span class="badge" style="background:var(--coral-800);color:#fff">Clasificación</span>
+        <span class="badge" style="background:var(--coral-800);color:#fff">Regresión (SVR)</span>
+        <span class="badge" style="background:var(--coral-50);color:var(--coral-800);border:1px solid var(--coral-800)">Margen máximo</span>
+      </div>
+    </div>
+    <div class="model-body">
+      <div>
+        <div class="cell-label">Cómo funciona</div>
+        <div class="cell-text">Encuentra el hiperplano de separación que maximiza la distancia (margen) entre las dos clases. Los puntos más cercanos al hiperplano se llaman vectores de soporte y son los que definen la frontera.</div>
+        <div class="formula">maximizar: 2 / ‖w‖</div>
+      </div>
+      <div>
+        <div class="cell-label">Kernel trick</div>
+        <div class="cell-text">Cuando los datos no son separables linealmente, SVM los proyecta a un espacio de mayor dimensión donde sí lo son. Los kernels más comunes: lineal, polinomial y RBF (gaussiano). Permite resolver problemas muy complejos.</div>
+      </div>
+    </div>
+    <div class="model-diagram">
+      <svg viewBox="0 0 480 170" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:480px">
+        <rect x="0" y="0" width="480" height="170" rx="6" fill="#FAECE7"/>
+        <circle cx="80" cy="50" r="7" fill="#993C1D" opacity=".8"/>
+        <circle cx="100" cy="70" r="7" fill="#993C1D" opacity=".8"/>
+        <circle cx="70" cy="90" r="7" fill="#993C1D" opacity=".8"/>
+        <circle cx="120" cy="55" r="7" fill="#993C1D" opacity=".8"/>
+        <circle cx="90" cy="110" r="7" fill="#993C1D" opacity=".8"/>
+        <circle cx="60" cy="130" r="7" fill="#993C1D" opacity=".8"/>
+        <circle cx="350" cy="40" r="7" fill="#0C447C" opacity=".8"/>
+        <circle cx="380" cy="60" r="7" fill="#0C447C" opacity=".8"/>
+        <circle cx="360" cy="80" r="7" fill="#0C447C" opacity=".8"/>
+        <circle cx="400" cy="50" r="7" fill="#0C447C" opacity=".8"/>
+        <circle cx="390" cy="100" r="7" fill="#0C447C" opacity=".8"/>
+        <circle cx="420" cy="70" r="7" fill="#0C447C" opacity=".8"/>
+        <line x1="230" y1="10" x2="210" y2="155" stroke="#0f0f0f" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="244" y="20" font-size="11" fill="#0f0f0f" font-weight="700">hiperplano</text>
+        <line x1="200" y1="10" x2="180" y2="155" stroke="#993C1D" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <line x1="260" y1="10" x2="240" y2="155" stroke="#0C447C" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <line x1="160" y1="90" x2="185" y2="90" stroke="#993C1D" stroke-width="1"/>
+        <text x="140" y="94" font-size="10" fill="#993C1D" text-anchor="end">margen</text>
+        <line x1="238" y1="90" x2="263" y2="90" stroke="#0C447C" stroke-width="1"/>
+        <line x1="185" y1="90" x2="238" y2="90" stroke="#555" stroke-width="1" stroke-dasharray="2,2"/>
+        <circle cx="180" cy="75" r="9" fill="none" stroke="#993C1D" stroke-width="2"/>
+        <text x="163" y="68" font-size="9" fill="#993C1D">vector de</text>
+        <text x="163" y="79" font-size="9" fill="#993C1D">soporte</text>
+        <circle cx="252" cy="65" r="9" fill="none" stroke="#0C447C" stroke-width="2"/>
+        <text x="265" y="62" font-size="9" fill="#0C447C">vector de</text>
+        <text x="265" y="73" font-size="9" fill="#0C447C">soporte</text>
+        <text x="80" y="155" text-anchor="middle" font-size="11" fill="#712B13" font-weight="700">Clase A</text>
+        <text x="390" y="125" text-anchor="middle" font-size="11" fill="#0C447C" font-weight="700">Clase B</text>
+      </svg>
+    </div>
+    <div style="padding:0 1.25rem 1.1rem">
+      <div class="callout" style="border-color:var(--coral-600);background:var(--coral-50);color:var(--coral-800)">
+        <strong>Cuándo brilla SVM:</strong> con datasets pequeños y de alta dimensionalidad (muchas features, pocos datos). En datasets grandes es lento. Necesita que los datos estén escalados (StandardScaler o similar). El hiperparámetro C controla el trade-off entre margen y errores permitidos.
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ══ K-NN ══ -->
+<div class="section" id="knn">
+  <div class="section-label">Modelo 07</div>
+  <h2>K-Nearest Neighbors (K-NN)</h2>
+  <p class="intro">K-NN es el modelo más intuitivo de todos: para predecir un punto nuevo, busca los K puntos más cercanos en el dataset de entrenamiento y decide por mayoría (clasificación) o por media (regresión). No aprende nada durante el entrenamiento, simplemente memoriza los datos.</p>
+
+  <div class="model-block">
+    <div class="model-header" style="background:#F1EFE8">
+      <span class="model-name" style="color:#2C2C2A">K-Nearest Neighbors</span>
+      <div class="model-badges">
+        <span class="badge" style="background:#2C2C2A;color:#fff">Clasificación</span>
+        <span class="badge" style="background:#2C2C2A;color:#fff">Regresión</span>
+        <span class="badge" style="background:#F1EFE8;color:#2C2C2A;border:1px solid #888">Lazy learning</span>
+      </div>
+    </div>
+    <div class="model-body">
+      <div>
+        <div class="cell-label">Cómo funciona</div>
+        <div class="cell-text">Dado un punto nuevo, calcula su distancia a todos los puntos del dataset. Toma los K más cercanos. Si es clasificación, devuelve la clase mayoritaria entre ellos. Si es regresión, devuelve la media de sus valores.</div>
+        <div class="formula">distancia Euclídea: √Σ(xᵢ − yᵢ)²</div>
+      </div>
+      <div>
+        <div class="cell-label">El valor de K importa mucho</div>
+        <div class="cell-text">K=1: el modelo memoriza el training set, overfitting total. K muy grande: fronteras demasiado suavizadas, underfitting. El K óptimo se busca con validación cruzada. Los datos deben estar escalados obligatoriamente.</div>
+      </div>
+    </div>
+    <div class="model-diagram">
+      <svg viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:480px">
+        <rect x="0" y="0" width="480" height="160" rx="6" fill="#F1EFE8"/>
+        <circle cx="100" cy="60" r="8" fill="#185FA5" opacity=".8"/>
+        <circle cx="130" cy="90" r="8" fill="#185FA5" opacity=".8"/>
+        <circle cx="80" cy="100" r="8" fill="#185FA5" opacity=".8"/>
+        <circle cx="160" cy="50" r="8" fill="#185FA5" opacity=".8"/>
+        <circle cx="300" cy="70" r="8" fill="#993C1D" opacity=".8"/>
+        <circle cx="340" cy="100" r="8" fill="#993C1D" opacity=".8"/>
+        <circle cx="370" cy="60" r="8" fill="#993C1D" opacity=".8"/>
+        <circle cx="320" cy="130" r="8" fill="#993C1D" opacity=".8"/>
+        <circle cx="230" cy="80" r="14" fill="none" stroke="#0f0f0f" stroke-width="2.5"/>
+        <circle cx="230" cy="80" r="4" fill="#0f0f0f"/>
+        <text x="230" y="70" text-anchor="middle" font-size="10" fill="#0f0f0f">nuevo</text>
+        <text x="230" y="62" text-anchor="middle" font-size="10" fill="#0f0f0f">punto</text>
+        <circle cx="230" cy="80" r="85" fill="none" stroke="#888" stroke-width="1" stroke-dasharray="5,4"/>
+        <line x1="230" y1="80" x2="160" y2="50" stroke="#185FA5" stroke-width="1.2" stroke-dasharray="3,3"/>
+        <line x1="230" y1="80" x2="130" y2="90" stroke="#185FA5" stroke-width="1.2" stroke-dasharray="3,3"/>
+        <line x1="230" y1="80" x2="300" y2="70" stroke="#993C1D" stroke-width="1.2" stroke-dasharray="3,3"/>
+        <text x="185" y="58" font-size="10" fill="#185FA5">vecino 1</text>
+        <text x="155" y="100" font-size="10" fill="#185FA5">vecino 2</text>
+        <text x="270" y="68" font-size="10" fill="#993C1D">vecino 3</text>
+        <rect x="20" y="130" width="200" height="22" rx="4" fill="rgba(24,95,165,0.15)"/>
+        <text x="120" y="145" text-anchor="middle" font-size="11" fill="#185FA5" font-weight="700">K=3 → 2 azules vs 1 rojo → Clase Azul</text>
+      </svg>
+    </div>
+    <div style="padding:0 1.25rem 1.1rem">
+      <div class="callout">
+        <strong>Limitación importante:</strong> K-NN es muy lento con datasets grandes porque calcula distancias a todos los puntos para cada predicción. No tiene ningún modelo interno que aprender: todo el trabajo lo hace en la predicción. Por eso se llama "lazy learning" (aprendizaje perezoso).
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ══ COMPARATIVA ══ -->
+<div class="section" id="comparativa">
+  <div class="section-label">Resumen</div>
+  <h2>¿Cuándo usar cada modelo?</h2>
+  <p class="intro" style="margin-bottom:1rem">No existe un modelo universalmente mejor. La elección depende del tamaño del dataset, la interpretabilidad que necesites, si es regresión o clasificación y cuánto tiempo tienes para ajustar hiperparámetros.</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Modelo</th>
+          <th>Tipo</th>
+          <th>Interpre-tabilidad</th>
+          <th>Overfitting</th>
+          <th>Escalado necesario</th>
+          <th>Cuándo brilla</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Regresión Lineal</td>
+          <td>Regresión</td>
+          <td>Muy alta</td>
+          <td>Bajo (con regularización)</td>
+          <td>Recomendado</td>
+          <td>Relación lineal, interpretabilidad clave</td>
+        </tr>
+        <tr>
+          <td>Regresión Logística</td>
+          <td>Clasificación</td>
+          <td>Alta</td>
+          <td>Bajo</td>
+          <td>Recomendado</td>
+          <td>Clasificación binaria, primer baseline</td>
+        </tr>
+        <tr>
+          <td>Árbol de decisión</td>
+          <td>Ambos</td>
+          <td>Alta</td>
+          <td>Alto sin podar</td>
+          <td>No</td>
+          <td>Explicar decisiones, datos mixtos</td>
+        </tr>
+        <tr>
+          <td>Random Forest</td>
+          <td>Ambos</td>
+          <td>Media</td>
+          <td>Muy bajo</td>
+          <td>No</td>
+          <td>Dataset mediano-grande, generalización</td>
+        </tr>
+        <tr>
+          <td>XGBoost / LightGBM</td>
+          <td>Ambos</td>
+          <td>Baja</td>
+          <td>Bajo (bien ajustado)</td>
+          <td>No</td>
+          <td>Máximo rendimiento en tabular data</td>
+        </tr>
+        <tr>
+          <td>SVM</td>
+          <td>Ambos</td>
+          <td>Baja</td>
+          <td>Bajo</td>
+          <td>Sí, obligatorio</td>
+          <td>Alta dimensionalidad, dataset pequeño</td>
+        </tr>
+        <tr>
+          <td>K-NN</td>
+          <td>Ambos</td>
+          <td>Alta</td>
+          <td>Depende de K</td>
+          <td>Sí, obligatorio</td>
+          <td>Dataset pequeño, exploración inicial</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout" style="margin-top:1rem">
+    <strong>Regla práctica:</strong> empieza siempre con el modelo más simple que tenga sentido para el problema (Regresión Lineal/Logística). Si no es suficiente, prueba Random Forest. Si necesitas exprimir al máximo el rendimiento, prueba XGBoost o LightGBM. SVM y K-NN tienen nichos específicos donde destacan.
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <span>The Bridge · Data Science · Sprint 09–11</span>
+  <span>Modelos supervisados · <b>Machine Learning</b></span>
+</footer>
+
+</body>
+</html>

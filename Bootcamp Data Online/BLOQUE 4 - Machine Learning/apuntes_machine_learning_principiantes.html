@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Apuntes de Machine Learning para Principiantes</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;max-width:1000px;margin:auto;padding:30px;line-height:1.7}
+h1,h2{color:#1f3c88}
+pre{background:#f4f4f4;padding:12px;border-radius:6px;overflow:auto}
+.box{background:#eef6ff;padding:12px;border-left:5px solid #1f3c88;margin:10px 0}
+table{border-collapse:collapse;width:100%}
+td,th{border:1px solid #ccc;padding:8px}
+</style>
+</head>
+<body>
+
+<h1>Guía de Machine Learning para Entender los Conceptos Fundamentales</h1>
+
+<h2>1. ¿Qué es Machine Learning?</h2>
+<p>
+La idea básica es muy simple:
+</p>
+<div class="box">
+Queremos que un programa encuentre patrones en datos para poder hacer predicciones.
+</div>
+
+<h2>2. Conceptos básicos</h2>
+
+<table>
+<tr><th>Concepto</th><th>Significado sencillo</th></tr>
+<tr><td>Feature</td><td>Información de entrada (edad, altura, metros cuadrados, etc.)</td></tr>
+<tr><td>Target</td><td>Lo que queremos predecir</td></tr>
+<tr><td>Dataset</td><td>Conjunto de datos completo</td></tr>
+<tr><td>Sample</td><td>Una fila del dataset</td></tr>
+<tr><td>Modelo</td><td>La regla matemática que aprende la máquina</td></tr>
+</table>
+
+<h2>3. Ejemplo de regresión lineal</h2>
+
+<p>Queremos predecir el precio de una casa.</p>
+
+<pre>
+Precio = β0 + β1·(metros cuadrados)
+</pre>
+
+<ul>
+<li><b>β0</b> = punto de partida.</li>
+<li><b>β1</b> = cuánto cambia el precio por cada metro cuadrado adicional.</li>
+</ul>
+
+<h2>4. ¿Qué son β0 y β1?</h2>
+
+<p>Imagina:</p>
+
+<pre>
+Precio = 50000 + 1000·m²
+</pre>
+
+<ul>
+<li>β0 = 50000 → precio base.</li>
+<li>β1 = 1000 → cada metro cuadrado añade 1000 €.</li>
+</ul>
+
+<div class="box">
+β0 = dónde empiezas.<br>
+β1 = cuánto cambia la predicción cuando cambia una variable.
+</div>
+
+<h2>5. Entrenamiento (Training)</h2>
+
+<p>Durante el entrenamiento sí conocemos las respuestas correctas.</p>
+
+<pre>
+Datos históricos
+      ↓
+Predicción
+      ↓
+Comparación con la realidad
+      ↓
+Error
+      ↓
+Corrección de parámetros
+</pre>
+
+<h2>6. ¿Qué es una predicción?</h2>
+
+<p>Sale de la fórmula del modelo.</p>
+
+<pre>
+Y = 1 + 2X
+</pre>
+
+<p>Si X=3:</p>
+
+<pre>
+Predicción = 1 + 2·3 = 7
+</pre>
+
+<h2>7. ¿Qué es el error?</h2>
+
+<p>La diferencia entre la realidad y la predicción.</p>
+
+<pre>
+Valor real = 10
+Predicción = 7
+
+Error = 3
+</pre>
+
+<h2>8. Error Cuadrático Medio (MSE)</h2>
+
+<p>Mide cuánto se equivoca el modelo de media.</p>
+
+<table>
+<tr><th>Real</th><th>Predicción</th><th>Error</th></tr>
+<tr><td>10</td><td>8</td><td>2</td></tr>
+<tr><td>20</td><td>25</td><td>-5</td></tr>
+<tr><td>30</td><td>28</td><td>2</td></tr>
+</table>
+
+<p>Errores al cuadrado:</p>
+
+<pre>
+2² = 4
+(-5)² = 25
+2² = 4
+</pre>
+
+<p>MSE:</p>
+
+<pre>
+(4 + 25 + 4) / 3 = 11
+</pre>
+
+<div class="box">
+Cuanto menor sea el MSE, mejor está prediciendo el modelo.
+</div>
+
+<h2>9. ¿Qué es Gradient Descent?</h2>
+
+<p>
+Es el mecanismo que corrige los coeficientes del modelo para reducir el error.
+</p>
+
+<p>Imagina que estás bajando una montaña con niebla:</p>
+
+<pre>
+Mides la pendiente
+↓
+Avanzas cuesta abajo
+↓
+Mides otra vez
+↓
+Repites
+</pre>
+
+<p>Gradient Descent hace exactamente eso con el error.</p>
+
+<h2>10. ¿Qué es el gradiente?</h2>
+
+<div class="box">
+El gradiente indica hacia qué dirección hay que mover los parámetros para reducir el error.
+</div>
+
+<p>No es más que una brújula matemática.</p>
+
+<h2>11. SGD (Stochastic Gradient Descent)</h2>
+
+<p>Hay dos formas de actualizar parámetros:</p>
+
+<h3>Gradient Descent clásico</h3>
+
+<pre>
+Usa todos los datos
+↓
+Calcula error
+↓
+Actualiza parámetros
+</pre>
+
+<h3>SGD</h3>
+
+<pre>
+Usa un ejemplo
+↓
+Actualiza parámetros
+↓
+Usa otro ejemplo
+↓
+Actualiza parámetros
+</pre>
+
+<p>SGD suele ser más rápido con datasets grandes.</p>
+
+<h2>12. Train vs Test</h2>
+
+<h3>Train</h3>
+
+<pre>
+Conozco X e Y
+↓
+Aprendo los parámetros
+</pre>
+
+<h3>Test</h3>
+
+<pre>
+Conozco X e Y
+↓
+NO aprendo
+↓
+Solo evalúo
+</pre>
+
+<div class="box">
+El conjunto de test sirve para comprobar si el modelo realmente ha aprendido o simplemente ha memorizado.
+</div>
+
+<h2>13. Overfitting</h2>
+
+<p>Cuando el modelo memoriza los datos de entrenamiento.</p>
+
+<pre>
+Error train = muy bajo
+Error test = muy alto
+</pre>
+
+<p>Eso significa que generaliza mal.</p>
+
+<h2>14. ¿Cómo elegir un algoritmo?</h2>
+
+<h3>Si predices números</h3>
+
+<ul>
+<li>Linear Regression</li>
+<li>Random Forest Regressor</li>
+<li>XGBoost Regressor</li>
+</ul>
+
+<h3>Si predices categorías</h3>
+
+<ul>
+<li>Logistic Regression</li>
+<li>Random Forest Classifier</li>
+<li>XGBoost Classifier</li>
+</ul>
+
+<h2>15. Librerías importantes</h2>
+
+<h3>Scikit-Learn</h3>
+
+<pre>
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+</pre>
+
+<h3>XGBoost</h3>
+
+<pre>
+from xgboost import XGBRegressor
+</pre>
+
+<h3>Deep Learning</h3>
+
+<pre>
+import tensorflow as tf
+import torch
+</pre>
+
+<h2>16. Flujo completo de un proyecto</h2>
+
+<pre>
+1. Entender el problema
+2. Elegir target
+3. Preparar datos
+4. Separar train/test
+5. Entrenar modelo
+6. Medir error
+7. Comparar modelos
+8. Elegir el mejor
+9. Hacer predicciones reales
+</pre>
+
+<h2>Resumen para memorizar</h2>
+
+<div class="box">
+Features → Modelo → Predicción → Error → Ajuste de parámetros → Modelo mejorado
+</div>
+
+<div class="box">
+Train = aprender.<br>
+Test = evaluar.<br>
+Producción = predecir.
+</div>
+
+</body>
+</html>
