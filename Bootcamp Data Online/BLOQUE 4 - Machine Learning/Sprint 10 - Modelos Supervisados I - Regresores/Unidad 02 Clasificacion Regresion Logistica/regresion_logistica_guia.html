@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regresión Logística — Guía completa</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a18; padding: 2rem 1rem; }
+  .container { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 14px; color: #73726c; margin-bottom: 1.5rem; }
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .tab { padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; border: 0.5px solid #ccc; background: transparent; color: #73726c; transition: all .15s; }
+  .tab.active { background: #EEEDFE; color: #3C3489; border-color: #AFA9EC; }
+  .panel { display: none; } .panel.active { display: block; }
+  .section { margin-bottom: 2rem; }
+  .section-title { font-size: 17px; font-weight: 500; margin-bottom: 1rem; padding-bottom: 6px; border-bottom: 0.5px solid #ddd; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 1rem; }
+  .card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1rem; }
+  .card-label { font-size: 12px; color: #73726c; margin-bottom: 4px; }
+  .card-value { font-size: 14px; font-weight: 500; }
+  .formula-box { background: #f5f5f3; border-left: 3px solid #7F77DD; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 8px 0; font-family: 'Courier New', monospace; font-size: 14px; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 8px; margin-right: 6px; margin-bottom: 4px; }
+  .tag-teal { background: #E1F5EE; color: #085041; }
+  .tag-amber { background: #FAEEDA; color: #633806; }
+  pre { background: #f5f5f3; border: 0.5px solid #ddd; border-radius: 8px; padding: 14px; font-size: 12px; font-family: 'Courier New', monospace; overflow-x: auto; margin: 8px 0; line-height: 1.7; }
+  .kw { color: #534AB7; } .fn { color: #0F6E56; } .st { color: #993C1D; } .cm { color: #888; }
+  .step { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+  .step-num { min-width: 28px; height: 28px; border-radius: 50%; background: #EEEDFE; color: #3C3489; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+  .step-body { flex: 1; padding-top: 4px; line-height: 1.6; }
+  .step-body strong { display: block; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0; }
+  th { text-align: left; font-weight: 500; padding: 8px; background: #f5f5f3; border-bottom: 0.5px solid #ddd; }
+  td { padding: 8px; border-bottom: 0.5px solid #eee; color: #555; }
+  td:first-child { color: #1a1a18; font-weight: 500; }
+  p.muted { font-size: 13px; color: #73726c; line-height: 1.7; margin-bottom: 1rem; }
+  .chart-wrap { position: relative; height: 200px; margin: 8px 0 1rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Regresión Logística</h1>
+  <p class="subtitle">Guía completa — The Bridge · Machine Learning Unidad 02</p>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('concepto', this)">Concepto</button>
+    <button class="tab" onclick="switchTab('formula', this)">Fórmulas</button>
+    <button class="tab" onclick="switchTab('tipos', this)">Binaria vs Multiclase</button>
+    <button class="tab" onclick="switchTab('metricas', this)">Métricas</button>
+    <button class="tab" onclick="switchTab('codigo', this)">Código Python</button>
+  </div>
+
+  <!-- CONCEPTO -->
+  <div id="tab-concepto" class="panel active">
+    <div class="section">
+      <div class="section-title">¿Qué es la regresión logística?</div>
+      <p class="muted">A pesar del nombre, es un modelo de <strong>clasificación</strong>, no de regresión. Predice la probabilidad de que una observación pertenezca a una clase (0 o 1).</p>
+      <div class="cards">
+        <div class="card"><div class="card-label">Input</div><div class="card-value">Variables numéricas X</div></div>
+        <div class="card"><div class="card-label">Output</div><div class="card-value">Probabilidad P(y=1)</div></div>
+        <div class="card"><div class="card-label">Decisión</div><div class="card-value">Umbral típico: 0.5</div></div>
+        <div class="card"><div class="card-label">Función clave</div><div class="card-value">Sigmoide σ(z)</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">La función sigmoide</div>
+      <p class="muted">Transforma cualquier número real en un valor entre 0 y 1, ideal para representar probabilidades.</p>
+      <div class="chart-wrap"><canvas id="sigmoidChart" role="img" aria-label="Curva sigmoide"></canvas></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Diferencia con regresión lineal</div>
+      <table>
+        <tr><th>Aspecto</th><th>Regresión lineal</th><th>Regresión logística</th></tr>
+        <tr><td>Objetivo</td><td>Predecir valor continuo</td><td>Predecir clase / probabilidad</td></tr>
+        <tr><td>Output</td><td>(-∞, +∞)</td><td>(0, 1)</td></tr>
+        <tr><td>Función de pérdida</td><td>MSE</td><td>Log-loss (cross-entropy)</td></tr>
+        <tr><td>Frontera de decisión</td><td>—</td><td>Línea / hiperplano</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- FÓRMULAS -->
+  <div id="tab-formula" class="panel">
+    <div class="section">
+      <div class="section-title">Fórmulas clave</div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Combinación lineal</strong>
+          <div class="formula-box">z = β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ</div>
+          <p class="muted">z puede ser cualquier número real.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Función sigmoide — convierte z en probabilidad</strong>
+          <div class="formula-box">σ(z) = 1 / (1 + e⁻ᶻ)</div>
+          <p class="muted">Resultado siempre entre 0 y 1.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Probabilidad predicha</strong>
+          <div class="formula-box">P(y=1 | X) = σ(z) = 1 / (1 + e⁻⁽β⁰⁺β¹ˣ¹⁺...⁾)</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Función de pérdida — Log Loss (cross-entropy)</strong>
+          <div class="formula-box">L = -[y·log(ŷ) + (1-y)·log(1-ŷ)]</div>
+          <p class="muted">Se minimiza con gradient descent. Penaliza mucho las predicciones seguras pero erróneas.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <strong>Odds y Log-Odds (interpretación de coeficientes)</strong>
+          <div class="formula-box">log(P / (1-P)) = β₀ + β₁x₁ + ...</div>
+          <p class="muted">Cada β = cambio en el log-odds. eᵝ = cambio multiplicativo en las odds.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIPOS -->
+  <div id="tab-tipos" class="panel">
+    <div class="section">
+      <div class="section-title">Clasificación binaria</div>
+      <p class="muted">Dos clases: 0 o 1. Una sola función sigmoide. El umbral por defecto es 0.5 pero se puede ajustar.</p>
+      <span class="tag tag-teal">spam / no spam</span>
+      <span class="tag tag-teal">enfermo / sano</span>
+      <span class="tag tag-teal">fraude / no fraude</span>
+      <pre><span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LogisticRegression
+model = <span class="fn">LogisticRegression</span>()
+model.<span class="fn">fit</span>(X_train, y_train)
+proba = model.<span class="fn">predict_proba</span>(X_test)[:, <span class="st">1</span>]  <span class="cm"># prob. clase 1</span></pre>
+    </div>
+    <div class="section">
+      <div class="section-title">Clasificación multiclase</div>
+      <table>
+        <tr><th>Estrategia</th><th>Cómo funciona</th><th>Cuándo usarla</th></tr>
+        <tr><td>OvR (One vs Rest)</td><td>Un clasificador binario por clase</td><td>Clases bien separadas</td></tr>
+        <tr><td>Softmax (Multinomial)</td><td>Una función para todas las clases</td><td>Clases mutuamente excluyentes</td></tr>
+      </table>
+      <span class="tag tag-amber" style="margin-top:8px;display:inline-block">dígitos 0-9</span>
+      <span class="tag tag-amber">tipo de flor</span>
+      <span class="tag tag-amber">categoría de producto</span>
+      <pre>model = <span class="fn">LogisticRegression</span>(multi_class=<span class="st">'multinomial'</span>, solver=<span class="st">'lbfgs'</span>)</pre>
+    </div>
+    <div class="section">
+      <div class="section-title">Función Softmax (multiclase)</div>
+      <div class="formula-box">P(y=k | X) = e^(zₖ) / Σ e^(zⱼ)  para j=1..K</div>
+      <p class="muted" style="margin-top:8px">Todas las probabilidades suman 1. Generaliza la sigmoide a K clases.</p>
+    </div>
+  </div>
+
+  <!-- MÉTRICAS -->
+  <div id="tab-metricas" class="panel">
+    <div class="section">
+      <div class="section-title">Matriz de confusión</div>
+      <table>
+        <tr><th></th><th>Pred: 0</th><th>Pred: 1</th></tr>
+        <tr><td>Real: 0</td><td style="color:#0F6E56;font-weight:500">TN (True Neg)</td><td style="color:#993C1D">FP (False Pos)</td></tr>
+        <tr><td>Real: 1</td><td style="color:#993C1D">FN (False Neg)</td><td style="color:#0F6E56;font-weight:500">TP (True Pos)</td></tr>
+      </table>
+    </div>
+    <div class="section">
+      <div class="section-title">Métricas derivadas</div>
+      <div class="step">
+        <div class="step-num" style="background:#E1F5EE;color:#085041">A</div>
+        <div class="step-body">
+          <strong>Accuracy</strong>
+          <div class="formula-box">(TP + TN) / (TP + TN + FP + FN)</div>
+          <p class="muted">⚠ Engañosa con clases desbalanceadas.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#EEEDFE;color:#3C3489">P</div>
+        <div class="step-body">
+          <strong>Precision — de los que predije como 1, ¿cuántos eran 1?</strong>
+          <div class="formula-box">TP / (TP + FP)</div>
+          <p class="muted">Importante cuando los FP son costosos (ej: spam).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#FAEEDA;color:#633806">R</div>
+        <div class="step-body">
+          <strong>Recall — de los que eran 1, ¿cuántos detecté?</strong>
+          <div class="formula-box">TP / (TP + FN)</div>
+          <p class="muted">Importante cuando los FN son costosos (ej: enfermedades).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#FAECE7;color:#712B13">F1</div>
+        <div class="step-body">
+          <strong>F1-Score — media armónica de Precision y Recall</strong>
+          <div class="formula-box">2 · (Precision · Recall) / (Precision + Recall)</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#E6F1FB;color:#0C447C">ROC</div>
+        <div class="step-body">
+          <strong>AUC-ROC — capacidad de discriminación global</strong>
+          <p class="muted">AUC = 0.5 → modelo aleatorio · AUC = 1.0 → modelo perfecto. Útil con clases desbalanceadas.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CÓDIGO -->
+  <div id="tab-codigo" class="panel">
+    <div class="section">
+      <div class="section-title">Pipeline completo — binaria</div>
+      <pre><span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LogisticRegression
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> (
+    classification_report, confusion_matrix,
+    roc_auc_score, ConfusionMatrixDisplay
+)
+
+<span class="cm"># 1. Split</span>
+X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(
+    X, y, test_size=<span class="st">0.2</span>, random_state=<span class="st">42</span>
+)
+
+<span class="cm"># 2. Escalado (importante en RL)</span>
+scaler = <span class="fn">StandardScaler</span>()
+X_train_s = scaler.<span class="fn">fit_transform</span>(X_train)
+X_test_s  = scaler.<span class="fn">transform</span>(X_test)
+
+<span class="cm"># 3. Modelo</span>
+model = <span class="fn">LogisticRegression</span>(max_iter=<span class="st">1000</span>)
+model.<span class="fn">fit</span>(X_train_s, y_train)
+
+<span class="cm"># 4. Predicciones</span>
+y_pred  = model.<span class="fn">predict</span>(X_test_s)
+y_proba = model.<span class="fn">predict_proba</span>(X_test_s)[:, <span class="st">1</span>]
+
+<span class="cm"># 5. Métricas</span>
+<span class="fn">print</span>(<span class="fn">classification_report</span>(y_test, y_pred))
+<span class="fn">print</span>(<span class="st">"AUC-ROC:"</span>, <span class="fn">roc_auc_score</span>(y_test, y_proba))
+
+<span class="cm"># 6. Matriz de confusión</span>
+<span class="fn">ConfusionMatrixDisplay</span>.<span class="fn">from_predictions</span>(y_test, y_pred)
+plt.<span class="fn">show</span>()</pre>
+    </div>
+    <div class="section">
+      <div class="section-title">Ajuste del umbral de decisión</div>
+      <pre><span class="cm"># Por defecto umbral = 0.5, pero se puede cambiar</span>
+umbral = <span class="st">0.3</span>  <span class="cm"># más sensible → más recall, menos precision</span>
+y_pred_custom = (y_proba >= umbral).<span class="fn">astype</span>(<span class="st">int</span>)</pre>
+    </div>
+    <div class="section">
+      <div class="section-title">Regularización</div>
+      <pre><span class="cm"># C = inverso de la regularización (como 1/alpha en Ridge)</span>
+<span class="cm"># C pequeño → más regularización</span>
+model_l2 = <span class="fn">LogisticRegression</span>(penalty=<span class="st">'l2'</span>, C=<span class="st">0.1</span>)   <span class="cm"># Ridge</span>
+model_l1 = <span class="fn">LogisticRegression</span>(penalty=<span class="st">'l1'</span>, C=<span class="st">1.0</span>,
+                               solver=<span class="st">'liblinear'</span>)    <span class="cm"># Lasso</span></pre>
+    </div>
+    <div class="section">
+      <div class="section-title">Multiclase</div>
+      <pre>model = <span class="fn">LogisticRegression</span>(
+    multi_class=<span class="st">'multinomial'</span>,
+    solver=<span class="st">'lbfgs'</span>,
+    max_iter=<span class="st">1000</span>
+)
+model.<span class="fn">fit</span>(X_train_s, y_train)
+<span class="fn">print</span>(<span class="fn">classification_report</span>(y_test, model.<span class="fn">predict</span>(X_test_s)))</pre>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'concepto') drawSigmoid();
+}
+
+function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+
+function drawSigmoid() {
+  const canvas = document.getElementById('sigmoidChart');
+  if (!canvas || canvas._drawn) return;
+  canvas._drawn = true;
+  const labels = [], data = [];
+  for (let z = -6; z <= 6; z += 0.2) {
+    labels.push(z.toFixed(1));
+    data.push(parseFloat(sigmoid(z).toFixed(4)));
+  }
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{ data, borderColor: '#7F77DD', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 7, color: '#888', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' }, title: { display: true, text: 'z', color: '#888' } },
+        y: { min: 0, max: 1, ticks: { color: '#888', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' }, title: { display: true, text: 'σ(z)', color: '#888' } }
+      }
+    }
+  });
+}
+
+drawSigmoid();
+</script>
+</body>
+</html>
