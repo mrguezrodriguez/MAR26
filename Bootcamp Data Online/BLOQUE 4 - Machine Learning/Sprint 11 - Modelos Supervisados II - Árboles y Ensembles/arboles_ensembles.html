@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprint 09 — Árboles & Ensembles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080808;
+    --surface: #0f0f0f;
+    --card: #141414;
+    --border: #1e1e1e;
+    --red: #e63946;
+    --amber: #f4a261;
+    --green: #52b788;
+    --blue: #4cc9f0;
+    --purple: #b5a0f0;
+    --text: #e8e8e8;
+    --muted: #6b6b6b;
+    --code-bg: #0a0a0a;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .hero {
+    background: #000;
+    border-bottom: 1px solid var(--border);
+    padding: 72px 48px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(230,57,70,0.12) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+  .hero h1 span { color: var(--red); }
+  .hero-sub { color: var(--muted); font-size: 14px; max-width: 600px; font-weight: 300; }
+  .hero-meta { display: flex; gap: 32px; margin-top: 36px; flex-wrap: wrap; }
+  .meta-item { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
+  .meta-item strong { color: var(--text); display: block; font-size: 13px; margin-bottom: 2px; }
+  .toc {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 48px;
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .toc a {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .toc a:hover { color: var(--red); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+  section { padding: 64px 0; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 12px;
+  }
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+    line-height: 1.1;
+  }
+  h3 { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 700; margin: 36px 0 14px; color: var(--text); }
+  h3.accent { color: var(--amber); }
+  h3.accent-blue { color: var(--blue); }
+  h3.accent-green { color: var(--green); }
+  h3.accent-purple { color: var(--purple); }
+  p { margin-bottom: 14px; color: #c8c8c8; font-weight: 300; }
+  strong { color: var(--text); font-weight: 500; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 28px; margin-bottom: 20px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 24px 0; }
+  .card-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; margin-bottom: 10px; }
+  .formula-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 2;
+    overflow-x: auto;
+  }
+  .formula-block .label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: block; }
+  .formula-block .formula { color: var(--amber); font-size: 15px; }
+  .formula-block .desc { color: var(--muted); font-size: 12px; margin-top: 8px; font-family: 'DM Sans', sans-serif; }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 20px 0;
+  }
+  code { font-family: 'DM Mono', monospace; font-size: 12.5px; line-height: 1.8; color: #c9d1d9; }
+  .kw { color: #ff7b72; }
+  .fn { color: #d2a8ff; }
+  .str { color: #a5d6ff; }
+  .num { color: #79c0ff; }
+  .cm { color: #484f58; }
+  .var { color: #ffa657; }
+  .cls { color: #f0e68c; }
+  .imp { color: #52b788; }
+  .diagram-wrap {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    margin: 24px 0;
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+  th { background: var(--surface); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: #c8c8c8; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .callout { border-radius: 4px; padding: 16px 20px; margin: 20px 0; font-size: 13.5px; display: flex; gap: 12px; align-items: flex-start; }
+  .callout.info { background: rgba(76,201,240,0.07); border-left: 3px solid var(--blue); }
+  .callout.warn { background: rgba(244,162,97,0.07); border-left: 3px solid var(--amber); }
+  .callout.tip { background: rgba(82,183,136,0.07); border-left: 3px solid var(--green); }
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .badge { display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; margin: 0 4px 4px 0; }
+  .badge.red { background: rgba(230,57,70,0.15); color: var(--red); }
+  .badge.amber { background: rgba(244,162,97,0.15); color: var(--amber); }
+  .badge.green { background: rgba(82,183,136,0.15); color: var(--green); }
+  .badge.blue { background: rgba(76,201,240,0.15); color: var(--blue); }
+  .badge.purple { background: rgba(181,160,240,0.15); color: var(--purple); }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 20px 0; }
+  .practice-box { background: linear-gradient(135deg, #0d0d0d 0%, #111 100%); border: 1px solid var(--border); border-top: 2px solid var(--red); border-radius: 4px; padding: 32px; margin: 24px 0; }
+  .practice-box h3 { color: var(--red); margin-top: 0; }
+  @media(max-width:700px) {
+    .two-col { grid-template-columns: 1fr; }
+    .toc { padding: 16px 24px; }
+    .hero { padding: 48px 24px; }
+    .container { padding: 0 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-tag">Machine Learning · Sprint 09</div>
+  <h1>Árboles de Decisión<br><span>&amp; Ensembles</span></h1>
+  <p class="hero-sub">Matemáticas, fórmulas y código de Árboles de Decisión, Random Forest, Bagging y Boosting. Desde la impureza de Gini hasta XGBoost.</p>
+  <div class="hero-meta">
+    <div class="meta-item"><strong>Bloque I</strong>Árboles de Decisión</div>
+    <div class="meta-item"><strong>Bloque II</strong>Bagging · Random Forest</div>
+    <div class="meta-item"><strong>Bloque III</strong>Boosting · XGBoost</div>
+    <div class="meta-item"><strong>Bloque IV</strong>Comparación &amp; Hiperparámetros</div>
+    <div class="meta-item"><strong>Prácticas</strong>Bank Marketing · Pima Diabetes</div>
+  </div>
+</div>
+
+<nav class="toc">
+  <a href="#arboles">01 Árboles</a>
+  <a href="#criterios">02 Criterios</a>
+  <a href="#bagging">03 Bagging</a>
+  <a href="#rf">04 Random Forest</a>
+  <a href="#boosting">05 Boosting</a>
+  <a href="#xgboost">06 XGBoost</a>
+  <a href="#hiperparametros">07 Hiperparámetros</a>
+  <a href="#comparacion">08 Comparación</a>
+  <a href="#practicas">09 Prácticas</a>
+</nav>
+
+<!-- SECCIÓN 1 -->
+<section id="arboles">
+<div class="container">
+  <div class="section-label">01 — Fundamentos</div>
+  <h2>Árboles de Decisión</h2>
+  <p>Un árbol de decisión divide el espacio de features en regiones rectangulares mediante <strong>preguntas binarias sucesivas</strong>. Cada nodo interno hace una pregunta sobre un feature; cada hoja asigna una clase (clasificación) o un valor (regresión).</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 700 320" width="700" height="320" xmlns="http://www.w3.org/2000/svg">
+      <rect x="270" y="10" width="160" height="44" rx="4" fill="#1a1a1a" stroke="#e63946" stroke-width="1.5"/>
+      <text x="350" y="28" text-anchor="middle" font-family="monospace" font-size="10" fill="#e63946">NODO RAÍZ</text>
+      <text x="350" y="45" text-anchor="middle" font-family="monospace" font-size="11" fill="#e8e8e8">edad ≤ 40?</text>
+      <line x1="300" y1="54" x2="175" y2="120" stroke="#333" stroke-width="1.5"/>
+      <text x="220" y="100" font-family="sans-serif" font-size="11" fill="#52b788">Sí</text>
+      <rect x="95" y="120" width="160" height="44" rx="4" fill="#1a1a1a" stroke="#4cc9f0" stroke-width="1.5"/>
+      <text x="175" y="138" text-anchor="middle" font-family="monospace" font-size="10" fill="#4cc9f0">NODO INTERNO</text>
+      <text x="175" y="155" text-anchor="middle" font-family="monospace" font-size="11" fill="#e8e8e8">balance &gt; 500?</text>
+      <line x1="400" y1="54" x2="525" y2="120" stroke="#333" stroke-width="1.5"/>
+      <text x="472" y="100" font-family="sans-serif" font-size="11" fill="#f4a261">No</text>
+      <rect x="445" y="120" width="160" height="44" rx="4" fill="#1a1a1a" stroke="#4cc9f0" stroke-width="1.5"/>
+      <text x="525" y="138" text-anchor="middle" font-family="monospace" font-size="10" fill="#4cc9f0">NODO INTERNO</text>
+      <text x="525" y="155" text-anchor="middle" font-family="monospace" font-size="11" fill="#e8e8e8">housing = yes?</text>
+      <line x1="145" y1="164" x2="90" y2="240" stroke="#333" stroke-width="1.5"/>
+      <rect x="30" y="240" width="120" height="44" rx="4" fill="#0d1f14" stroke="#52b788" stroke-width="1.5"/>
+      <text x="90" y="258" text-anchor="middle" font-family="monospace" font-size="10" fill="#52b788">HOJA</text>
+      <text x="90" y="275" text-anchor="middle" font-family="monospace" font-size="11" fill="#e8e8e8">clase: YES</text>
+      <line x1="205" y1="164" x2="260" y2="240" stroke="#333" stroke-width="1.5"/>
+      <rect x="200" y="240" width="120" height="44" rx="4" fill="#1f0d0e" stroke="#e63946" stroke-width="1.5"/>
+      <text x="260" y="258" text-anchor="middle" font-family="monospace" font-size="10" fill="#e63946">HOJA</text>
+      <text x="260" y="275" text-anchor="middle" font-family="monospace" font-size="11" fill="#e8e8e8">clase: NO</text>
+      <line x1="495" y1="164" x2="420" y2="240" stroke="#333" stroke-width="1.5"/>
+      <rect x="360" y="240" width="120" height="44" rx="4" fill="#1f0d0e" stroke="#e63946" stroke-width="1.5"/>
+      <text x="420" y="258" text-anchor="middle" font-family="monospace" font-size="10" fill="#e63946">HOJA</text>
+      <text x="420" y="275" text-anchor="middle" font-family="monospace" font-size="11" fill="#e8e8e8">clase: NO</text>
+      <line x1="555" y1="164" x2="610" y2="240" stroke="#333" stroke-width="1.5"/>
+      <rect x="550" y="240" width="120" height="44" rx="4" fill="#0d1f14" stroke="#52b788" stroke-width="1.5"/>
+      <text x="610" y="258" text-anchor="middle" font-family="monospace" font-size="10" fill="#52b788">HOJA</text>
+      <text x="610" y="275" text-anchor="middle" font-family="monospace" font-size="11" fill="#e8e8e8">clase: YES</text>
+    </svg>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">🌳 Terminología</div>
+      <table>
+        <tr><th>Término</th><th>Qué es</th></tr>
+        <tr><td><span class="badge red">Raíz</span></td><td>Nodo inicial, todo el dataset</td></tr>
+        <tr><td><span class="badge blue">Nodo interno</span></td><td>Pregunta sobre un feature</td></tr>
+        <tr><td><span class="badge green">Hoja</span></td><td>Predicción final</td></tr>
+        <tr><td><span class="badge amber">Profundidad</span></td><td>Nº de splits desde raíz a hoja</td></tr>
+        <tr><td><span class="badge purple">Rama</span></td><td>Camino entre nodos</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">⚙️ Algoritmo CART</div>
+      <p>El algoritmo de sklearn. Para cada nodo:</p>
+      <ol style="color:#c8c8c8; padding-left:20px; font-size:13.5px; line-height:2.2;">
+        <li>Prueba todos los features y umbrales posibles</li>
+        <li>Elige el split que <strong>minimiza la impureza</strong> de los hijos</li>
+        <li>Repite recursivamente en cada subconjunto</li>
+        <li>Para cuando se cumple criterio de parada (<code>max_depth</code>, etc.)</li>
+      </ol>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECCIÓN 2 -->
+<section id="criterios">
+<div class="container">
+  <div class="section-label">02 — Matemáticas</div>
+  <h2>Criterios de División</h2>
+
+  <h3 class="accent">🎯 Impureza de Gini (clasificación)</h3>
+  <p>Mide la probabilidad de clasificar incorrectamente un elemento si lo etiquetamos al azar. <strong>0 = nodo puro</strong>; <strong>0.5 = máximo desorden</strong> (2 clases iguales).</p>
+
+  <div class="formula-block">
+    <span class="label">Gini de un nodo</span>
+    <div class="formula">Gini(t) = 1 − Σ pᵢ²</div>
+    <div class="desc">donde pᵢ es la proporción de la clase i en el nodo t</div>
+  </div>
+
+  <div class="formula-block">
+    <span class="label">Ejemplo: nodo con 80% positivos / 20% negativos</span>
+    <div class="formula">Gini = 1 − (0.8² + 0.2²) = 1 − (0.64 + 0.04) = 0.32</div>
+    <div class="desc">Nodo impuro → ganamos dividiendo. Si fuera una sola clase: Gini = 1 − 1² = 0 (puro)</div>
+  </div>
+
+  <div class="formula-block">
+    <span class="label">Ganancia de Gini al hacer un split</span>
+    <div class="formula">ΔGini = Gini(padre) − [Nₗ/N · Gini(izq) + Nᵣ/N · Gini(der)]</div>
+    <div class="desc">Se elige el split que maximiza ΔGini. N = total muestras del nodo padre; Nₗ, Nᵣ = muestras en cada hijo</div>
+  </div>
+
+  <h3 class="accent">📊 Entropía e Information Gain</h3>
+  <p>Viene de la teoría de la información (Shannon). Alternativa a Gini; usa <code>criterion="entropy"</code>.</p>
+
+  <div class="formula-block">
+    <span class="label">Entropía de un nodo</span>
+    <div class="formula">H(t) = −Σ pᵢ · log₂(pᵢ)</div>
+    <div class="desc">Si pᵢ = 0 → 0·log(0) = 0 por convenio. Máximo: H = log₂(K) para K clases equiprobables</div>
+  </div>
+
+  <div class="formula-block">
+    <span class="label">Information Gain</span>
+    <div class="formula">IG = H(padre) − [Nₗ/N · H(izq) + Nᵣ/N · H(der)]</div>
+    <div class="desc">Mismo criterio que ID3/C4.5. Se maximiza el IG para elegir el mejor split.</div>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ️</span>
+    <div><strong>Gini vs Entropía:</strong> resultados muy similares en práctica. Gini es más ligero computacionalmente (sin logaritmos). sklearn usa Gini por defecto.</div>
+  </div>
+
+  <h3 class="accent-blue">📉 MSE para Regresión</h3>
+  <div class="formula-block">
+    <span class="label">MSE de un nodo (criterio de regresión)</span>
+    <div class="formula">MSE(t) = (1/N) · Σ (yᵢ − ȳ)²</div>
+    <div class="desc">La predicción de la hoja es la media ȳ de los valores en ese nodo</div>
+  </div>
+
+  <h3 class="accent-green">🛑 Hiperparámetros de poda (pre-pruning)</h3>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title"><code>max_depth</code></div>
+      <p>Profundidad máxima. Sin límite → memoriza training set. Típico: 3–10.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><code>min_samples_split</code></div>
+      <p>Nº mínimo de muestras para dividir un nodo. Por defecto: 2.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><code>min_samples_leaf</code></div>
+      <p>Nº mínimo de muestras en cada hoja tras el split.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><code>max_features</code></div>
+      <p>Nº máximo de features a considerar en cada split. Clave en Random Forest.</p>
+    </div>
+  </div>
+
+  <h3 class="accent-purple">💻 Código: Árbol de Decisión + GridSearch</h3>
+<pre><code><span class="imp">from</span> sklearn.tree <span class="imp">import</span> DecisionTreeClassifier, plot_tree
+<span class="imp">from</span> sklearn.model_selection <span class="imp">import</span> train_test_split, GridSearchCV
+<span class="imp">from</span> sklearn.metrics <span class="imp">import</span> classification_report, f1_score
+<span class="imp">import</span> matplotlib.pyplot <span class="imp">as</span> plt
+
+<span class="cm"># 1. Split estratificado</span>
+<span class="var">X_train</span>, <span class="var">X_test</span>, <span class="var">y_train</span>, <span class="var">y_test</span> = <span class="fn">train_test_split</span>(
+    X, y, test_size=<span class="num">0.2</span>, random_state=<span class="num">42</span>, stratify=y
+)
+
+<span class="cm"># 2. Árbol base</span>
+<span class="var">dt</span> = <span class="cls">DecisionTreeClassifier</span>(
+    criterion=<span class="str">'gini'</span>,
+    max_depth=<span class="num">5</span>,
+    min_samples_split=<span class="num">10</span>,
+    random_state=<span class="num">42</span>
+)
+<span class="var">dt</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+
+<span class="cm"># 3. Visualizar el árbol</span>
+plt.<span class="fn">figure</span>(figsize=(<span class="num">20</span>, <span class="num">8</span>))
+<span class="fn">plot_tree</span>(<span class="var">dt</span>, feature_names=X.<span class="var">columns</span>, class_names=[<span class="str">'No'</span>,<span class="str">'Yes'</span>], filled=<span class="kw">True</span>)
+plt.<span class="fn">show</span>()
+
+<span class="cm"># 4. Feature importances</span>
+<span class="imp">import</span> pandas <span class="kw">as</span> pd
+<span class="var">pd</span>.<span class="cls">Series</span>(<span class="var">dt</span>.feature_importances_, index=X.<span class="var">columns</span>).<span class="fn">sort_values</span>().<span class="fn">plot</span>(kind=<span class="str">'barh'</span>)
+
+<span class="cm"># 5. GridSearchCV</span>
+<span class="var">param_grid</span> = {
+    <span class="str">'max_depth'</span>: [<span class="num">3</span>, <span class="num">5</span>, <span class="num">7</span>, <span class="num">10</span>, <span class="kw">None</span>],
+    <span class="str">'min_samples_split'</span>: [<span class="num">2</span>, <span class="num">10</span>, <span class="num">20</span>],
+    <span class="str">'min_samples_leaf'</span>: [<span class="num">1</span>, <span class="num">5</span>, <span class="num">10</span>],
+    <span class="str">'criterion'</span>: [<span class="str">'gini'</span>, <span class="str">'entropy'</span>],
+    <span class="str">'class_weight'</span>: [<span class="kw">None</span>, <span class="str">'balanced'</span>]
+}
+<span class="var">grid_dt</span> = <span class="cls">GridSearchCV</span>(
+    <span class="cls">DecisionTreeClassifier</span>(random_state=<span class="num">42</span>),
+    <span class="var">param_grid</span>, cv=<span class="num">5</span>, scoring=<span class="str">'f1'</span>, n_jobs=<span class="num">-1</span>
+)
+<span class="var">grid_dt</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+<span class="fn">print</span>(<span class="var">grid_dt</span>.best_params_)
+<span class="fn">print</span>(<span class="fn">classification_report</span>(<span class="var">y_test</span>, <span class="var">grid_dt</span>.<span class="fn">predict</span>(<span class="var">X_test</span>)))</code></pre>
+</div>
+</section>
+
+<!-- SECCIÓN 3 -->
+<section id="bagging">
+<div class="container">
+  <div class="section-label">03 — Ensemble paralelo</div>
+  <h2>Bagging</h2>
+  <p><strong>Bagging</strong> = <strong>B</strong>ootstrap <strong>Agg</strong>regat<strong>ing</strong>. Entrenas muchos modelos independientes sobre subconjuntos aleatorios (con reemplazo) del dataset, y combinas sus predicciones.</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 720 200" width="720" height="200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="10" y="70" width="100" height="60" rx="4" fill="#1a1a1a" stroke="#e63946" stroke-width="1.5"/>
+      <text x="60" y="96" text-anchor="middle" font-family="monospace" font-size="10" fill="#e63946">DATASET</text>
+      <text x="60" y="116" text-anchor="middle" font-family="monospace" font-size="10" fill="#888">N muestras</text>
+      <line x1="110" y1="90" x2="165" y2="55" stroke="#333" stroke-width="1.2"/>
+      <line x1="110" y1="100" x2="165" y2="100" stroke="#333" stroke-width="1.2"/>
+      <line x1="110" y1="110" x2="165" y2="145" stroke="#333" stroke-width="1.2"/>
+      <text x="128" y="84" font-family="monospace" font-size="8" fill="#f4a261">bootstrap</text>
+      <rect x="165" y="32" width="90" height="46" rx="3" fill="#111" stroke="#4cc9f0" stroke-width="1"/>
+      <text x="210" y="52" text-anchor="middle" font-family="monospace" font-size="9" fill="#4cc9f0">Sample 1</text>
+      <text x="210" y="68" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">~63% único</text>
+      <rect x="165" y="78" width="90" height="46" rx="3" fill="#111" stroke="#4cc9f0" stroke-width="1"/>
+      <text x="210" y="98" text-anchor="middle" font-family="monospace" font-size="9" fill="#4cc9f0">Sample 2</text>
+      <text x="210" y="114" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">~63% único</text>
+      <rect x="165" y="124" width="90" height="46" rx="3" fill="#111" stroke="#4cc9f0" stroke-width="1"/>
+      <text x="210" y="144" text-anchor="middle" font-family="monospace" font-size="9" fill="#4cc9f0">Sample B</text>
+      <text x="210" y="160" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">~63% único</text>
+      <line x1="255" y1="55" x2="305" y2="55" stroke="#333" stroke-width="1.2"/>
+      <line x1="255" y1="101" x2="305" y2="101" stroke="#333" stroke-width="1.2"/>
+      <line x1="255" y1="147" x2="305" y2="147" stroke="#333" stroke-width="1.2"/>
+      <rect x="305" y="32" width="90" height="46" rx="3" fill="#111" stroke="#b5a0f0" stroke-width="1"/>
+      <text x="350" y="52" text-anchor="middle" font-family="monospace" font-size="9" fill="#b5a0f0">Model h₁</text>
+      <text x="350" y="68" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">fit en S1</text>
+      <rect x="305" y="78" width="90" height="46" rx="3" fill="#111" stroke="#b5a0f0" stroke-width="1"/>
+      <text x="350" y="98" text-anchor="middle" font-family="monospace" font-size="9" fill="#b5a0f0">Model h₂</text>
+      <text x="350" y="114" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">fit en S2</text>
+      <rect x="305" y="124" width="90" height="46" rx="3" fill="#111" stroke="#b5a0f0" stroke-width="1"/>
+      <text x="350" y="144" text-anchor="middle" font-family="monospace" font-size="9" fill="#b5a0f0">Model hB</text>
+      <text x="350" y="160" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">fit en SB</text>
+      <line x1="395" y1="55" x2="455" y2="95" stroke="#333" stroke-width="1.2"/>
+      <line x1="395" y1="101" x2="455" y2="101" stroke="#333" stroke-width="1.2"/>
+      <line x1="395" y1="147" x2="455" y2="110" stroke="#333" stroke-width="1.2"/>
+      <rect x="455" y="70" width="150" height="62" rx="4" fill="#0d1f14" stroke="#52b788" stroke-width="1.5"/>
+      <text x="530" y="94" text-anchor="middle" font-family="monospace" font-size="9" fill="#52b788">AGREGACIÓN</text>
+      <text x="530" y="112" text-anchor="middle" font-family="monospace" font-size="10" fill="#e8e8e8">Voto / Promedio</text>
+      <text x="530" y="126" text-anchor="middle" font-family="monospace" font-size="9" fill="#888">ŷ = mayoría / media</text>
+    </svg>
+  </div>
+
+  <h3 class="accent">🧮 ¿Por qué funciona? Bias-Variance</h3>
+  <div class="formula-block">
+    <span class="label">Descomposición del error</span>
+    <div class="formula">Error = Bias² + Variance + Ruido irreducible</div>
+    <div class="desc">Los árboles profundos tienen bajo Bias pero alta Variance. Bagging reduce la Variance sin aumentar el Bias.</div>
+  </div>
+  <div class="formula-block">
+    <span class="label">Reducción de varianza al promediar B modelos</span>
+    <div class="formula">Var(ȳ) = σ²/B   (si modelos son independientes)</div>
+    <div class="desc">En la práctica la correlación entre modelos limita la reducción. Por eso RF introduce aleatoriedad extra en features.</div>
+  </div>
+  <div class="formula-block">
+    <span class="label">Predicción final — clasificación (voto)</span>
+    <div class="formula">ŷ = argmax_c  Σᵦ 𝟙[hᵦ(x) = c]</div>
+    <div class="desc">Regresión: ŷ = (1/B) · Σᵦ hᵦ(x)</div>
+  </div>
+
+  <h3 class="accent-purple">💻 BaggingClassifier</h3>
+<pre><code><span class="imp">from</span> sklearn.ensemble <span class="imp">import</span> BaggingClassifier
+<span class="imp">from</span> sklearn.tree <span class="imp">import</span> DecisionTreeClassifier
+
+<span class="var">bagging</span> = <span class="cls">BaggingClassifier</span>(
+    estimator=<span class="cls">DecisionTreeClassifier</span>(max_depth=<span class="num">5</span>),
+    n_estimators=<span class="num">100</span>,   <span class="cm"># número de árboles</span>
+    max_samples=<span class="num">1.0</span>,    <span class="cm"># fracción del dataset por bootstrap</span>
+    max_features=<span class="num">1.0</span>,   <span class="cm"># fracción de features</span>
+    bootstrap=<span class="kw">True</span>,      <span class="cm"># con reemplazo (bootstrap)</span>
+    random_state=<span class="num">42</span>,
+    n_jobs=<span class="num">-1</span>
+)
+<span class="var">bagging</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+<span class="fn">print</span>(<span class="var">bagging</span>.<span class="fn">score</span>(<span class="var">X_test</span>, <span class="var">y_test</span>))</code></pre>
+</div>
+</section>
+
+<!-- SECCIÓN 4 -->
+<section id="rf">
+<div class="container">
+  <div class="section-label">04 — Bagging con aleatoriedad doble</div>
+  <h2>Random Forest</h2>
+  <p>Random Forest = Bagging + en cada split se selecciona un <strong>subconjunto aleatorio de features</strong>. Esto <strong>descorrelaciona</strong> los árboles → mayor reducción de varianza.</p>
+
+  <div class="callout warn">
+    <span class="callout-icon">⚡</span>
+    <div><strong>La clave:</strong> si un feature es muy dominante, todos los árboles lo elegirán → alta correlación entre árboles → Bagging no reduce mucho la varianza. RF fuerza a ignorar algunos features en cada split → mayor diversidad → mejor ensemble.</div>
+  </div>
+
+  <div class="formula-block">
+    <span class="label">Número de features por split (regla empírica)</span>
+    <div class="formula">Clasificación:  max_features = √p</div>
+    <div class="formula">Regresión:      max_features = p/3</div>
+    <div class="desc">p = número total de features. sklearn: max_features="sqrt" o "log2"</div>
+  </div>
+
+  <div class="formula-block">
+    <span class="label">Out-of-Bag Error (OOB) — validación gratis</span>
+    <div class="formula">P(muestra no usada en un bootstrap) = (1 − 1/N)ᴺ → 1/e ≈ 36.8%</div>
+    <div class="formula">OOB_score = proporción de muestras correctamente predichas por sus OOB árboles</div>
+    <div class="desc">Cada muestra es testeada por los árboles que no la vieron → estimación de generalización sin CV extra</div>
+  </div>
+
+  <div class="formula-block">
+    <span class="label">Feature Importance (Mean Decrease in Impurity)</span>
+    <div class="formula">Importance(fⱼ) = (1/B) · Σᵦ Σₙₒdₑₛ ΔGiniₙ · 𝟙[split en fⱼ]</div>
+    <div class="desc">Promedia la reducción de Gini atribuida a cada feature sobre todos los árboles. Ojo: sesgada hacia alta cardinalidad.</div>
+  </div>
+
+  <h3 class="accent-purple">💻 Random Forest + GridSearch</h3>
+<pre><code><span class="imp">from</span> sklearn.ensemble <span class="imp">import</span> RandomForestClassifier
+
+<span class="var">rf</span> = <span class="cls">RandomForestClassifier</span>(
+    n_estimators=<span class="num">200</span>,
+    max_depth=<span class="num">10</span>,
+    max_features=<span class="str">'sqrt'</span>,    <span class="cm"># clave: aleatoriedad en features</span>
+    min_samples_leaf=<span class="num">4</span>,
+    oob_score=<span class="kw">True</span>,           <span class="cm"># validación OOB gratis</span>
+    n_jobs=<span class="num">-1</span>,
+    random_state=<span class="num">42</span>
+)
+<span class="var">rf</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+<span class="fn">print</span>(<span class="str">f"OOB score: {rf.oob_score_:.3f}"</span>)
+
+<span class="cm"># Feature importances</span>
+<span class="imp">import</span> pandas <span class="kw">as</span> pd
+<span class="var">fi</span> = pd.<span class="cls">Series</span>(<span class="var">rf</span>.feature_importances_, index=X.<span class="var">columns</span>)
+<span class="var">fi</span>.<span class="fn">sort_values</span>(ascending=<span class="kw">False</span>).<span class="fn">head</span>(<span class="num">10</span>).<span class="fn">plot</span>(kind=<span class="str">'bar'</span>)
+
+<span class="cm"># GridSearch sobre RF</span>
+<span class="var">param_rf</span> = {
+    <span class="str">'n_estimators'</span>: [<span class="num">100</span>, <span class="num">200</span>],
+    <span class="str">'max_depth'</span>: [<span class="num">5</span>, <span class="num">10</span>, <span class="kw">None</span>],
+    <span class="str">'max_features'</span>: [<span class="str">'sqrt'</span>, <span class="str">'log2'</span>],
+    <span class="str">'min_samples_leaf'</span>: [<span class="num">1</span>, <span class="num">4</span>, <span class="num">8</span>]
+}
+<span class="var">grid_rf</span> = <span class="cls">GridSearchCV</span>(<span class="cls">RandomForestClassifier</span>(random_state=<span class="num">42</span>),
+                       <span class="var">param_rf</span>, cv=<span class="num">5</span>, scoring=<span class="str">'roc_auc'</span>, n_jobs=<span class="num">-1</span>)
+<span class="var">grid_rf</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)</code></pre>
+</div>
+</section>
+
+<!-- SECCIÓN 5 -->
+<section id="boosting">
+<div class="container">
+  <div class="section-label">05 — Ensemble secuencial</div>
+  <h2>Boosting</h2>
+  <p>A diferencia de Bagging (paralelo), Boosting entrena modelos <strong>en secuencia</strong>: cada modelo se enfoca en los errores del anterior. Los modelos se combinan con <strong>pesos</strong>, no con voto igualitario.</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 720 160" width="720" height="160" xmlns="http://www.w3.org/2000/svg">
+      <rect x="10" y="55" width="80" height="50" rx="3" fill="#1a1a1a" stroke="#e63946" stroke-width="1.5"/>
+      <text x="50" y="77" text-anchor="middle" font-family="monospace" font-size="9" fill="#e63946">DATA</text>
+      <text x="50" y="93" text-anchor="middle" font-family="monospace" font-size="9" fill="#888">w = 1/N</text>
+      <line x1="90" y1="80" x2="125" y2="80" stroke="#333" stroke-width="1.5"/>
+      <rect x="125" y="55" width="90" height="50" rx="3" fill="#111" stroke="#b5a0f0" stroke-width="1"/>
+      <text x="170" y="77" text-anchor="middle" font-family="monospace" font-size="9" fill="#b5a0f0">h₁(x)</text>
+      <text x="170" y="93" text-anchor="middle" font-family="monospace" font-size="9" fill="#888">err → α₁</text>
+      <line x1="215" y1="80" x2="255" y2="80" stroke="#f4a261" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="232" y="70" font-family="monospace" font-size="8" fill="#f4a261">↑w errores</text>
+      <rect x="255" y="55" width="90" height="50" rx="3" fill="#111" stroke="#b5a0f0" stroke-width="1"/>
+      <text x="300" y="77" text-anchor="middle" font-family="monospace" font-size="9" fill="#b5a0f0">h₂(x)</text>
+      <text x="300" y="93" text-anchor="middle" font-family="monospace" font-size="9" fill="#888">err → α₂</text>
+      <line x1="345" y1="80" x2="385" y2="80" stroke="#f4a261" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="360" y="70" font-family="monospace" font-size="8" fill="#f4a261">↑w errores</text>
+      <rect x="385" y="55" width="90" height="50" rx="3" fill="#111" stroke="#b5a0f0" stroke-width="1"/>
+      <text x="430" y="77" text-anchor="middle" font-family="monospace" font-size="9" fill="#b5a0f0">h₃(x)</text>
+      <text x="430" y="93" text-anchor="middle" font-family="monospace" font-size="9" fill="#888">err → α₃</text>
+      <text x="498" y="84" font-family="monospace" font-size="16" fill="#333">···</text>
+      <line x1="520" y1="80" x2="555" y2="80" stroke="#333" stroke-width="1.5"/>
+      <rect x="555" y="45" width="155" height="70" rx="4" fill="#0d1f14" stroke="#52b788" stroke-width="1.5"/>
+      <text x="632" y="72" text-anchor="middle" font-family="monospace" font-size="9" fill="#52b788">PREDICCIÓN FINAL</text>
+      <text x="632" y="92" text-anchor="middle" font-family="monospace" font-size="11" fill="#e8e8e8">H(x) = Σ αₘ·hₘ(x)</text>
+      <text x="632" y="107" text-anchor="middle" font-family="monospace" font-size="9" fill="#888">suma ponderada</text>
+    </svg>
+  </div>
+
+  <h3 class="accent">🧮 AdaBoost — Matemáticas paso a paso</h3>
+  <div class="formula-block">
+    <span class="label">1. Error ponderado del clasificador m</span>
+    <div class="formula">εₘ = Σᵢ wᵢ · 𝟙[hₘ(xᵢ) ≠ yᵢ]  /  Σᵢ wᵢ</div>
+    <div class="desc">Fracción ponderada de errores. Si εₘ > 0.5: peor que el azar, se invierte el clasificador.</div>
+  </div>
+  <div class="formula-block">
+    <span class="label">2. Peso del clasificador m (cuánto vale su voto)</span>
+    <div class="formula">αₘ = 0.5 · ln((1 − εₘ) / εₘ)</div>
+    <div class="desc">εₘ → 0 (casi perfecto): αₘ → ∞   |   εₘ = 0.5 (azar): αₘ = 0</div>
+  </div>
+  <div class="formula-block">
+    <span class="label">3. Actualización de pesos de las muestras</span>
+    <div class="formula">wᵢ ← wᵢ · exp(αₘ · 𝟙[hₘ(xᵢ) ≠ yᵢ])</div>
+    <div class="desc">Ejemplos mal clasificados reciben más peso → el siguiente modelo se fija más en ellos. Luego se normalizan (Σwᵢ = 1).</div>
+  </div>
+  <div class="formula-block">
+    <span class="label">4. Predicción final</span>
+    <div class="formula">H(x) = sign( Σₘ αₘ · hₘ(x) )</div>
+    <div class="desc">Suma ponderada de clasificadores débiles. Multiclase: versión SAMME.</div>
+  </div>
+
+  <h3 class="accent">📉 Gradient Boosting — Matemáticas</h3>
+  <p>En vez de ponderar muestras, ajusta cada modelo sobre los <strong>residuos</strong> = gradiente negativo de la función de pérdida.</p>
+
+  <div class="formula-block">
+    <span class="label">Algoritmo general</span>
+    <div class="formula">F₀(x) = argmin_γ Σᵢ L(yᵢ, γ)        ← predicción constante inicial</div>
+    <div class="formula">rᵢₘ = −∂L(yᵢ, Fₘ₋₁(xᵢ)) / ∂Fₘ₋₁   ← pseudoresiduos</div>
+    <div class="formula">hₘ ← árbol ajustado sobre {(xᵢ, rᵢₘ)}</div>
+    <div class="formula">Fₘ(x) = Fₘ₋₁(x) + η · hₘ(x)         ← η = learning rate</div>
+    <div class="desc">Descenso de gradiente en el espacio funcional. η pequeño → más robusto, necesita más árboles.</div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">MSE — regresión</div>
+      <div class="formula-block" style="margin:8px 0 0">
+        <div class="formula" style="font-size:13px">L = (y − F(x))² / 2</div>
+        <div class="desc">Pseudoresiduos = yᵢ − Fₘ₋₁(xᵢ). Son exactamente el error.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Log-loss — clasificación</div>
+      <div class="formula-block" style="margin:8px 0 0">
+        <div class="formula" style="font-size:13px">L = −y·log(p) − (1−y)·log(1−p)</div>
+        <div class="desc">Pseudoresiduos = yᵢ − p̂ᵢ  (clase real − probabilidad predicha).</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="accent-purple">💻 AdaBoost y GradientBoosting</h3>
+<pre><code><span class="imp">from</span> sklearn.ensemble <span class="imp">import</span> AdaBoostClassifier, GradientBoostingClassifier
+
+<span class="cm"># AdaBoost — clasificador débil habitual: stump (max_depth=1)</span>
+<span class="var">ada</span> = <span class="cls">AdaBoostClassifier</span>(
+    estimator=<span class="cls">DecisionTreeClassifier</span>(max_depth=<span class="num">1</span>),
+    n_estimators=<span class="num">200</span>,
+    learning_rate=<span class="num">0.5</span>,
+    random_state=<span class="num">42</span>
+)
+<span class="var">ada</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+
+<span class="cm"># Gradient Boosting sklearn</span>
+<span class="var">gb</span> = <span class="cls">GradientBoostingClassifier</span>(
+    n_estimators=<span class="num">200</span>,
+    learning_rate=<span class="num">0.05</span>,  <span class="cm"># η pequeño → más árboles, mejor resultado</span>
+    max_depth=<span class="num">3</span>,          <span class="cm"># árbol débil típico</span>
+    subsample=<span class="num">0.8</span>,        <span class="cm"># Stochastic GB: fracción de filas</span>
+    min_samples_leaf=<span class="num">4</span>,
+    random_state=<span class="num">42</span>
+)
+<span class="var">gb</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)</code></pre>
+</div>
+</section>
+
+<!-- SECCIÓN 6 -->
+<section id="xgboost">
+<div class="container">
+  <div class="section-label">06 — Boosting industrial</div>
+  <h2>XGBoost &amp; LightGBM</h2>
+  <p>XGBoost (<strong>eXtreme Gradient Boosting</strong>) añade <strong>regularización L1/L2</strong> nativa y usa la <strong>expansión de Taylor de 2º orden</strong> para derivar analíticamente el valor de cada hoja. LightGBM crece el árbol hoja a hoja en vez de nivel a nivel.</p>
+
+  <div class="formula-block">
+    <span class="label">Función objetivo XGBoost (paso m)</span>
+    <div class="formula">Obj = Σᵢ L(yᵢ, ŷᵢ) + Σₖ Ω(fₖ)</div>
+    <div class="formula">Ω(f) = γT + (λ/2)·Σⱼ wⱼ²</div>
+    <div class="desc">T = nº hojas; wⱼ = predicción en hoja j; γ = penalización por crear hojas; λ = regularización L2</div>
+  </div>
+
+  <div class="formula-block">
+    <span class="label">Expansión de Taylor 2º orden</span>
+    <div class="formula">L ≈ Σᵢ [gᵢ · fₘ(xᵢ) + (1/2) · hᵢ · fₘ(xᵢ)²]</div>
+    <div class="formula">gᵢ = ∂L/∂ŷᵢ  (gradiente)    hᵢ = ∂²L/∂ŷᵢ²  (hessiano)</div>
+    <div class="desc">Permite derivar el valor óptimo de cada hoja en forma cerrada.</div>
+  </div>
+
+  <div class="formula-block">
+    <span class="label">Valor óptimo de hoja j y criterio de ganancia del split</span>
+    <div class="formula">wⱼ* = −(Σᵢ∈Iⱼ gᵢ) / (Σᵢ∈Iⱼ hᵢ + λ)</div>
+    <div class="formula">Gain = ½ · [Gₗ²/(Hₗ+λ) + Gᵣ²/(Hᵣ+λ) − (Gₗ+Gᵣ)²/(Hₗ+Hᵣ+λ)] − γ</div>
+    <div class="desc">Split solo se realiza si Gain &gt; 0. γ controla cuándo "vale la pena" crear una hoja nueva.</div>
+  </div>
+
+  <h3 class="accent-purple">💻 XGBoost y LightGBM</h3>
+<pre><code><span class="imp">import</span> xgboost <span class="kw">as</span> xgb
+<span class="imp">import</span> lightgbm <span class="kw">as</span> lgb
+
+<span class="cm"># XGBoost</span>
+<span class="var">xgb_model</span> = <span class="cls">xgb.XGBClassifier</span>(
+    n_estimators=<span class="num">300</span>,
+    learning_rate=<span class="num">0.05</span>,
+    max_depth=<span class="num">4</span>,
+    subsample=<span class="num">0.8</span>,         <span class="cm"># fracción de filas por árbol</span>
+    colsample_bytree=<span class="num">0.8</span>,   <span class="cm"># fracción de features por árbol</span>
+    gamma=<span class="num">0.1</span>,              <span class="cm"># penalización por hojas (γ)</span>
+    reg_lambda=<span class="num">1.0</span>,         <span class="cm"># regularización L2 (λ)</span>
+    eval_metric=<span class="str">'auc'</span>,
+    random_state=<span class="num">42</span>
+)
+<span class="var">xgb_model</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>,
+              eval_set=[(<span class="var">X_test</span>, <span class="var">y_test</span>)],   <span class="cm"># monitorizar overfitting</span>
+              verbose=<span class="kw">False</span>)
+
+<span class="cm"># LightGBM — más rápido en datasets grandes</span>
+<span class="var">lgb_model</span> = <span class="cls">lgb.LGBMClassifier</span>(
+    n_estimators=<span class="num">300</span>,
+    learning_rate=<span class="num">0.05</span>,
+    num_leaves=<span class="num">31</span>,          <span class="cm"># controla complejidad (no max_depth)</span>
+    subsample=<span class="num">0.8</span>,
+    colsample_bytree=<span class="num">0.8</span>,
+    random_state=<span class="num">42</span>
+)
+<span class="var">lgb_model</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)</code></pre>
+
+  <div class="card-grid">
+    <div class="card" style="border-color:var(--blue)">
+      <div class="card-title" style="color:var(--blue)">XGBoost vs sklearn GBM</div>
+      <table>
+        <tr><th>Feature</th><th>sklearn GB</th><th>XGBoost</th></tr>
+        <tr><td>Regularización L1/L2</td><td>❌</td><td>✅</td></tr>
+        <tr><td>Hessiano 2º orden</td><td>❌</td><td>✅</td></tr>
+        <tr><td>Missing values nativo</td><td>Manual</td><td>✅</td></tr>
+        <tr><td>Paralelismo por columna</td><td>Limitado</td><td>✅</td></tr>
+        <tr><td>Early stopping</td><td>Limitado</td><td>✅</td></tr>
+      </table>
+    </div>
+    <div class="card" style="border-color:var(--green)">
+      <div class="card-title" style="color:var(--green)">LightGBM — diferencia clave</div>
+      <p>Crece el árbol <strong>hoja a hoja (leaf-wise)</strong> en vez de nivel a nivel (level-wise). Mayor precisión con menos hojas, pero más propenso a overfitting en datos pequeños.</p>
+      <p style="margin-top:12px"><code>num_leaves</code> = control principal de complejidad.<br><code>min_data_in_leaf</code> → evita overfitting.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECCIÓN 7 -->
+<section id="hiperparametros">
+<div class="container">
+  <div class="section-label">07 — Tuning</div>
+  <h2>Optimización de Hiperparámetros</h2>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">GridSearchCV</div>
+      <p>Prueba <em>todas</em> las combinaciones. Exhaustivo pero costoso.</p>
+      <div class="formula-block" style="margin:12px 0 0">
+        <div class="formula" style="font-size:12px">Combinaciones = Π len(param_grid[k])</div>
+        <div class="desc">Grid 4×3×3×2 = 72 combinaciones × 5 folds = 360 fits</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">RandomizedSearchCV</div>
+      <p>Muestrea <code>n_iter</code> combinaciones al azar. Eficiente con espacios grandes o continuos.</p>
+      <div class="formula-block" style="margin:12px 0 0">
+        <div class="formula" style="font-size:12px">n_iter × cv = total fits</div>
+        <div class="desc">Permite distribuciones: <code>scipy.stats.uniform(0.01, 0.3)</code></div>
+      </div>
+    </div>
+  </div>
+
+<pre><code><span class="imp">from</span> sklearn.model_selection <span class="imp">import</span> RandomizedSearchCV
+<span class="imp">from</span> scipy.stats <span class="imp">import</span> uniform, randint
+
+<span class="var">param_dist</span> = {
+    <span class="str">'n_estimators'</span>: <span class="fn">randint</span>(<span class="num">100</span>, <span class="num">500</span>),
+    <span class="str">'max_depth'</span>: <span class="fn">randint</span>(<span class="num">2</span>, <span class="num">8</span>),
+    <span class="str">'learning_rate'</span>: <span class="fn">uniform</span>(<span class="num">0.01</span>, <span class="num">0.3</span>),
+    <span class="str">'subsample'</span>: <span class="fn">uniform</span>(<span class="num">0.6</span>, <span class="num">0.4</span>),
+    <span class="str">'colsample_bytree'</span>: <span class="fn">uniform</span>(<span class="num">0.5</span>, <span class="num">0.5</span>)
+}
+<span class="var">random_search</span> = <span class="cls">RandomizedSearchCV</span>(
+    <span class="cls">xgb.XGBClassifier</span>(random_state=<span class="num">42</span>),
+    <span class="var">param_dist</span>, n_iter=<span class="num">50</span>, cv=<span class="num">5</span>,
+    scoring=<span class="str">'roc_auc'</span>, random_state=<span class="num">42</span>, n_jobs=<span class="num">-1</span>
+)
+<span class="var">random_search</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+<span class="fn">print</span>(<span class="var">random_search</span>.best_params_)</code></pre>
+
+  <table>
+    <tr><th>Parámetro</th><th>Aplica a</th><th>Efecto al aumentar</th><th>Consejo</th></tr>
+    <tr><td><code>max_depth</code></td><td>DT, RF, GB, XGB</td><td>↑ complejidad, ↑ overfitting</td><td>Empezar en 3–5</td></tr>
+    <tr><td><code>n_estimators</code></td><td>RF, GB, XGB</td><td>↑ tiempo; RF: nunca empeora</td><td>GB: puede sobreajustar</td></tr>
+    <tr><td><code>learning_rate</code></td><td>GB, XGB, LGB</td><td>↓ → más robusto, más árboles</td><td>0.01–0.1 habitual</td></tr>
+    <tr><td><code>subsample</code></td><td>GB, XGB, LGB</td><td>↓ → más aleatoriedad</td><td>0.7–0.9 suele funcionar</td></tr>
+    <tr><td><code>min_samples_leaf</code></td><td>DT, RF, GB</td><td>↑ → hojas más grandes</td><td>Útil con clases raras</td></tr>
+    <tr><td><code>gamma</code></td><td>XGB</td><td>↑ → más poda</td><td>0–1 para empezar</td></tr>
+    <tr><td><code>num_leaves</code></td><td>LightGBM</td><td>↑ → más complejo</td><td>31 por defecto</td></tr>
+  </table>
+</div>
+</section>
+
+<!-- SECCIÓN 8 -->
+<section id="comparacion">
+<div class="container">
+  <div class="section-label">08 — ¿Cuál elegir?</div>
+  <h2>Comparación de Modelos</h2>
+
+  <div class="card-grid">
+    <div class="card" style="border-color:#e63946">
+      <div class="card-title" style="color:var(--red)">🌳 Árbol de Decisión</div>
+      <p>Interpretabilidad total. Alta varianza sin poda.</p>
+      <div><span class="badge red">Interpretable</span><span class="badge red">Visualizable</span><span class="badge red">Overfitting</span></div>
+    </div>
+    <div class="card" style="border-color:#4cc9f0">
+      <div class="card-title" style="color:var(--blue)">🌲 Random Forest</div>
+      <p>Buen equilibrio bias-variance. Robusto. Paralelizable. OOB gratis.</p>
+      <div><span class="badge blue">Robusto</span><span class="badge blue">OOB</span><span class="badge blue">Paralelo</span></div>
+    </div>
+    <div class="card" style="border-color:#f4a261">
+      <div class="card-title" style="color:var(--amber)">⚡ GradientBoosting</div>
+      <p>Alta precisión. Sensible a outliers. Lento de entrenar. Requiere más tuning.</p>
+      <div><span class="badge amber">Alta precisión</span><span class="badge amber">Secuencial</span><span class="badge amber">Tuning</span></div>
+    </div>
+    <div class="card" style="border-color:#52b788">
+      <div class="card-title" style="color:var(--green)">🚀 XGBoost / LightGBM</div>
+      <p>Estado del arte tabular. Regularización nativa. Rápido. Maneja nulls.</p>
+      <div><span class="badge green">Kaggle winner</span><span class="badge green">Regularizado</span><span class="badge green">Rápido</span></div>
+    </div>
+  </div>
+
+  <h3 class="accent-blue">📊 Comparar múltiples modelos correctamente</h3>
+<pre><code><span class="imp">from</span> sklearn.model_selection <span class="imp">import</span> cross_val_score
+<span class="imp">from</span> sklearn.metrics <span class="imp">import</span> RocCurveDisplay
+<span class="imp">import</span> matplotlib.pyplot <span class="imp">as</span> plt
+
+<span class="var">modelos</span> = {
+    <span class="str">'DT'</span>: <span class="var">dt</span>, <span class="str">'RF'</span>: <span class="var">rf</span>, <span class="str">'AdaBoost'</span>: <span class="var">ada</span>,
+    <span class="str">'GB'</span>: <span class="var">gb</span>, <span class="str">'XGB'</span>: <span class="var">xgb_model</span>
+}
+
+<span class="cm"># Comparar con CV (sin tocar test)</span>
+<span class="kw">for</span> nombre, modelo <span class="kw">in</span> <span class="var">modelos</span>.items():
+    <span class="var">scores</span> = <span class="fn">cross_val_score</span>(modelo, <span class="var">X_train</span>, <span class="var">y_train</span>,
+                              cv=<span class="num">5</span>, scoring=<span class="str">'roc_auc'</span>)
+    <span class="fn">print</span>(<span class="str">f"{nombre}: {scores.mean():.3f} ± {scores.std():.3f}"</span>)
+
+<span class="cm"># Curva ROC de todos los modelos</span>
+<span class="var">fig</span>, <span class="var">ax</span> = plt.<span class="fn">subplots</span>(figsize=(<span class="num">8</span>, <span class="num">6</span>))
+<span class="kw">for</span> nombre, modelo <span class="kw">in</span> <span class="var">modelos</span>.items():
+    modelo.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)  <span class="cm"># entrenar en todo train</span>
+    <span class="cls">RocCurveDisplay</span>.<span class="fn">from_estimator</span>(modelo, <span class="var">X_test</span>, <span class="var">y_test</span>,
+                                    ax=<span class="var">ax</span>, name=nombre)
+plt.<span class="fn">show</span>()
+
+<span class="cm"># Curva de validación — diagnóstico de overfitting</span>
+<span class="imp">from</span> sklearn.model_selection <span class="imp">import</span> validation_curve
+<span class="var">param_range</span> = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">5</span>, <span class="num">7</span>, <span class="num">10</span>, <span class="kw">None</span>]
+<span class="var">train_s</span>, <span class="var">val_s</span> = <span class="fn">validation_curve</span>(
+    <span class="cls">DecisionTreeClassifier</span>(random_state=<span class="num">42</span>),
+    <span class="var">X_train</span>, <span class="var">y_train</span>,
+    param_name=<span class="str">'max_depth'</span>,
+    param_range=<span class="var">param_range</span>,
+    cv=<span class="num">5</span>, scoring=<span class="str">'f1'</span>
+)
+<span class="cm"># train alto y val bajo → overfitting</span>
+<span class="cm"># ambos bajos → underfitting</span></code></pre>
+</div>
+</section>
+
+<!-- SECCIÓN 9 -->
+<section id="practicas">
+<div class="container">
+  <div class="section-label">09 — Prácticas Obligatorias</div>
+  <h2>Guía de las Prácticas</h2>
+
+  <div class="practice-box">
+    <h3>🏦 Práctica 1: Bank Marketing — Árbol de Decisión</h3>
+    <p>Dataset de campañas de marketing bancario portugués (UCI). Target <code>y</code>: ¿el cliente suscribe un depósito a plazo? Clasificación binaria con clases desbalanceadas (~89% No / ~11% Sí).</p>
+    <div style="margin-bottom:16px"><span class="badge red">Clasificación</span><span class="badge amber">Desbalanceo</span><span class="badge blue">GridSearchCV</span><span class="badge green">Bank Marketing UCI</span></div>
+
+    <div class="callout tip">
+      <span class="callout-icon">✅</span>
+      <div><strong>Obligatorio según el enunciado:</strong> (1) identificar target y analizar su distribución, (2) grid de hiperparámetros razonado, (3) comparar DT optimizado vs Logistic Regression baseline (sin optimizar), (4) evaluación final contra test.</div>
+    </div>
+
+<pre><code><span class="imp">import</span> pandas <span class="kw">as</span> pd
+<span class="imp">from</span> sklearn.tree <span class="imp">import</span> DecisionTreeClassifier
+<span class="imp">from</span> sklearn.linear_model <span class="imp">import</span> LogisticRegression
+<span class="imp">from</span> sklearn.model_selection <span class="imp">import</span> train_test_split, GridSearchCV
+<span class="imp">from</span> sklearn.metrics <span class="imp">import</span> classification_report, f1_score
+
+<span class="cm"># 1. Carga</span>
+<span class="var">df</span> = pd.<span class="fn">read_csv</span>(<span class="str">'bank.csv'</span>, sep=<span class="str">';'</span>)
+<span class="fn">print</span>(<span class="var">df</span>[<span class="str">'y'</span>].<span class="fn">value_counts</span>(normalize=<span class="kw">True</span>))  <span class="cm"># distribución del target</span>
+
+<span class="cm"># 2. Preprocesamiento</span>
+<span class="var">df</span>[<span class="str">'y'</span>] = (<span class="var">df</span>[<span class="str">'y'</span>] == <span class="str">'yes'</span>).<span class="fn">astype</span>(<span class="num">int</span>)
+<span class="var">df_enc</span> = pd.<span class="fn">get_dummies</span>(<span class="var">df</span>, drop_first=<span class="kw">True</span>)
+<span class="var">X</span>, <span class="var">y</span> = <span class="var">df_enc</span>.<span class="fn">drop</span>(<span class="str">'y'</span>, axis=<span class="num">1</span>), <span class="var">df_enc</span>[<span class="str">'y'</span>]
+
+<span class="cm"># 3. Split estratificado (obligatorio con desbalanceo)</span>
+<span class="var">X_train</span>, <span class="var">X_test</span>, <span class="var">y_train</span>, <span class="var">y_test</span> = <span class="fn">train_test_split</span>(
+    X, y, test_size=<span class="num">0.2</span>, stratify=y, random_state=<span class="num">42</span>)
+
+<span class="cm"># 4. Baseline: Logistic Regression SIN optimizar</span>
+<span class="var">lr</span> = <span class="cls">LogisticRegression</span>(max_iter=<span class="num">1000</span>)
+<span class="var">lr</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+<span class="fn">print</span>(<span class="str">f"Baseline LR F1: {f1_score(y_test, lr.predict(X_test)):.3f}"</span>)
+
+<span class="cm"># 5. GridSearch DT</span>
+<span class="var">param_grid</span> = {
+    <span class="str">'max_depth'</span>: [<span class="num">3</span>, <span class="num">5</span>, <span class="num">7</span>, <span class="num">10</span>],
+    <span class="str">'min_samples_split'</span>: [<span class="num">2</span>, <span class="num">10</span>, <span class="num">50</span>],
+    <span class="str">'min_samples_leaf'</span>: [<span class="num">1</span>, <span class="num">5</span>, <span class="num">20</span>],
+    <span class="str">'class_weight'</span>: [<span class="kw">None</span>, <span class="str">'balanced'</span>]
+}
+<span class="var">grid</span> = <span class="cls">GridSearchCV</span>(
+    <span class="cls">DecisionTreeClassifier</span>(random_state=<span class="num">42</span>),
+    <span class="var">param_grid</span>, cv=<span class="num">5</span>, scoring=<span class="str">'f1'</span>, n_jobs=<span class="num">-1</span>
+)
+<span class="var">grid</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+<span class="fn">print</span>(<span class="var">grid</span>.best_params_)
+
+<span class="cm"># 6. Evaluación final contra test</span>
+<span class="fn">print</span>(<span class="fn">classification_report</span>(<span class="var">y_test</span>, <span class="var">grid</span>.<span class="fn">predict</span>(<span class="var">X_test</span>)))</code></pre>
+  </div>
+
+  <div class="practice-box" style="border-top-color: var(--blue); margin-top:32px">
+    <h3 style="color:var(--blue)">🩺 Práctica 2: Pima Diabetes — Ensembles</h3>
+    <p>Dataset mujeres Pima Indians ≥21 años. Target <code>class</code>: desarrollo de diabetes en 5 años. Construir ≥3 modelos (al menos uno bagging, uno boosting), comparar en CV, elegir el mejor y evaluarlo contra test.</p>
+    <div style="margin-bottom:16px"><span class="badge blue">Bagging</span><span class="badge blue">Boosting</span><span class="badge amber">Comparación CV</span><span class="badge green">Pima Indians</span></div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>Regla de oro:</strong> la comparación entre modelos se hace con <code>cross_val_score</code> sobre <em>train</em>. El test set se toca <strong>una sola vez</strong>, con el modelo ganador ya optimizado.</div>
+    </div>
+
+<pre><code><span class="imp">import</span> pandas <span class="kw">as</span> pd
+<span class="imp">from</span> sklearn.ensemble <span class="imp">import</span> (BaggingClassifier, RandomForestClassifier,
+                                 AdaBoostClassifier, GradientBoostingClassifier)
+<span class="imp">from</span> sklearn.tree <span class="imp">import</span> DecisionTreeClassifier
+<span class="imp">from</span> sklearn.model_selection <span class="imp">import</span> train_test_split, cross_val_score, GridSearchCV
+<span class="imp">from</span> sklearn.metrics <span class="imp">import</span> classification_report
+<span class="imp">import</span> xgboost <span class="kw">as</span> xgb
+
+<span class="cm"># Carga</span>
+<span class="var">url</span> = <span class="str">"https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv"</span>
+<span class="var">names</span> = [<span class="str">'preg'</span>,<span class="str">'plas'</span>,<span class="str">'pres'</span>,<span class="str">'skin'</span>,<span class="str">'test'</span>,<span class="str">'mass'</span>,<span class="str">'pedi'</span>,<span class="str">'age'</span>,<span class="str">'class'</span>]
+<span class="var">df</span> = pd.<span class="fn">read_csv</span>(<span class="var">url</span>, names=<span class="var">names</span>)
+<span class="var">X</span>, <span class="var">y</span> = <span class="var">df</span>.<span class="fn">drop</span>(<span class="str">'class'</span>, axis=<span class="num">1</span>), <span class="var">df</span>[<span class="str">'class'</span>]
+<span class="var">X_train</span>, <span class="var">X_test</span>, <span class="var">y_train</span>, <span class="var">y_test</span> = <span class="fn">train_test_split</span>(
+    X, y, test_size=<span class="num">0.2</span>, stratify=y, random_state=<span class="num">42</span>)
+
+<span class="cm"># Los 5 modelos</span>
+<span class="var">modelos</span> = {
+    <span class="str">'Bagging'</span>: <span class="cls">BaggingClassifier</span>(
+        estimator=<span class="cls">DecisionTreeClassifier</span>(max_depth=<span class="num">5</span>),
+        n_estimators=<span class="num">100</span>, random_state=<span class="num">42</span>),
+    <span class="str">'RandomForest'</span>: <span class="cls">RandomForestClassifier</span>(
+        n_estimators=<span class="num">200</span>, random_state=<span class="num">42</span>),
+    <span class="str">'AdaBoost'</span>: <span class="cls">AdaBoostClassifier</span>(
+        n_estimators=<span class="num">200</span>, learning_rate=<span class="num">0.5</span>, random_state=<span class="num">42</span>),
+    <span class="str">'GradientBoosting'</span>: <span class="cls">GradientBoostingClassifier</span>(
+        n_estimators=<span class="num">200</span>, learning_rate=<span class="num">0.05</span>,
+        max_depth=<span class="num">3</span>, random_state=<span class="num">42</span>),
+    <span class="str">'XGBoost'</span>: <span class="cls">xgb.XGBClassifier</span>(
+        n_estimators=<span class="num">200</span>, random_state=<span class="num">42</span>,
+        eval_metric=<span class="str">'logloss'</span>)
+}
+
+<span class="cm"># Comparar con CV (SIN tocar test)</span>
+<span class="var">resultados</span> = {}
+<span class="kw">for</span> nombre, modelo <span class="kw">in</span> <span class="var">modelos</span>.items():
+    <span class="var">scores</span> = <span class="fn">cross_val_score</span>(modelo, <span class="var">X_train</span>, <span class="var">y_train</span>,
+                              cv=<span class="num">5</span>, scoring=<span class="str">'roc_auc'</span>, n_jobs=<span class="num">-1</span>)
+    <span class="var">resultados</span>[nombre] = <span class="var">scores</span>
+    <span class="fn">print</span>(<span class="str">f"{nombre}: {scores.mean():.3f} ± {scores.std():.3f}"</span>)
+
+<span class="cm"># Mejor modelo → optimizar → evaluar contra test</span>
+<span class="var">mejor_nombre</span> = <span class="fn">max</span>(<span class="var">resultados</span>, key=<span class="kw">lambda</span> k: <span class="var">resultados</span>[k].<span class="fn">mean</span>())
+<span class="fn">print</span>(<span class="str">f"Mejor modelo: {mejor_nombre}"</span>)
+
+<span class="cm"># Entrenar en todo train y evaluar en test</span>
+<span class="var">mejor</span> = <span class="var">modelos</span>[<span class="var">mejor_nombre</span>]
+<span class="var">mejor</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+<span class="fn">print</span>(<span class="fn">classification_report</span>(<span class="var">y_test</span>, <span class="var">mejor</span>.<span class="fn">predict</span>(<span class="var">X_test</span>)))</code></pre>
+  </div>
+</div>
+</section>
+
+<footer style="background:#000; border-top:1px solid #1e1e1e; padding:40px 48px; text-align:center;">
+  <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; color:#333; text-transform:uppercase;">
+    Machine Learning · Sprint 09 · The Bridge · Árboles &amp; Ensembles
+  </div>
+</footer>
+
+</body>
+</html>
