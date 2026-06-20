@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clustering · K-Means</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0d;
+    --bg-card:#131316;
+    --bg-card2:#17171b;
+    --line:#26262c;
+    --text:#e8e6e1;
+    --text-dim:#8a8a92;
+    --coral:#ff5d5d;
+    --teal:#4fd1c5;
+    --gold:#f0b94d;
+    --violet:#9c8cf0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'DM Mono', monospace;
+    line-height:1.6;
+  }
+  h1,h2,h3{
+    font-family:'Syne', sans-serif;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:0 24px 100px;}
+
+  header{
+    padding:56px 24px 40px;
+    border-bottom:1px solid var(--line);
+    text-align:left;
+  }
+  .eyebrow{
+    font-size:13px;
+    color:var(--coral);
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    margin-bottom:10px;
+  }
+  header h1{
+    font-size:clamp(34px, 6vw, 52px);
+    font-weight:800;
+  }
+  header p{
+    color:var(--text-dim);
+    max-width:560px;
+    margin-top:14px;
+    font-size:15px;
+  }
+
+  .section{
+    padding:48px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .section:last-of-type{border-bottom:none;}
+  .tag{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    margin-bottom:14px;
+  }
+  .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);}
+  .section h2{
+    font-size:26px;
+    font-weight:700;
+    margin-bottom:14px;
+  }
+  .section p{font-size:15px; color:var(--text);}
+  .section p + p{margin-top:12px;}
+  .dim{color:var(--text-dim);}
+
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-top:20px;
+  }
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px;
+  }
+  .card h3{font-size:16px; margin-bottom:8px; color:var(--text);}
+  .card h3 span{color:var(--text-dim); font-weight:400; font-size:13px;}
+  .card p{font-size:13.5px; color:var(--text-dim); margin:0;}
+
+  .steps{
+    counter-reset:step;
+    margin-top:24px;
+    display:grid;
+    gap:0;
+  }
+  .step{
+    display:grid;
+    grid-template-columns:48px 1fr;
+    gap:16px;
+    padding:18px 0;
+    border-top:1px solid var(--line);
+  }
+  .step:first-child{border-top:none;}
+  .step-num{
+    counter-increment:step;
+    font-family:'Syne', sans-serif;
+    font-weight:800;
+    font-size:13px;
+    color:var(--coral);
+  }
+  .step-num::before{content: counter(step, decimal-leading-zero);}
+  .step h4{
+    font-family:'Syne', sans-serif;
+    font-size:15px;
+    margin:0 0 4px;
+    color:var(--text);
+  }
+  .step p{font-size:13.5px; color:var(--text-dim); margin:0;}
+
+  svg{display:block; width:100%; height:auto; margin-top:20px;}
+  .formula{
+    background:var(--bg-card2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:18px 20px;
+    font-size:14px;
+    color:var(--teal);
+    margin-top:16px;
+    overflow-x:auto;
+  }
+
+  /* demo */
+  .demo{
+    margin-top:24px;
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px;
+  }
+  .demo-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .demo-controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .demo-controls label{font-size:12px; color:var(--text-dim);}
+  select, button{
+    font-family:'DM Mono', monospace;
+    background:var(--bg-card2);
+    color:var(--text);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:7px 12px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  button.primary{
+    background:var(--coral);
+    border-color:var(--coral);
+    color:#160707;
+    font-weight:600;
+  }
+  button:hover{filter:brightness(1.1);}
+  button:disabled{opacity:0.4; cursor:not-allowed;}
+  #canvasWrap{
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    background:#0d0d10;
+  }
+  canvas{display:block; width:100%; height:auto;}
+  .demo-stats{
+    display:flex;
+    gap:24px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .stat{font-size:12px; color:var(--text-dim);}
+  .stat b{color:var(--text); font-family:'Syne',sans-serif; font-size:15px; display:block;}
+
+  footer{
+    padding:40px 0 0;
+    color:var(--text-dim);
+    font-size:13px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap" style="padding:0;">
+    <div class="eyebrow">Machine Learning · Teoría No Supervisados</div>
+    <h1>Clustering: K-Means</h1>
+    <p>Agrupar datos sin etiquetas: la idea detrás del aprendizaje no supervisado y, en concreto, del algoritmo más usado para encontrar grupos — K-Means.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="section">
+    <div class="tag"><span class="dot"></span>Intro · No supervisado</div>
+    <h2>¿Qué significa "no supervisado"?</h2>
+    <p>En aprendizaje <b>supervisado</b> cada ejemplo viene con una etiqueta (<span class="dim">target</span>) y el modelo aprende a predecirla. En <b>no supervisado</b> no hay etiquetas: solo tenemos las features, y el objetivo es descubrir estructura oculta en los datos por sí solos.</p>
+    <p class="dim">Clustering es la tarea no supervisada más habitual: dado un conjunto de puntos, agruparlos de forma que los puntos de un mismo grupo (clúster) se parezcan entre sí más de lo que se parecen a los de otros grupos.</p>
+    <div class="grid2">
+      <div class="card">
+        <h3>Casos de uso típicos</h3>
+        <p>Segmentación de clientes, compresión de imágenes por color, detección de anomalías, agrupar documentos por temática, reducir dimensionalidad (usar distancias a centroides como features).</p>
+      </div>
+      <div class="card">
+        <h3>Lo que NO tiene clustering</h3>
+        <p>No hay "respuesta correcta" que comprobar. No se puede calcular accuracy contra un target real (salvo que lo tengamos solo para evaluar a posteriori, como en la práctica con Olivetti faces).</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--coral);"></span>K-Means · Intuición</div>
+    <h2>La idea en una frase</h2>
+    <p>K-Means coloca <b>k</b> "centros" (centroides) en el espacio de features y asigna cada punto al centroide más cercano. Después mueve cada centroide al promedio de los puntos que le tocaron. Repite hasta que nada cambia.</p>
+    <svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg">
+      <!-- cluster 1 -->
+      <circle cx="160" cy="90" r="46" fill="none" stroke="#ff5d5d" stroke-width="1.4" stroke-dasharray="4 4" opacity="0.5"/>
+      <circle cx="160" cy="90" r="6" fill="#ff5d5d"/>
+      <circle cx="140" cy="70" r="4" fill="#ff8b8b"/>
+      <circle cx="180" cy="110" r="4" fill="#ff8b8b"/>
+      <circle cx="190" cy="65" r="4" fill="#ff8b8b"/>
+      <circle cx="125" cy="105" r="4" fill="#ff8b8b"/>
+      <!-- cluster 2 -->
+      <circle cx="380" cy="190" r="50" fill="none" stroke="#4fd1c5" stroke-width="1.4" stroke-dasharray="4 4" opacity="0.5"/>
+      <circle cx="380" cy="190" r="6" fill="#4fd1c5"/>
+      <circle cx="355" cy="170" r="4" fill="#8fe5dc"/>
+      <circle cx="410" cy="205" r="4" fill="#8fe5dc"/>
+      <circle cx="400" cy="155" r="4" fill="#8fe5dc"/>
+      <circle cx="350" cy="215" r="4" fill="#8fe5dc"/>
+      <!-- cluster 3 -->
+      <circle cx="600" cy="80" r="44" fill="none" stroke="#f0b94d" stroke-width="1.4" stroke-dasharray="4 4" opacity="0.5"/>
+      <circle cx="600" cy="80" r="6" fill="#f0b94d"/>
+      <circle cx="580" cy="60" r="4" fill="#f6d28b"/>
+      <circle cx="625" cy="95" r="4" fill="#f6d28b"/>
+      <circle cx="615" cy="55" r="4" fill="#f6d28b"/>
+      <circle cx="570" cy="100" r="4" fill="#f6d28b"/>
+      <text x="160" y="160" fill="#8a8a92" font-family="DM Mono" font-size="12" text-anchor="middle">centroide</text>
+      <text x="380" y="245" fill="#8a8a92" font-family="DM Mono" font-size="12" text-anchor="middle">centroide</text>
+      <text x="600" y="148" fill="#8a8a92" font-family="DM Mono" font-size="12" text-anchor="middle">centroide</text>
+    </svg>
+  </section>
+
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--gold);"></span>El algoritmo</div>
+    <h2>K-Means paso a paso</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num"></div>
+        <div>
+          <h4>Elegir k e inicializar centroides</h4>
+          <p>Se decide cuántos clústeres queremos (k) y se colocan k centroides, normalmente en posiciones aleatorias entre los puntos (sklearn usa por defecto <span class="dim">k-means++</span>, una inicialización más inteligente que evita centroides mal repartidos).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div>
+          <h4>Asignar cada punto al centroide más cercano</h4>
+          <p>Se calcula la distancia (normalmente euclídea) de cada punto a los k centroides y se asigna al más próximo. Esto define k regiones.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div>
+          <h4>Recalcular los centroides</h4>
+          <p>Cada centroide se mueve al promedio (centro de masas) de los puntos que tiene asignados.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div>
+          <h4>Repetir hasta convergencia</h4>
+          <p>Se repiten los pasos 2 y 3 hasta que las asignaciones ya no cambian (o el cambio es mínimo). El algoritmo siempre converge, aunque puede quedarse en un óptimo local: por eso sklearn prueba varias inicializaciones (<span class="dim">n_init</span>) y se queda con la mejor.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--violet);"></span>Regiones de decisión</div>
+    <h2>El espacio queda dividido en celdas (Voronoi)</h2>
+    <p>Una vez entrenado, K-Means asigna cualquier punto nuevo al centroide más cercano. Esto divide el espacio en regiones poligonales — un <b>diagrama de Voronoi</b> — donde cada región "pertenece" a un centroide.</p>
+    <svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="0,0 300,0 230,240 0,240" fill="#ff5d5d" opacity="0.12"/>
+      <polygon points="300,0 520,0 470,240 230,240" fill="#4fd1c5" opacity="0.12"/>
+      <polygon points="520,0 760,0 760,240 470,240" fill="#f0b94d" opacity="0.12"/>
+      <line x1="300" y1="0" x2="230" y2="240" stroke="#26262c" stroke-width="1.5"/>
+      <line x1="520" y1="0" x2="470" y2="240" stroke="#26262c" stroke-width="1.5"/>
+      <circle cx="140" cy="110" r="6" fill="#ff5d5d"/>
+      <circle cx="395" cy="130" r="6" fill="#4fd1c5"/>
+      <circle cx="640" cy="100" r="6" fill="#f0b94d"/>
+    </svg>
+    <p class="dim" style="margin-top:14px; font-size:13px;">En la práctica con caras Olivetti, cada región corresponde a un grupo de imágenes que K-Means consideró visualmente similares (no necesariamente la misma persona, porque el modelo no conoce las identidades reales).</p>
+  </section>
+
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--coral);"></span>Inercia</div>
+    <h2>¿Qué tan bueno es el agrupamiento?</h2>
+    <p>La <b>inercia</b> (WCSS, <i>within-cluster sum of squares</i>) mide la suma de las distancias al cuadrado de cada punto a su centroide. Cuanta más baja, más "compactos" son los clústeres.</p>
+    <div class="formula">inercia&nbsp; = &nbsp;Σᵢ &nbsp;‖xᵢ − centroide(xᵢ)‖²</div>
+    <p class="dim" style="margin-top:14px;">Ojo: la inercia siempre baja al aumentar k (con k = nº de puntos, la inercia sería 0). Por eso no sirve para elegir k directamente, sino para compararlo visualmente con el <b>método del codo</b>.</p>
+  </section>
+
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--teal);"></span>Ajuste de k</div>
+    <h2>¿Cómo elegimos el número de clústeres?</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Método del codo <span>(inercia)</span></h3>
+        <p>Se entrena K-Means para varios valores de k y se pinta la inercia frente a k. Se busca el punto donde la curva deja de bajar bruscamente y se "dobla" (el codo). A partir de ahí, añadir más clústeres aporta poca mejora.</p>
+      </div>
+      <div class="card">
+        <h3>Método de la silueta <span>(silhouette score)</span></h3>
+        <p>Mide, para cada punto, cuánto se parece a su propio clúster frente a los demás (rango -1 a 1). Se calcula el promedio para cada k y se elige el k con mayor score. Suele dar una respuesta más nítida que el codo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--gold);"></span>Demo</div>
+    <h2>Prueba K-Means en directo</h2>
+    <p class="dim">Puntos generados alrededor de grupos ocultos. Pulsa <b>paso a paso</b> para ver cómo se mueven los centroides en cada iteración, o <b>reiniciar</b> para generar un nuevo dataset.</p>
+
+    <div class="demo">
+      <div class="demo-head">
+        <div class="demo-controls">
+          <label for="kSelect">k =</label>
+          <select id="kSelect">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+          <button id="stepBtn" class="primary">▶ paso a paso</button>
+          <button id="resetBtn">↻ reiniciar</button>
+        </div>
+      </div>
+      <div id="canvasWrap">
+        <canvas id="kmeansCanvas" width="760" height="380"></canvas>
+      </div>
+      <div class="demo-stats">
+        <div class="stat">iteración<b id="iterStat">0</b></div>
+        <div class="stat">inercia<b id="inertiaStat">—</b></div>
+        <div class="stat">estado<b id="statusStat">listo</b></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Apuntes de apoyo para la sesión de Teoría No Supervisados y K-Means · La práctica obligatoria (caras Olivetti) aplica estos mismos conceptos con PCA + silhouette score sobre datos reales.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('kmeansCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const palette = ['#ff5d5d', '#4fd1c5', '#f0b94d', '#9c8cf0', '#5dd6ff'];
+
+  const kSelect = document.getElementById('kSelect');
+  const stepBtn = document.getElementById('stepBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const iterStat = document.getElementById('iterStat');
+  const inertiaStat = document.getElementById('inertiaStat');
+  const statusStat = document.getElementById('statusStat');
+
+  let points = [];
+  let centroids = [];
+  let assignments = [];
+  let iter = 0;
+  let converged = false;
+
+  function rand(min, max){ return Math.random() * (max - min) + min; }
+
+  function generatePoints(k){
+    points = [];
+    const margin = 60;
+    const centers = [];
+    for(let i=0;i<k;i++){
+      centers.push([rand(margin, W-margin), rand(margin, H-margin)]);
+    }
+    centers.forEach(c => {
+      const n = Math.floor(rand(14, 22));
+      for(let i=0;i<n;i++){
+        points.push([
+          c[0] + rand(-55, 55),
+          c[1] + rand(-45, 45)
+        ]);
+      }
+    });
+  }
+
+  function initCentroids(k){
+    centroids = [];
+    const shuffled = [...points].sort(()=>Math.random()-0.5);
+    for(let i=0;i<k;i++){
+      centroids.push([...shuffled[i]]);
+    }
+  }
+
+  function dist2(a,b){
+    const dx = a[0]-b[0], dy = a[1]-b[1];
+    return dx*dx + dy*dy;
+  }
+
+  function assignStep(){
+    assignments = points.map(p => {
+      let best = 0, bestD = Infinity;
+      centroids.forEach((c, ci) => {
+        const d = dist2(p, c);
+        if(d < bestD){ bestD = d; best = ci; }
+      });
+      return best;
+    });
+  }
+
+  function updateStep(){
+    let changed = false;
+    const newCentroids = centroids.map((c, ci) => {
+      const assigned = points.filter((p,i) => assignments[i] === ci);
+      if(assigned.length === 0) return c;
+      const mx = assigned.reduce((s,p)=>s+p[0],0)/assigned.length;
+      const my = assigned.reduce((s,p)=>s+p[1],0)/assigned.length;
+      if(Math.abs(mx-c[0])>0.5 || Math.abs(my-c[1])>0.5) changed = true;
+      return [mx, my];
+    });
+    centroids = newCentroids;
+    return changed;
+  }
+
+  function computeInertia(){
+    let total = 0;
+    points.forEach((p,i) => { total += dist2(p, centroids[assignments[i]]); });
+    return total;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle = '#1a1a1f';
+    ctx.lineWidth = 1;
+    for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+    points.forEach((p,i) => {
+      const color = assignments.length ? palette[assignments[i] % palette.length] : '#5a5a62';
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], 4.5, 0, Math.PI*2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.8;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    centroids.forEach((c, ci) => {
+      ctx.beginPath();
+      ctx.arc(c[0], c[1], 9, 0, Math.PI*2);
+      ctx.fillStyle = palette[ci % palette.length];
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#0a0a0d';
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(c[0]-12, c[1]); ctx.lineTo(c[0]+12, c[1]);
+      ctx.moveTo(c[0], c[1]-12); ctx.lineTo(c[0], c[1]+12);
+      ctx.strokeStyle = '#0a0a0d';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+  }
+
+  function reset(){
+    const k = parseInt(kSelect.value, 10);
+    generatePoints(k);
+    initCentroids(k);
+    assignments = [];
+    iter = 0;
+    converged = false;
+    iterStat.textContent = '0';
+    inertiaStat.textContent = '—';
+    statusStat.textContent = 'listo';
+    stepBtn.disabled = false;
+    draw();
+  }
+
+  function step(){
+    if(converged) return;
+    assignStep();
+    const changed = updateStep();
+    iter++;
+    iterStat.textContent = iter;
+    inertiaStat.textContent = Math.round(computeInertia());
+    draw();
+    if(!changed){
+      converged = true;
+      statusStat.textContent = 'convergido';
+      stepBtn.disabled = true;
+    } else {
+      statusStat.textContent = 'ajustando…';
+    }
+  }
+
+  stepBtn.addEventListener('click', step);
+  resetBtn.addEventListener('click', reset);
+  kSelect.addEventListener('change', reset);
+
+  reset();
+})();
+</script>
+
+</body>
+</html>
