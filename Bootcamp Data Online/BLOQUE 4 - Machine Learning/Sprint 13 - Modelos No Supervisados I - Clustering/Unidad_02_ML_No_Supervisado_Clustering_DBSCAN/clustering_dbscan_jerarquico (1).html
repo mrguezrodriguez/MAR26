@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clustering · DBSCAN y Jerárquico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0d;
+    --bg-card:#131316;
+    --bg-card2:#17171b;
+    --line:#26262c;
+    --text:#e8e6e1;
+    --text-dim:#8a8a92;
+    --coral:#ff5d5d;
+    --teal:#4fd1c5;
+    --gold:#f0b94d;
+    --violet:#9c8cf0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'DM Mono', monospace;
+    line-height:1.6;
+  }
+  h1,h2,h3{font-family:'Syne', sans-serif; margin:0; letter-spacing:-0.01em;}
+  .wrap{max-width:860px; margin:0 auto; padding:0 24px 100px;}
+
+  header{padding:56px 24px 40px; border-bottom:1px solid var(--line);}
+  .eyebrow{font-size:13px; color:var(--coral); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:10px;}
+  header h1{font-size:clamp(34px,6vw,52px); font-weight:800;}
+  header p{color:var(--text-dim); max-width:560px; margin-top:14px; font-size:15px;}
+
+  .section{padding:48px 0; border-bottom:1px solid var(--line);}
+  .section:last-of-type{border-bottom:none;}
+  .tag{display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:14px;}
+  .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);}
+  .section h2{font-size:26px; font-weight:700; margin-bottom:14px;}
+  .section p{font-size:15px; color:var(--text);}
+  .section p+p{margin-top:12px;}
+  .dim{color:var(--text-dim);}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  .card{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:20px;}
+  .card h3{font-size:16px; margin-bottom:8px; color:var(--text);}
+  .card h3 span{color:var(--text-dim); font-weight:400; font-size:13px;}
+  .card p{font-size:13.5px; color:var(--text-dim); margin:0;}
+
+  .steps{counter-reset:step; margin-top:24px; display:grid; gap:0;}
+  .step{display:grid; grid-template-columns:48px 1fr; gap:16px; padding:18px 0; border-top:1px solid var(--line);}
+  .step:first-child{border-top:none;}
+  .step-num{counter-increment:step; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; color:var(--coral);}
+  .step-num::before{content:counter(step,decimal-leading-zero);}
+  .step h4{font-family:'Syne',sans-serif; font-size:15px; margin:0 0 4px; color:var(--text);}
+  .step p{font-size:13.5px; color:var(--text-dim); margin:0;}
+
+  svg{display:block; width:100%; height:auto; margin-top:20px;}
+  .formula{background:var(--bg-card2); border:1px solid var(--line); border-radius:8px; padding:18px 20px; font-size:14px; color:var(--teal); margin-top:16px; overflow-x:auto;}
+
+  .demo{margin-top:24px; background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:20px;}
+  .demo-head{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;}
+  .demo-controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .demo-controls label{font-size:12px; color:var(--text-dim);}
+  select,button{font-family:'DM Mono',monospace; background:var(--bg-card2); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:7px 12px; font-size:13px; cursor:pointer;}
+  button.primary{background:var(--coral); border-color:var(--coral); color:#160707; font-weight:600;}
+  button:hover{filter:brightness(1.1);}
+  #canvasWrap{border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#0d0d10;}
+  canvas{display:block; width:100%; height:auto;}
+  .demo-stats{display:flex; gap:24px; margin-top:14px; flex-wrap:wrap;}
+  .stat{font-size:12px; color:var(--text-dim);}
+  .stat b{color:var(--text); font-family:'Syne',sans-serif; font-size:15px; display:block;}
+
+  .compare-table{width:100%; border-collapse:collapse; margin-top:20px; font-size:13.5px;}
+  .compare-table th{text-align:left; padding:10px 14px; background:var(--bg-card2); color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.08em; border-bottom:1px solid var(--line);}
+  .compare-table td{padding:10px 14px; border-bottom:1px solid var(--line); color:var(--text-dim); vertical-align:top;}
+  .compare-table td:first-child{color:var(--text); font-family:'Syne',sans-serif; font-weight:600; font-size:14px;}
+  .compare-table .win{color:var(--teal);}
+
+  footer{padding:40px 0 0; color:var(--text-dim); font-size:13px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap" style="padding:0;">
+    <div class="eyebrow">Machine Learning · Práctica obligatoria</div>
+    <h1>DBSCAN y Clustering Jerárquico</h1>
+    <p>Dos algoritmos que encuentran grupos sin necesitar K de antemano: DBSCAN detecta forma y densidad, el jerárquico construye un árbol de similitud que puedes cortar donde quieras.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- DBSCAN intuición -->
+  <section class="section">
+    <div class="tag"><span class="dot"></span>DBSCAN · Intuición</div>
+    <h2>Clusters por densidad, no por distancia al centro</h2>
+    <p>K-Means asume clusters esféricos. DBSCAN en cambio define un cluster como <b>una zona de puntos suficientemente densa y conectada</b> — puede tener cualquier forma, y lo que no encaja se marca como ruido.</p>
+    <p class="dim">Solo necesita dos hiperparámetros: el radio de vecindad <b>ε (eps)</b> y el mínimo de vecinos dentro de ese radio <b>min_samples</b>.</p>
+
+    <div class="grid2" style="margin-top:20px;">
+      <div class="card">
+        <h3>ε (eps) <span>— radio de vecindad</span></h3>
+        <p>Distancia máxima para considerar dos puntos como "vecinos". Demasiado grande: todo un solo cluster. Demasiado pequeño: todo ruido. Se elige con el gráfico k-distancias.</p>
+      </div>
+      <div class="card">
+        <h3>min_samples <span>— densidad mínima</span></h3>
+        <p>Vecinos mínimos en radio ε para ser punto núcleo. Regla heurística: min_samples ≥ nº de features. A mayor valor, más estricta la definición de cluster y más puntos quedan como ruido.</p>
+      </div>
+    </div>
+
+    <!-- SVG tipos de puntos -->
+    <svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg">
+      <!-- CLUSTER A — nube densa teal -->
+      <circle cx="190" cy="110" r="70" fill="none" stroke="#4fd1c5" stroke-width="1" stroke-dasharray="4 3" opacity="0.3"/>
+      <!-- puntos frontera -->
+      <circle cx="135" cy="90" r="5" fill="#4fd1c5" opacity="0.45"/>
+      <circle cx="250" cy="80" r="5" fill="#4fd1c5" opacity="0.45"/>
+      <circle cx="255" cy="145" r="5" fill="#4fd1c5" opacity="0.45"/>
+      <circle cx="130" cy="148" r="5" fill="#4fd1c5" opacity="0.45"/>
+      <!-- puntos nucleo -->
+      <circle cx="170" cy="95" r="6" fill="#4fd1c5"/>
+      <circle cx="210" cy="105" r="6" fill="#4fd1c5"/>
+      <circle cx="185" cy="135" r="6" fill="#4fd1c5"/>
+      <circle cx="225" cy="130" r="6" fill="#4fd1c5"/>
+      <circle cx="160" cy="125" r="6" fill="#4fd1c5"/>
+      <!-- radio eps en un nucleo -->
+      <circle cx="210" cy="105" r="38" fill="none" stroke="#4fd1c5" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>
+      <text x="210" y="67" fill="#4fd1c5" font-family="DM Mono" font-size="11" text-anchor="middle" opacity="0.7">ε</text>
+
+      <!-- CLUSTER B — coral -->
+      <circle cx="520" cy="110" r="55" fill="none" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="4 3" opacity="0.3"/>
+      <circle cx="500" cy="95" r="6" fill="#ff5d5d"/>
+      <circle cx="540" cy="100" r="6" fill="#ff5d5d"/>
+      <circle cx="520" cy="130" r="6" fill="#ff5d5d"/>
+      <circle cx="480" cy="120" r="5" fill="#ff5d5d" opacity="0.45"/>
+      <circle cx="558" cy="125" r="5" fill="#ff5d5d" opacity="0.45"/>
+
+      <!-- RUIDO -->
+      <circle cx="370" cy="55" r="5" fill="#3a3a42"/>
+      <circle cx="390" cy="170" r="5" fill="#3a3a42"/>
+      <circle cx="70"  cy="170" r="5" fill="#3a3a42"/>
+      <circle cx="660" cy="75"  r="5" fill="#3a3a42"/>
+      <circle cx="700" cy="155" r="5" fill="#3a3a42"/>
+
+      <!-- Labels -->
+      <text x="190" y="200" fill="#8a8a92" font-family="DM Mono" font-size="11" text-anchor="middle">Cluster A (teal)</text>
+      <text x="520" y="185" fill="#8a8a92" font-family="DM Mono" font-size="11" text-anchor="middle">Cluster B (coral)</text>
+      <text x="370" y="45"  fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">ruido (−1)</text>
+      <text x="390" y="200" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">ruido (−1)</text>
+
+      <!-- leyenda tipos -->
+      <circle cx="40" cy="20" r="6" fill="#4fd1c5"/>
+      <text x="52" y="24" fill="#8a8a92" font-family="DM Mono" font-size="11">punto núcleo</text>
+      <circle cx="190" cy="20" r="5" fill="#4fd1c5" opacity="0.45"/>
+      <text x="202" y="24" fill="#8a8a92" font-family="DM Mono" font-size="11">punto frontera</text>
+      <circle cx="370" cy="20" r="5" fill="#3a3a42"/>
+      <text x="382" y="24" fill="#8a8a92" font-family="DM Mono" font-size="11">ruido (label = −1)</text>
+    </svg>
+  </section>
+
+  <!-- k-distancias -->
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--gold);"></span>Selección de eps</div>
+    <h2>El gráfico k-distancias</h2>
+    <p>Para cada punto, calculas su distancia al k-ésimo vecino más cercano (con k = min_samples − 1) y ordenas de mayor a menor. El <b>codo</b> de la curva — donde baja bruscamente — marca el eps óptimo.</p>
+    <div class="formula">k = min_samples − 1&nbsp;&nbsp;→&nbsp;&nbsp;ajustar eps donde la curva "dobla"</div>
+    <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- ejes -->
+      <line x1="50" y1="10" x2="50" y2="165" stroke="#26262c" stroke-width="1"/>
+      <line x1="50" y1="165" x2="730" y2="165" stroke="#26262c" stroke-width="1"/>
+      <text x="45" y="169" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">0</text>
+      <text x="45" y="120" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">0.5</text>
+      <text x="45" y="75" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">1.0</text>
+      <text x="45" y="30" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">1.5</text>
+      <line x1="50" y1="75" x2="730" y2="75" stroke="#1e1e22" stroke-width="1" stroke-dasharray="3 3"/>
+      <line x1="50" y1="120" x2="730" y2="120" stroke="#1e1e22" stroke-width="1" stroke-dasharray="3 3"/>
+      <!-- curva k-dist (polilinea) -->
+      <polyline points="
+        55,15 80,18 110,22 140,28 165,36 190,46 215,57 235,66
+        255,74 275,80 300,88 330,96 365,103 400,109 440,113
+        490,118 540,122 600,128 660,135 720,142
+      " fill="none" stroke="#f0b94d" stroke-width="2.5" stroke-linejoin="round"/>
+      <!-- línea eps=1.0 -->
+      <line x1="50" y1="75" x2="730" y2="75" stroke="#ff5d5d" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="735" y="79" fill="#ff5d5d" font-family="DM Mono" font-size="11">eps = 1.0</text>
+      <!-- codo -->
+      <circle cx="255" cy="74" r="6" fill="#ff5d5d"/>
+      <text x="255" y="62" fill="#ff5d5d" font-family="DM Mono" font-size="11" text-anchor="middle">codo</text>
+      <!-- labels ejes -->
+      <text x="390" y="195" fill="#8a8a92" font-family="DM Mono" font-size="11" text-anchor="middle">muestras (ordenadas de mayor a menor distancia)</text>
+      <text x="14" y="90" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle" transform="rotate(-90 14 90)">dist. al k-vecino</text>
+    </svg>
+  </section>
+
+  <!-- Jerárquico -->
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--violet);"></span>Clustering Jerárquico</div>
+    <h2>Un árbol de fusiones</h2>
+    <p>El clustering aglomerativo empieza con cada punto como su propio cluster y va fusionando los más similares paso a paso. El resultado es un <b>dendrograma</b>: puedes elegir el número de clusters después de entrenar, cortando el árbol a la altura que quieras.</p>
+    <div class="grid2">
+      <div class="card">
+        <h3>ward <span>— linkage recomendado</span></h3>
+        <p>Minimiza la varianza intra-cluster al fusionar. Produce clusters compactos y de tamaño similar. Es el que mejor funciona con los datos de NonstopU (Silhouette ≈ 0.384).</p>
+      </div>
+      <div class="card">
+        <h3>complete / average</h3>
+        <p><b>complete</b> usa la distancia máxima entre clusters — agrupa bien cuando no hay outliers. <b>average</b> es el compromiso. <b>single</b> (mínimo) tiende a clusters alargados.</p>
+      </div>
+    </div>
+
+    <!-- Dendrograma SVG -->
+    <svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg">
+      <!-- ejes -->
+      <line x1="50" y1="15" x2="50" y2="205" stroke="#26262c" stroke-width="1"/>
+      <line x1="50" y1="205" x2="730" y2="205" stroke="#26262c" stroke-width="1"/>
+      <text x="45" y="209" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">0</text>
+      <text x="45" y="165" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">3</text>
+      <text x="45" y="115" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">6</text>
+      <text x="45" y="65"  fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">9</text>
+      <line x1="50" y1="165" x2="730" y2="165" stroke="#1a1a1f" stroke-width="1" stroke-dasharray="3 3"/>
+      <line x1="50" y1="115" x2="730" y2="115" stroke="#1a1a1f" stroke-width="1" stroke-dasharray="3 3"/>
+      <line x1="50" y1="65"  x2="730" y2="65"  stroke="#1a1a1f" stroke-width="1" stroke-dasharray="3 3"/>
+
+      <!-- Cluster A — teal -->
+      <line x1="105" y1="205" x2="105" y2="192" stroke="#4fd1c5" stroke-width="1.5"/>
+      <line x1="145" y1="205" x2="145" y2="192" stroke="#4fd1c5" stroke-width="1.5"/>
+      <line x1="185" y1="205" x2="185" y2="192" stroke="#4fd1c5" stroke-width="1.5"/>
+      <line x1="225" y1="205" x2="225" y2="192" stroke="#4fd1c5" stroke-width="1.5"/>
+      <line x1="105" y1="193" x2="145" y2="193" stroke="#4fd1c5" stroke-width="1.5"/>
+      <line x1="125" y1="193" x2="125" y2="183" stroke="#4fd1c5" stroke-width="1.5"/>
+      <line x1="185" y1="194" x2="225" y2="194" stroke="#4fd1c5" stroke-width="1.5"/>
+      <line x1="205" y1="194" x2="205" y2="183" stroke="#4fd1c5" stroke-width="1.5"/>
+      <line x1="125" y1="183" x2="205" y2="183" stroke="#4fd1c5" stroke-width="1.5"/>
+      <line x1="165" y1="183" x2="165" y2="170" stroke="#4fd1c5" stroke-width="1.5"/>
+      <circle cx="165" cy="170" r="4" fill="#4fd1c5" opacity="0.7"/>
+      <text x="165" y="225" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">Cluster A</text>
+
+      <!-- Cluster B — coral -->
+      <line x1="320" y1="205" x2="320" y2="192" stroke="#ff5d5d" stroke-width="1.5"/>
+      <line x1="360" y1="205" x2="360" y2="192" stroke="#ff5d5d" stroke-width="1.5"/>
+      <line x1="400" y1="205" x2="400" y2="192" stroke="#ff5d5d" stroke-width="1.5"/>
+      <line x1="320" y1="193" x2="360" y2="193" stroke="#ff5d5d" stroke-width="1.5"/>
+      <line x1="340" y1="193" x2="340" y2="184" stroke="#ff5d5d" stroke-width="1.5"/>
+      <line x1="340" y1="184" x2="400" y2="184" stroke="#ff5d5d" stroke-width="1.5"/>
+      <line x1="370" y1="184" x2="370" y2="170" stroke="#ff5d5d" stroke-width="1.5"/>
+      <circle cx="370" cy="170" r="4" fill="#ff5d5d" opacity="0.7"/>
+      <text x="360" y="225" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">Cluster B</text>
+
+      <!-- Cluster C — violet -->
+      <line x1="530" y1="205" x2="530" y2="192" stroke="#9c8cf0" stroke-width="1.5"/>
+      <line x1="570" y1="205" x2="570" y2="192" stroke="#9c8cf0" stroke-width="1.5"/>
+      <line x1="610" y1="205" x2="610" y2="192" stroke="#9c8cf0" stroke-width="1.5"/>
+      <line x1="650" y1="205" x2="650" y2="192" stroke="#9c8cf0" stroke-width="1.5"/>
+      <line x1="530" y1="193" x2="570" y2="193" stroke="#9c8cf0" stroke-width="1.5"/>
+      <line x1="550" y1="193" x2="550" y2="184" stroke="#9c8cf0" stroke-width="1.5"/>
+      <line x1="610" y1="194" x2="650" y2="194" stroke="#9c8cf0" stroke-width="1.5"/>
+      <line x1="630" y1="194" x2="630" y2="184" stroke="#9c8cf0" stroke-width="1.5"/>
+      <line x1="550" y1="184" x2="630" y2="184" stroke="#9c8cf0" stroke-width="1.5"/>
+      <line x1="590" y1="184" x2="590" y2="170" stroke="#9c8cf0" stroke-width="1.5"/>
+      <circle cx="590" cy="170" r="4" fill="#9c8cf0" opacity="0.7"/>
+      <text x="590" y="225" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">Cluster C</text>
+
+      <!-- fusiones entre clusters — zona alta -->
+      <line x1="165" y1="170" x2="370" y2="170" stroke="#3a3a42" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <line x1="267" y1="170" x2="267" y2="110" stroke="#3a3a42" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <line x1="267" y1="110" x2="590" y2="110" stroke="#3a3a42" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <line x1="428" y1="110" x2="428" y2="55"  stroke="#3a3a42" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+      <!-- línea de corte -->
+      <line x1="50" y1="148" x2="730" y2="148" stroke="#ff5d5d" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="735" y="152" fill="#ff5d5d" font-family="DM Mono" font-size="11">corte → 3</text>
+
+      <!-- label eje -->
+      <text x="14" y="110" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle" transform="rotate(-90 14 110)">distancia (Ward)</text>
+    </svg>
+
+    <p class="dim" style="margin-top:14px; font-size:13px;">Cuanto más alta la fusión, más distintos son esos grupos. La línea roja corta 3 ramas → 3 clusters. Muévela hacia arriba para obtener 2, hacia abajo para 4 o 5.</p>
+  </section>
+
+  <!-- Demo DBSCAN interactivo -->
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--coral);"></span>Demo</div>
+    <h2>DBSCAN en directo</h2>
+    <p class="dim">Ajusta eps y min_samples para ver cómo cambia la segmentación. Los puntos grises son ruido (label = −1). Pulsa <b>reiniciar</b> para un nuevo dataset.</p>
+    <div class="demo">
+      <div class="demo-head">
+        <div class="demo-controls">
+          <label>eps =</label>
+          <select id="epsSelect">
+            <option value="30">0.5</option>
+            <option value="45" selected>1.0</option>
+            <option value="65">1.5</option>
+            <option value="90">2.0</option>
+          </select>
+          <label>min_samples =</label>
+          <select id="minSelect">
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="8">8</option>
+          </select>
+          <button id="runBtn" class="primary">▶ aplicar DBSCAN</button>
+          <button id="resetBtn2">↻ reiniciar</button>
+        </div>
+      </div>
+      <div id="canvasWrap">
+        <canvas id="dbscanCanvas" width="760" height="360"></canvas>
+      </div>
+      <div class="demo-stats">
+        <div class="stat">clusters<b id="nClust">—</b></div>
+        <div class="stat">puntos ruido<b id="nNoise">—</b></div>
+        <div class="stat">estado<b id="statusDb">listo</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Caso NonstopU -->
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--gold);"></span>Práctica · NonstopU</div>
+    <h2>El caso: bebidas energéticas sin probar</h2>
+    <p>Una planta de experimentación tiene mezclas de 5 componentes pero <b>sin etiquetas</b> — nunca se hicieron tests con usuarios. Necesitan segmentar sin clasificador supervisado. Los químicos esperan entre 3 y 5 clusters.</p>
+    <div class="grid2">
+      <div class="card">
+        <h3>Dataset <span>empowering_drinks.csv</span></h3>
+        <p>153 muestras × 5 features (Cafeína, Taurina, Azúcares, Ácido Cítrico, Guaraná). Ya normalizado — no necesitas StandardScaler. Carga con <b>sep="|"</b>.</p>
+      </div>
+      <div class="card">
+        <h3>Resultado esperado</h3>
+        <p>DBSCAN (eps=1.0, min_samples=5) → 3 clusters + ~18% ruido, Silhouette ≈ 0.455. Jerárquico (ward, n=3) → 3 clusters, Silhouette ≈ 0.384. Ambos convergen en 3 grupos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Flujo de trabajo -->
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--teal);"></span>Flujo de trabajo</div>
+    <h2>Los 6 pasos de la práctica</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num"></div>
+        <div><h4>Entender el problema</h4><p>¿Por qué no podemos usar un clasificador? ¿Qué significa cada cluster para los químicos? ¿Por qué la comparación será especulativa?</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div><h4>Carga y mini-EDA</h4><p>Leer con sep="|", revisar nulos y distribuciones. Pairplot para ver qué pares de features separan mejor los grupos visualmente.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div><h4>Tratamiento de features</h4><p>Los datos ya están normalizados. Extrae la matriz con <span class="dim">X = df.values</span>. No hace falta StandardScaler.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div><h4>DBSCAN — elegir eps y min_samples</h4><p>Gráfico k-distancias con k=4. Grid de eps × min_samples filtrando combinaciones con 3–5 clusters. Silhouette solo sobre puntos no-ruido (<span class="dim">labels != -1</span>).</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div><h4>Clustering Jerárquico</h4><p>Dendrograma (ward) para elegir el corte visualmente. Grid de n_clusters ∈ {3,4,5} × linkage. Quedate con el mayor Silhouette.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div><h4>Comparar y concluir</h4><p>¿Coinciden los clusters? ¿Por qué es especulativa la comparación? Parte II: reentrenar sobre el conjunto ampliado con los nuevos experimentos.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparativa final -->
+  <section class="section">
+    <div class="tag"><span class="dot" style="background:var(--violet);"></span>Comparativa</div>
+    <h2>DBSCAN vs Jerárquico</h2>
+    <table class="compare-table">
+      <tr><th>Criterio</th><th>DBSCAN</th><th>Jerárquico</th></tr>
+      <tr><td>Nº de clusters</td><td>Automático</td><td class="win">Fijado por ti (n_clusters)</td></tr>
+      <tr><td>Ruido</td><td class="win">Detecta outliers explícitamente (−1)</td><td>Todos los puntos van a algún cluster</td></tr>
+      <tr><td>Forma de clusters</td><td class="win">Arbitraria (densidad conectada)</td><td>Tiende a convexos con ward</td></tr>
+      <tr><td>Relaciones entre grupos</td><td>No disponible</td><td class="win">Dendrograma muestra la jerarquía</td></tr>
+      <tr><td>Silhouette (NonstopU)</td><td class="win">≈ 0.455</td><td>≈ 0.384</td></tr>
+    </table>
+  </section>
+
+  <footer>
+    Apuntes de apoyo — Unidad 18 · DBSCAN y Clustering Jerárquico · La práctica obligatoria aplica ambos modelos sobre el dataset de bebidas energéticas <span class="dim">empowering_drinks.csv</span>.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('dbscanCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const palette = ['#4fd1c5','#ff5d5d','#f0b94d','#9c8cf0','#5dd6ff'];
+
+  const epsSelect = document.getElementById('epsSelect');
+  const minSelect = document.getElementById('minSelect');
+  const runBtn    = document.getElementById('runBtn');
+  const resetBtn  = document.getElementById('resetBtn2');
+  const nClust    = document.getElementById('nClust');
+  const nNoise    = document.getElementById('nNoise');
+  const statusDb  = document.getElementById('statusDb');
+
+  let points = [];
+  let labels  = [];
+
+  function rand(a,b){ return Math.random()*(b-a)+a; }
+
+  function generatePoints(){
+    points = [];
+    // 3 clusters naturales + ruido
+    const centers = [[190,130],[430,200],[620,110]];
+    centers.forEach(c => {
+      const n = Math.floor(rand(16,26));
+      for(let i=0;i<n;i++){
+        points.push([c[0]+rand(-55,55), c[1]+rand(-45,45)]);
+      }
+    });
+    // ruido
+    for(let i=0;i<12;i++){
+      points.push([rand(60,700), rand(40,320)]);
+    }
+    labels = new Array(points.length).fill(-1);
+  }
+
+  function dist(a,b){ const dx=a[0]-b[0],dy=a[1]-b[1]; return Math.sqrt(dx*dx+dy*dy); }
+
+  function runDBSCAN(){
+    const eps     = parseInt(epsSelect.value);
+    const minSamp = parseInt(minSelect.value);
+    const n = points.length;
+    labels = new Array(n).fill(-1);
+    let clusterId = 0;
+
+    function regionQuery(idx){
+      const res = [];
+      for(let i=0;i<n;i++){
+        if(dist(points[idx], points[i]) <= eps) res.push(i);
+      }
+      return res;
+    }
+
+    function expand(idx, neighbors, cid){
+      labels[idx] = cid;
+      let i = 0;
+      while(i < neighbors.length){
+        const p = neighbors[i];
+        if(labels[p] === -1){
+          labels[p] = cid;
+          const nn = regionQuery(p);
+          if(nn.length >= minSamp) neighbors.push(...nn.filter(x => !neighbors.includes(x)));
+        }
+        i++;
+      }
+    }
+
+    for(let i=0;i<n;i++){
+      if(labels[i] !== -1) continue;
+      const neighbors = regionQuery(i);
+      if(neighbors.length < minSamp){ labels[i] = -1; continue; }
+      expand(i, neighbors, clusterId);
+      clusterId++;
+    }
+
+    const nc = clusterId;
+    const nn = labels.filter(l => l === -1).length;
+    nClust.textContent   = nc;
+    nNoise.textContent   = nn + ' (' + Math.round(nn/n*100) + '%)';
+    statusDb.textContent = nc === 0 ? 'todo ruido — baja min_samples' : nc > 5 ? 'muchos clusters — sube eps' : 'ok';
+    draw();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle = '#1a1a1f';
+    ctx.lineWidth = 1;
+    for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+    // radio eps alrededor de un punto central del canvas para orientación
+    const epsVal = parseInt(epsSelect.value);
+    ctx.beginPath();
+    ctx.arc(700, 30, epsVal, 0, Math.PI*2);
+    ctx.strokeStyle = '#2a2a32';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#3a3a42';
+    ctx.font = '10px DM Mono, monospace';
+    ctx.fillText('ε', 700 + epsVal + 4, 33);
+
+    points.forEach((p,i) => {
+      const lbl   = labels[i];
+      const color = lbl === -1 ? '#3a3a42' : palette[lbl % palette.length];
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], lbl === -1 ? 4 : 5.5, 0, Math.PI*2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = lbl === -1 ? 0.5 : 0.9;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      if(lbl !== -1){
+        ctx.strokeStyle = '#0a0a0d';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+    });
+  }
+
+  function reset(){
+    generatePoints();
+    labels = new Array(points.length).fill(-1);
+    nClust.textContent   = '—';
+    nNoise.textContent   = '—';
+    statusDb.textContent = 'listo';
+    draw();
+  }
+
+  runBtn.addEventListener('click', runDBSCAN);
+  resetBtn.addEventListener('click', reset);
+
+  reset();
+})();
+</script>
+
+</body>
+</html>

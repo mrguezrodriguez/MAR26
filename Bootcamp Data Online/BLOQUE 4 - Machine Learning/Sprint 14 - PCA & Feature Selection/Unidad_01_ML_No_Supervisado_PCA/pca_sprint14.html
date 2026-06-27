@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCA · Análisis de Componentes Principales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0d;
+    --bg-card:#131316;
+    --bg-card2:#17171b;
+    --line:#26262c;
+    --text:#e8e6e1;
+    --text-dim:#8a8a92;
+    --coral:#ff5d5d;
+    --teal:#4fd1c5;
+    --gold:#f0b94d;
+    --violet:#9c8cf0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'DM Mono', monospace;
+    line-height:1.6;
+  }
+  h1,h2,h3{font-family:'Syne', sans-serif; margin:0; letter-spacing:-0.01em;}
+  .wrap{max-width:860px; margin:0 auto; padding:0 24px 100px;}
+
+  header{padding:56px 24px 40px; border-bottom:1px solid var(--line);}
+  .eyebrow{font-size:13px; color:var(--coral); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:10px;}
+  header h1{font-size:clamp(34px,6vw,52px); font-weight:800;}
+  header p{color:var(--text-dim); max-width:580px; margin-top:14px; font-size:15px;}
+
+  .section{padding:48px 0; border-bottom:1px solid var(--line);}
+  .section:last-of-type{border-bottom:none;}
+  .tag{display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:14px;}
+  .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);}
+  .section h2{font-size:26px; font-weight:700; margin-bottom:14px;}
+  .section p{font-size:15px; color:var(--text);}
+  .section p+p{margin-top:12px;}
+  .dim{color:var(--text-dim);}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  .card{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:20px;}
+  .card h3{font-size:16px; margin-bottom:8px; color:var(--text);}
+  .card h3 span{color:var(--text-dim); font-weight:400; font-size:13px;}
+  .card p{font-size:13.5px; color:var(--text-dim); margin:0;}
+
+  .steps{counter-reset:step; margin-top:24px; display:grid; gap:0;}
+  .step{display:grid; grid-template-columns:48px 1fr; gap:16px; padding:18px 0; border-top:1px solid var(--line);}
+  .step:first-child{border-top:none;}
+  .step-num{counter-increment:step; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; color:var(--coral);}
+  .step-num::before{content:counter(step,decimal-leading-zero);}
+  .step h4{font-family:'Syne',sans-serif; font-size:15px; margin:0 0 4px; color:var(--text);}
+  .step p{font-size:13.5px; color:var(--text-dim); margin:0;}
+
+  svg{display:block; width:100%; height:auto; margin-top:20px;}
+  .formula{background:var(--bg-card2); border:1px solid var(--line); border-radius:8px; padding:18px 20px; font-size:14px; color:var(--teal); margin-top:16px; overflow-x:auto; white-space:pre;}
+
+  .demo{margin-top:24px; background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:20px;}
+  .demo-head{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;}
+  .demo-controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .demo-controls label{font-size:12px; color:var(--text-dim);}
+  select,button{font-family:'DM Mono',monospace; background:var(--bg-card2); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:7px 12px; font-size:13px; cursor:pointer;}
+  button.primary{background:var(--coral); border-color:var(--coral); color:#160707; font-weight:600;}
+  button:hover{filter:brightness(1.1);}
+  canvas{display:block; width:100%; height:auto; border:1px solid var(--line); border-radius:8px; background:#0d0d10;}
+  .demo-stats{display:flex; gap:24px; margin-top:14px; flex-wrap:wrap;}
+  .stat{font-size:12px; color:var(--text-dim);}
+  .stat b{color:var(--text); font-family:'Syne',sans-serif; font-size:15px; display:block;}
+
+  .compare-table{width:100%; border-collapse:collapse; margin-top:20px; font-size:13.5px;}
+  .compare-table th{text-align:left; padding:10px 14px; background:var(--bg-card2); color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.08em; border-bottom:1px solid var(--line);}
+  .compare-table td{padding:10px 14px; border-bottom:1px solid var(--line); color:var(--text-dim); vertical-align:top;}
+  .compare-table td:first-child{color:var(--text); font-family:'Syne',sans-serif; font-weight:600; font-size:14px;}
+  .compare-table .win{color:var(--teal);}
+
+  .warn-box{background:#1a1208; border:1px solid #4d350f; border-radius:10px; padding:16px 20px; margin-top:20px; font-size:13.5px; color:var(--gold);}
+  .info-box{background:#0d1318; border:1px solid #1a3a4a; border-radius:10px; padding:16px 20px; margin-top:20px; font-size:13.5px; color:var(--teal);}
+
+  footer{padding:40px 0 0; color:var(--text-dim); font-size:13px;}
+
+  /* variance bar */
+  .var-bar-wrap{margin-top:20px;}
+  .var-bar-row{display:flex; align-items:center; gap:12px; margin-bottom:10px;}
+  .var-bar-label{font-size:12px; color:var(--text-dim); width:80px; flex-shrink:0;}
+  .var-bar-track{flex:1; height:8px; background:var(--bg-card2); border-radius:4px; overflow:hidden;}
+  .var-bar-fill{height:100%; border-radius:4px; transition:width 0.4s;}
+  .var-bar-pct{font-size:12px; color:var(--text-dim); width:44px; text-align:right; flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap" style="padding:0;">
+    <div class="eyebrow">Sprint 14 · Modelos No Supervisados II</div>
+    <h1>PCA</h1>
+    <p>Principal Component Analysis: reducir dimensiones sin perder lo esencial. PCA proyecta tus datos sobre los ejes de máxima varianza para que puedas trabajar con menos variables manteniendo la mayor información posible.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ─── 1. INTUICIÓN ──────────────────────────────────────────────── -->
+<section class="section">
+  <div class="tag"><span class="dot"></span>Intuición</div>
+  <h2>¿Por qué reducir dimensiones?</h2>
+  <p>Imagina un dataset con 50 features. Muchas están correlacionadas — si sube una, sube la otra. PCA encuentra esas redundancias y las colapsa en un número menor de <b>componentes principales</b> no correlacionados entre sí, que capturan la mayor parte de la varianza original.</p>
+  <p class="dim">El resultado: menos columnas, más compactas, más independientes. Los modelos entrenan más rápido, se reduce el overfitting, y la visualización 2D/3D se vuelve posible.</p>
+
+  <!-- SVG: la maldición de la dimensionalidad -->
+  <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg">
+    <!-- 1D -->
+    <text x="80" y="24" fill="#8a8a92" font-family="DM Mono" font-size="11" text-anchor="middle">1 feature</text>
+    <line x1="20" y1="80" x2="140" y2="80" stroke="#26262c" stroke-width="2"/>
+    <circle cx="40"  cy="80" r="5" fill="#4fd1c5" opacity="0.9"/>
+    <circle cx="62"  cy="80" r="5" fill="#4fd1c5" opacity="0.9"/>
+    <circle cx="78"  cy="80" r="5" fill="#ff5d5d" opacity="0.9"/>
+    <circle cx="95"  cy="80" r="5" fill="#4fd1c5" opacity="0.9"/>
+    <circle cx="120" cy="80" r="5" fill="#ff5d5d" opacity="0.9"/>
+    <text x="80" y="110" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">fácil de separar</text>
+
+    <!-- 2D -->
+    <text x="290" y="24" fill="#8a8a92" font-family="DM Mono" font-size="11" text-anchor="middle">2 features</text>
+    <line x1="200" y1="160" x2="380" y2="160" stroke="#26262c" stroke-width="1.5"/>
+    <line x1="200" y1="160" x2="200" y2="30"  stroke="#26262c" stroke-width="1.5"/>
+    <circle cx="240" cy="120" r="5" fill="#4fd1c5" opacity="0.85"/>
+    <circle cx="260" cy="100" r="5" fill="#4fd1c5" opacity="0.85"/>
+    <circle cx="230" cy="140" r="5" fill="#4fd1c5" opacity="0.85"/>
+    <circle cx="330" cy="60"  r="5" fill="#ff5d5d" opacity="0.85"/>
+    <circle cx="350" cy="75"  r="5" fill="#ff5d5d" opacity="0.85"/>
+    <circle cx="315" cy="80"  r="5" fill="#ff5d5d" opacity="0.85"/>
+    <!-- PC1 arrow -->
+    <line x1="220" y1="150" x2="360" y2="55" stroke="#9c8cf0" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="310" y="46" fill="#9c8cf0" font-family="DM Mono" font-size="10">PC1</text>
+    <text x="290" y="185" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">máxima varianza</text>
+
+    <!-- nD -->
+    <text x="580" y="24" fill="#8a8a92" font-family="DM Mono" font-size="11" text-anchor="middle">n features</text>
+    <!-- cajas representando dimensiones apiladas -->
+    <rect x="510" y="40" width="140" height="18" rx="3" fill="#131316" stroke="#ff5d5d" stroke-width="1" opacity="0.8"/>
+    <rect x="510" y="62" width="140" height="18" rx="3" fill="#131316" stroke="#ff5d5d" stroke-width="1" opacity="0.7"/>
+    <rect x="510" y="84" width="140" height="18" rx="3" fill="#131316" stroke="#ff5d5d" stroke-width="1" opacity="0.55"/>
+    <rect x="510" y="106" width="140" height="18" rx="3" fill="#131316" stroke="#ff5d5d" stroke-width="1" opacity="0.4"/>
+    <rect x="510" y="128" width="140" height="18" rx="3" fill="#131316" stroke="#3a3a42" stroke-width="1" opacity="0.3"/>
+    <text x="580" y="52" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">feature 1</text>
+    <text x="580" y="74" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">feature 2</text>
+    <text x="580" y="96" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">feature 3</text>
+    <text x="580" y="118" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">feature 4 …</text>
+    <text x="580" y="140" fill="#3a3a42" font-family="DM Mono" font-size="10" text-anchor="middle">feature n (ruido)</text>
+    <text x="580" y="175" fill="#ff5d5d" font-family="DM Mono" font-size="10" text-anchor="middle">maldición de la dimensionalidad</text>
+
+    <!-- flechas entre -->
+    <text x="165" y="85" fill="#26262c" font-family="Syne" font-size="22" font-weight="800">→</text>
+    <text x="400" y="85" fill="#26262c" font-family="Syne" font-size="22" font-weight="800">→</text>
+  </svg>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Maldición de la dimensionalidad <span>— el problema</span></h3>
+      <p>Con muchas features, los datos se vuelven dispersos. Las distancias pierden significado, los modelos necesitan exponencialmente más datos y el riesgo de overfitting explota.</p>
+    </div>
+    <div class="card">
+      <h3>PCA como solución <span>— la respuesta</span></h3>
+      <p>Proyecta sobre los ejes de mayor varianza. Con 2–10 componentes suele capturar el 90–99% de la varianza total, con un coste computacional mínimo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 2. TEORÍA: COVARIANZA Y EIGENVECTORS ─────────────────────── -->
+<section class="section">
+  <div class="tag"><span class="dot" style="background:var(--gold);"></span>Teoría · Álgebra lineal</div>
+  <h2>Covarianza, eigenvectores y eigenvalores</h2>
+  <p>PCA se basa en la <b>matriz de covarianza</b> de los datos. Esta matriz codifica cómo varían conjuntamente cada par de features. Los <b>eigenvectores</b> de esa matriz marcan las direcciones de máxima varianza; los <b>eigenvalores</b> cuantifican cuánta varianza hay en cada dirección.</p>
+
+  <div class="formula">Cov(X) = (1/n) · Xᵀ · X          ← si X ya está centrada
+
+eigenvalores λ₁ ≥ λ₂ ≥ … ≥ λₚ  →  varianza explicada por cada PC
+eigenvectores v₁, v₂, …, vₚ     →  dirección de cada componente</div>
+
+  <!-- SVG: eigenvectores sobre una nube de puntos correlacionados -->
+  <svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg">
+    <!-- ejes -->
+    <line x1="80" y1="230" x2="440" y2="230" stroke="#26262c" stroke-width="1.5"/>
+    <line x1="80" y1="230" x2="80"  y2="20"  stroke="#26262c" stroke-width="1.5"/>
+    <text x="445" y="234" fill="#3a3a42" font-family="DM Mono" font-size="11">x₁</text>
+    <text x="82"  y="16"  fill="#3a3a42" font-family="DM Mono" font-size="11">x₂</text>
+
+    <!-- nube de puntos correlacionados (elipse diagonal) -->
+    <ellipse cx="260" cy="130" rx="130" ry="55" fill="none" stroke="#26262c" stroke-width="1" stroke-dasharray="3 3" transform="rotate(-35 260 130)" opacity="0.5"/>
+    <!-- puntos -->
+    <circle cx="165" cy="195" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="185" cy="180" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="195" cy="170" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="210" cy="162" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="218" cy="155" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="228" cy="148" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="238" cy="140" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="248" cy="133" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="262" cy="122" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="272" cy="116" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="285" cy="106" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="298" cy="97"  r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="310" cy="90"  r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="325" cy="80"  r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="340" cy="70"  r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="222" cy="168" r="4" fill="#4fd1c5" opacity="0.55"/>
+    <circle cx="252" cy="145" r="4" fill="#4fd1c5" opacity="0.55"/>
+    <circle cx="278" cy="125" r="4" fill="#4fd1c5" opacity="0.55"/>
+    <circle cx="305" cy="103" r="4" fill="#4fd1c5" opacity="0.55"/>
+    <circle cx="335" cy="84"  r="4" fill="#4fd1c5" opacity="0.55"/>
+    <circle cx="200" cy="178" r="4" fill="#4fd1c5" opacity="0.55"/>
+    <circle cx="355" cy="65"  r="4" fill="#4fd1c5" opacity="0.55"/>
+    <circle cx="172" cy="205" r="4" fill="#4fd1c5" opacity="0.5"/>
+
+    <!-- PC1 — máxima varianza (diagonal) -->
+    <line x1="135" y1="215" x2="385" y2="55" stroke="#ff5d5d" stroke-width="2.5"/>
+    <!-- flecha PC1 -->
+    <polygon points="385,55 372,68 378,58 368,65" fill="#ff5d5d"/>
+    <text x="390" y="52" fill="#ff5d5d" font-family="Syne" font-size="13" font-weight="700">PC1</text>
+    <text x="390" y="67" fill="#8a8a92" font-family="DM Mono" font-size="10">máx varianza</text>
+
+    <!-- PC2 — perpendicular -->
+    <line x1="260" y1="190" x2="205" y2="92" stroke="#9c8cf0" stroke-width="2"/>
+    <polygon points="205,92 215,106 208,95 220,102" fill="#9c8cf0"/>
+    <text x="175" y="88" fill="#9c8cf0" font-family="Syne" font-size="13" font-weight="700">PC2</text>
+    <text x="145" y="103" fill="#8a8a92" font-family="DM Mono" font-size="10">⊥ a PC1</text>
+
+    <!-- centro / media -->
+    <circle cx="260" cy="130" r="5" fill="none" stroke="#f0b94d" stroke-width="1.5"/>
+    <text x="270" y="148" fill="#f0b94d" font-family="DM Mono" font-size="10">centroide</text>
+
+    <!-- proyecciones sobre PC1 (líneas finas) -->
+    <line x1="185" y1="180" x2="192" y2="173" stroke="#3a3a42" stroke-width="0.8" stroke-dasharray="2 2"/>
+    <line x1="310" y1="90"  x2="305" y2="97"  stroke="#3a3a42" stroke-width="0.8" stroke-dasharray="2 2"/>
+
+    <!-- panel derecho: antes/después -->
+    <text x="520" y="30" fill="#8a8a92" font-family="DM Mono" font-size="11" text-anchor="middle">Proyección sobre PC1</text>
+    <line x1="490" y1="130" x2="640" y2="130" stroke="#26262c" stroke-width="2"/>
+    <!-- puntos 1D proyectados -->
+    <circle cx="498" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="506" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="516" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="524" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="534" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="543" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="553" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="561" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="572" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="582" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="591" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="602" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="615" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="627" cy="130" r="4" fill="#4fd1c5" opacity="0.7"/>
+    <circle cx="636" cy="130" r="4" fill="#4fd1c5" opacity="0.55"/>
+    <text x="565" y="155" fill="#ff5d5d" font-family="DM Mono" font-size="10" text-anchor="middle">varianza máxima conservada</text>
+    <text x="565" y="170" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">dimensión: 2 → 1</text>
+  </svg>
+
+  <p class="dim">Los eigenvectores son ortogonales entre sí (los componentes no están correlacionados). El primero apunta a la dirección de máxima dispersión, el segundo a la siguiente mayor, etc.</p>
+</section>
+
+<!-- ─── 3. ALGORITMO PASO A PASO ──────────────────────────────────── -->
+<section class="section">
+  <div class="tag"><span class="dot" style="background:var(--violet);"></span>Algoritmo · Paso a paso</div>
+  <h2>¿Cómo funciona PCA por dentro?</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div>
+        <h4>Estandarizar los datos</h4>
+        <p>Centrar cada feature restando su media y dividir por su desviación típica. Sin esto, features con escalas grandes dominarían los componentes. <code style="color:var(--teal)">StandardScaler</code> antes de PCA es obligatorio si las unidades difieren.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div>
+        <h4>Calcular la matriz de covarianza</h4>
+        <p>Cov(X) = XᵀX / (n−1). Cada celda (i,j) indica cuánto varían juntas las features i y j. Si es positiva, suben juntas. Si es negativa, van en sentido contrario. La diagonal son las varianzas individuales.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div>
+        <h4>Descomposición en eigenvectores</h4>
+        <p>Factorizar la matriz de covarianza: Cov = V · Λ · Vᵀ. Los eigenvectores (columnas de V) son las direcciones principales. Los eigenvalores (diagonal de Λ) miden la varianza en cada dirección.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div>
+        <h4>Ordenar y seleccionar componentes</h4>
+        <p>Ordenar eigenvectores de mayor a menor eigenvalor. Elegir los k primeros que acumulen la varianza deseada (habitualmente 90–95%). Estos forman la matriz de proyección W (p × k).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div>
+        <h4>Proyectar los datos</h4>
+        <p>X_reducido = X · W. Cada fila sigue siendo una observación, pero ahora en el espacio de k componentes en vez de p features originales. Las columnas son los nuevos ejes PC1, PC2, …</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SVG pipeline -->
+  <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#3a3a42"/>
+      </marker>
+    </defs>
+    <!-- boxes -->
+    <rect x="10"  y="25" width="110" height="40" rx="6" fill="#131316" stroke="#26262c"/>
+    <text x="65"  y="49" fill="#e8e6e1" font-family="DM Mono" font-size="11" text-anchor="middle">X (n×p)</text>
+    <text x="65"  y="63" fill="#8a8a92" font-family="DM Mono" font-size="9"  text-anchor="middle">datos originales</text>
+
+    <line x1="120" y1="45" x2="148" y2="45" stroke="#3a3a42" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="134" y="40" fill="#8a8a92" font-family="DM Mono" font-size="9" text-anchor="middle">scale</text>
+
+    <rect x="150" y="25" width="120" height="40" rx="6" fill="#131316" stroke="#26262c"/>
+    <text x="210" y="49" fill="#e8e6e1" font-family="DM Mono" font-size="11" text-anchor="middle">Cov(X)</text>
+    <text x="210" y="63" fill="#8a8a92" font-family="DM Mono" font-size="9"  text-anchor="middle">covarianza (p×p)</text>
+
+    <line x1="270" y1="45" x2="298" y2="45" stroke="#3a3a42" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="284" y="40" fill="#8a8a92" font-family="DM Mono" font-size="9" text-anchor="middle">eig</text>
+
+    <rect x="300" y="25" width="140" height="40" rx="6" fill="#131316" stroke="#26262c"/>
+    <text x="370" y="49" fill="#9c8cf0" font-family="DM Mono" font-size="11" text-anchor="middle">v₁,v₂…,vₖ</text>
+    <text x="370" y="63" fill="#8a8a92" font-family="DM Mono" font-size="9"  text-anchor="middle">eigenvectores top-k</text>
+
+    <line x1="440" y1="45" x2="468" y2="45" stroke="#3a3a42" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="454" y="40" fill="#8a8a92" font-family="DM Mono" font-size="9" text-anchor="middle">X·W</text>
+
+    <rect x="470" y="25" width="130" height="40" rx="6" fill="#131316" stroke="#ff5d5d" stroke-width="1.5"/>
+    <text x="535" y="49" fill="#ff5d5d" font-family="DM Mono" font-size="11" text-anchor="middle">X_pca (n×k)</text>
+    <text x="535" y="63" fill="#8a8a92" font-family="DM Mono" font-size="9"  text-anchor="middle">espacio reducido</text>
+
+    <line x1="600" y1="45" x2="628" y2="45" stroke="#3a3a42" stroke-width="1.5" marker-end="url(#arr)"/>
+    <rect x="630" y="25" width="120" height="40" rx="6" fill="#131316" stroke="#4fd1c5" stroke-width="1.5"/>
+    <text x="690" y="49" fill="#4fd1c5" font-family="DM Mono" font-size="11" text-anchor="middle">Modelo / Viz</text>
+    <text x="690" y="63" fill="#8a8a92" font-family="DM Mono" font-size="9"  text-anchor="middle">k &lt;&lt; p</text>
+  </svg>
+</section>
+
+<!-- ─── 4. VARIANZA EXPLICADA ─────────────────────────────────────── -->
+<section class="section">
+  <div class="tag"><span class="dot" style="background:var(--gold);"></span>Varianza explicada</div>
+  <h2>¿Cuántos componentes elegir?</h2>
+  <p>La varianza explicada por el componente i es λᵢ / Σλ. La <b>varianza acumulada</b> te dice qué fracción del total de información captura tu subconjunto de componentes. El criterio más común: elegir k tal que la varianza acumulada supere el 90%.</p>
+
+  <div class="formula">varianza_explicada[i]  = λᵢ / Σλⱼ
+varianza_acumulada[k]  = Σᵢ₌₁ᵏ varianza_explicada[i]</div>
+
+  <!-- Scree plot SVG -->
+  <svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" id="screePlot">
+    <!-- ejes -->
+    <line x1="80" y1="20" x2="80" y2="180" stroke="#26262c" stroke-width="1.5"/>
+    <line x1="80" y1="180" x2="680" y2="180" stroke="#26262c" stroke-width="1.5"/>
+
+    <!-- etiquetas eje Y izquierdo (varianza individual) -->
+    <text x="74" y="24"  fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">60%</text>
+    <text x="74" y="74"  fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">40%</text>
+    <text x="74" y="124" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">20%</text>
+    <text x="74" y="174" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="end">0%</text>
+    <text x="20" y="110" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle" transform="rotate(-90 20 110)">varianza explicada</text>
+
+    <!-- barras scree (valores típicos) -->
+    <!-- PC1: 52% -->
+    <rect x="110" y="93" width="60" height="87" rx="3" fill="#ff5d5d" opacity="0.85"/>
+    <!-- PC2: 22% -->
+    <rect x="200" y="126" width="60" height="54" rx="3" fill="#ff5d5d" opacity="0.65"/>
+    <!-- PC3: 10% -->
+    <rect x="290" y="155" width="60" height="25" rx="3" fill="#ff5d5d" opacity="0.45"/>
+    <!-- PC4: 7% -->
+    <rect x="380" y="163" width="60" height="17" rx="3" fill="#26262c" opacity="0.9"/>
+    <!-- PC5: 4% -->
+    <rect x="470" y="170" width="60" height="10" rx="3" fill="#26262c" opacity="0.9"/>
+    <!-- PC6: 3% -->
+    <rect x="560" y="173" width="60" height="7" rx="3" fill="#26262c" opacity="0.9"/>
+    <!-- PC7: 2% -->
+    <rect x="650" y="176" width="40" height="4" rx="3" fill="#26262c" opacity="0.9"/>
+
+    <!-- labels X -->
+    <text x="140" y="197" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">PC1</text>
+    <text x="230" y="197" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">PC2</text>
+    <text x="320" y="197" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">PC3</text>
+    <text x="410" y="197" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">PC4</text>
+    <text x="500" y="197" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">PC5</text>
+    <text x="590" y="197" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">PC6</text>
+    <text x="670" y="197" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">PC7</text>
+
+    <!-- pct labels sobre barras -->
+    <text x="140" y="88" fill="#ff5d5d" font-family="DM Mono" font-size="11" text-anchor="middle" font-weight="500">52%</text>
+    <text x="230" y="121" fill="#ff5d5d" font-family="DM Mono" font-size="11" text-anchor="middle" font-weight="500">22%</text>
+    <text x="320" y="150" fill="#ff5d5d" font-family="DM Mono" font-size="11" text-anchor="middle" font-weight="500">10%</text>
+
+    <!-- línea varianza acumulada -->
+    <polyline points="140,93 230,126 320,155 410,163 500,170 590,173 670,176"
+      fill="none" stroke="#4fd1c5" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <!-- puntos acumulados -->
+    <circle cx="140" cy="93"  r="4" fill="#4fd1c5"/>
+    <circle cx="230" cy="55"  r="4" fill="#4fd1c5"/>
+    <circle cx="320" cy="33"  r="4" fill="#4fd1c5"/>
+    <circle cx="410" cy="24"  r="4" fill="#4fd1c5"/>
+
+    <!-- línea real acumulada (52, 74, 84, 91...) -->
+    <line x1="140" y1="93" x2="230" y2="55" stroke="#4fd1c5" stroke-width="1.5"/>
+    <line x1="230" y1="55" x2="320" y2="33" stroke="#4fd1c5" stroke-width="1.5"/>
+    <line x1="320" y1="33" x2="410" y2="24" stroke="#4fd1c5" stroke-width="1.5"/>
+    <text x="145" y="87" fill="#4fd1c5" font-family="DM Mono" font-size="9">52%</text>
+    <text x="235" y="50" fill="#4fd1c5" font-family="DM Mono" font-size="9">74%</text>
+    <text x="325" y="28" fill="#4fd1c5" font-family="DM Mono" font-size="9">84%</text>
+    <text x="415" y="19" fill="#4fd1c5" font-family="DM Mono" font-size="9">91% ✓</text>
+
+    <!-- umbral 90% -->
+    <line x1="80" y1="27" x2="680" y2="27" stroke="#f0b94d" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>
+    <text x="690" y="31" fill="#f0b94d" font-family="DM Mono" font-size="9">90%</text>
+
+    <!-- codo indicator -->
+    <text x="400" y="215" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">← elbow: cortar aquí donde la ganancia marginal se vuelve pequeña</text>
+
+    <!-- leyenda -->
+    <rect x="82" y="205" width="10" height="10" rx="2" fill="#ff5d5d" opacity="0.85"/>
+    <text x="97" y="214" fill="#8a8a92" font-family="DM Mono" font-size="10">varianza individual</text>
+    <line x1="210" y1="210" x2="232" y2="210" stroke="#4fd1c5" stroke-width="1.5"/>
+    <circle cx="221" cy="210" r="3" fill="#4fd1c5"/>
+    <text x="237" y="214" fill="#8a8a92" font-family="DM Mono" font-size="10">varianza acumulada</text>
+  </svg>
+
+  <div class="warn-box">⚠ El scree plot y la varianza acumulada deben mirarse juntos. A veces el "codo" no está claro; en ese caso usa el criterio del 90% (o 95% si el contexto exige alta fidelidad). En clasificación, también puedes elegir k por cross-validation sobre el modelo downstream.</div>
+</section>
+
+<!-- ─── 5. DEMO INTERACTIVO ───────────────────────────────────────── -->
+<section class="section">
+  <div class="tag"><span class="dot" style="background:var(--coral);"></span>Demo interactivo</div>
+  <h2>PCA en tiempo real</h2>
+  <p class="dim">Genera puntos 2D correlacionados y observa cómo PCA extrae la dirección principal. Puedes ajustar la correlación y ver cómo cambia el eje PC1.</p>
+
+  <div class="demo">
+    <div class="demo-head">
+      <span style="font-family:'Syne',sans-serif; font-size:14px;">Nube 2D → PC1 + PC2</span>
+      <div class="demo-controls">
+        <label>Correlación</label>
+        <select id="corrSelect">
+          <option value="0.2">baja (0.2)</option>
+          <option value="0.7" selected>media (0.7)</option>
+          <option value="0.95">alta (0.95)</option>
+        </select>
+        <label>Puntos</label>
+        <select id="nSelect">
+          <option value="40">40</option>
+          <option value="80" selected>80</option>
+          <option value="160">160</option>
+        </select>
+        <button class="primary" id="runPCA">Regenerar</button>
+      </div>
+    </div>
+    <canvas id="pcaCanvas" width="800" height="340"></canvas>
+    <div class="demo-stats">
+      <div class="stat"><b id="varPC1">—</b>varianza PC1</div>
+      <div class="stat"><b id="varPC2">—</b>varianza PC2</div>
+      <div class="stat"><b id="anglePC1">—</b>ángulo PC1 (grados)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 6. LOADINGS Y BIPLOT ──────────────────────────────────────── -->
+<section class="section">
+  <div class="tag"><span class="dot" style="background:var(--violet);"></span>Interpretación</div>
+  <h2>Loadings y biplot</h2>
+  <p>Los <b>loadings</b> son las coordenadas de cada feature original en el espacio de componentes. Indican qué tanto "pesa" cada variable en cada componente. Un loading alto en PC1 significa que esa feature varía mucho a lo largo del primer eje principal.</p>
+  <p class="dim">El <b>biplot</b> superpone los scores de las observaciones con las flechas de loadings. Features con flechas en la misma dirección están correlacionadas; en sentido opuesto, correlación negativa.</p>
+
+  <!-- SVG biplot esquemático -->
+  <svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg">
+    <!-- ejes -->
+    <line x1="100" y1="140" x2="500" y2="140" stroke="#26262c" stroke-width="1.5"/>
+    <line x1="300" y1="240" x2="300" y2="30"  stroke="#26262c" stroke-width="1.5"/>
+    <text x="510" y="144" fill="#3a3a42" font-family="DM Mono" font-size="11">PC1</text>
+    <text x="304" y="26" fill="#3a3a42" font-family="DM Mono" font-size="11">PC2</text>
+
+    <!-- scores (observaciones dispersas) -->
+    <circle cx="220" cy="100" r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="240" cy="120" r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="180" cy="80"  r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="350" cy="160" r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="370" cy="175" r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="390" cy="190" r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="200" cy="110" r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="150" cy="60"  r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="260" cy="130" r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="410" cy="200" r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="320" cy="155" r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="340" cy="165" r="4" fill="#4fd1c5" opacity="0.5"/>
+    <circle cx="430" cy="210" r="4" fill="#ff5d5d" opacity="0.6"/>
+    <circle cx="450" cy="220" r="4" fill="#ff5d5d" opacity="0.6"/>
+    <circle cx="160" cy="175" r="4" fill="#ff5d5d" opacity="0.6"/>
+    <circle cx="140" cy="190" r="4" fill="#ff5d5d" opacity="0.6"/>
+    <circle cx="120" cy="200" r="4" fill="#ff5d5d" opacity="0.6"/>
+    <circle cx="460" cy="100" r="4" fill="#ff5d5d" opacity="0.6"/>
+    <circle cx="470" cy="85"  r="4" fill="#ff5d5d" opacity="0.6"/>
+
+    <!-- loading arrows (flechas de features) -->
+    <!-- Feature A: correlacionada con PC1 positivo -->
+    <line x1="300" y1="140" x2="440" y2="100" stroke="#f0b94d" stroke-width="2"/>
+    <polygon points="440,100 425,104 432,96 424,108" fill="#f0b94d"/>
+    <text x="448" y="98" fill="#f0b94d" font-family="DM Mono" font-size="11">feature_A</text>
+
+    <!-- Feature B: también positiva PC1, algo PC2 -->
+    <line x1="300" y1="140" x2="420" y2="75" stroke="#f0b94d" stroke-width="2"/>
+    <polygon points="420,75 407,84 412,74 404,86" fill="#f0b94d"/>
+    <text x="425" y="72" fill="#f0b94d" font-family="DM Mono" font-size="11">feature_B</text>
+
+    <!-- Feature C: negativa PC1 -->
+    <line x1="300" y1="140" x2="165" y2="175" stroke="#9c8cf0" stroke-width="2"/>
+    <polygon points="165,175 179,168 171,178 180,166" fill="#9c8cf0"/>
+    <text x="110" y="185" fill="#9c8cf0" font-family="DM Mono" font-size="11">feature_C</text>
+
+    <!-- Feature D: carga en PC2 -->
+    <line x1="300" y1="140" x2="320" y2="55" stroke="#4fd1c5" stroke-width="2"/>
+    <polygon points="320,55 312,68 316,57 308,70" fill="#4fd1c5"/>
+    <text x="325" y="50" fill="#4fd1c5" font-family="DM Mono" font-size="11">feature_D</text>
+
+    <!-- anotaciones -->
+    <text x="590" y="60"  fill="#8a8a92" font-family="DM Mono" font-size="11">Flecha larga →</text>
+    <text x="590" y="75"  fill="#8a8a92" font-family="DM Mono" font-size="10">feature importante</text>
+    <text x="590" y="100" fill="#8a8a92" font-family="DM Mono" font-size="11">Misma dirección →</text>
+    <text x="590" y="115" fill="#8a8a92" font-family="DM Mono" font-size="10">correlación positiva</text>
+    <text x="590" y="140" fill="#8a8a92" font-family="DM Mono" font-size="11">Opuesta →</text>
+    <text x="590" y="155" fill="#8a8a92" font-family="DM Mono" font-size="10">corr. negativa</text>
+    <text x="590" y="180" fill="#8a8a92" font-family="DM Mono" font-size="11">⊥ perpendicular →</text>
+    <text x="590" y="195" fill="#8a8a92" font-family="DM Mono" font-size="10">no correlacionadas</text>
+
+    <line x1="560" y1="58" x2="588" y2="58" stroke="#f0b94d" stroke-width="1.5"/>
+    <line x1="560" y1="98" x2="588" y2="98" stroke="#f0b94d" stroke-width="1.5"/>
+    <line x1="560" y1="138" x2="588" y2="138" stroke="#9c8cf0" stroke-width="1.5"/>
+    <line x1="560" y1="178" x2="588" y2="178" stroke="#4fd1c5" stroke-width="1.5"/>
+
+    <!-- título -->
+    <text x="300" y="268" fill="#8a8a92" font-family="DM Mono" font-size="11" text-anchor="middle">Biplot: scores de observaciones + vectores de loadings</text>
+  </svg>
+</section>
+
+<!-- ─── 7. PCA EN SKLEARN ──────────────────────────────────────────── -->
+<section class="section">
+  <div class="tag"><span class="dot" style="background:var(--teal);"></span>Sklearn · API</div>
+  <h2>PCA con scikit-learn</h2>
+  <p class="dim">La implementación usa SVD (Singular Value Decomposition) internamente, más estable que calcular eigenvectores directamente. Mismos resultados, mejor aritmética.</p>
+
+  <div class="formula">from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
+# 1. Escalar siempre antes de PCA
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# 2. Explorar cuántos componentes
+pca_full = PCA()
+pca_full.fit(X_scaled)
+
+# Scree plot
+plt.bar(range(1, len(pca_full.explained_variance_ratio_)+1),
+        pca_full.explained_variance_ratio_)
+plt.plot(range(1, len(pca_full.explained_variance_ratio_)+1),
+         pca_full.explained_variance_ratio_.cumsum(),
+         marker='o', color='cyan')
+plt.axhline(0.90, color='gold', linestyle='--')
+plt.xlabel('Componente'); plt.ylabel('Varianza explicada')
+
+# 3. Ajustar con k elegido (o con umbral)
+pca = PCA(n_components=0.90)   # automático: elige k para ≥90%
+X_pca = pca.fit_transform(X_scaled)
+print(X_pca.shape)             # (n_samples, k)
+
+# 4. Ver loadings
+import pandas as pd
+loadings = pd.DataFrame(pca.components_.T,
+                        index=feature_names,
+                        columns=[f'PC{i+1}' for i in range(pca.n_components_)])
+print(loadings)
+
+# 5. Biplot 2D
+plt.scatter(X_pca[:,0], X_pca[:,1], alpha=0.5)
+for i, feat in enumerate(feature_names):
+    plt.arrow(0, 0, pca.components_[0,i]*3, pca.components_[1,i]*3,
+              color='gold', alpha=0.8)
+    plt.text(pca.components_[0,i]*3.1, pca.components_[1,i]*3.1, feat)</div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>n_components <span>— cuántos PCs</span></h3>
+      <p>Entero: número exacto de componentes. Float entre 0 y 1: umbral de varianza acumulada (e.g. 0.95). <code style="color:var(--teal)">'mle'</code>: selección automática por criterio MLE de Minka.</p>
+    </div>
+    <div class="card">
+      <h3>explained_variance_ratio_ <span>— resultado clave</span></h3>
+      <p>Array con la fracción de varianza de cada componente. <code style="color:var(--teal)">.cumsum()</code> para la acumulada. Siempre graficarlo para justificar tu k.</p>
+    </div>
+    <div class="card">
+      <h3>components_ <span>— los eigenvectores</span></h3>
+      <p>Matriz (k × p): cada fila es un componente, cada columna el peso (loading) de una feature. Valor absoluto alto → esa feature es importante en el componente.</p>
+    </div>
+    <div class="card">
+      <h3>inverse_transform <span>— reconstrucción</span></h3>
+      <p>Vuelve al espacio original desde los PCs. Útil para medir el error de reconstrucción y para compresión de imágenes (ej. PCA sobre píxeles de caras).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 8. FEATURE SELECTION vs PCA ──────────────────────────────── -->
+<section class="section">
+  <div class="tag"><span class="dot" style="background:var(--gold);"></span>Feature Selection</div>
+  <h2>PCA vs Feature Selection: ¿cuándo usar cada uno?</h2>
+  <p>PCA <b>crea nuevas variables</b> (combinaciones lineales). Feature Selection <b>elige un subconjunto</b> de las variables existentes. Son estrategias distintas con propósitos distintos.</p>
+
+  <table class="compare-table">
+    <tr><th>Criterio</th><th>PCA</th><th>Feature Selection</th></tr>
+    <tr><td>Interpretabilidad</td><td>Baja — los PCs no tienen nombre real</td><td class="win">Alta — sigues viendo features originales</td></tr>
+    <tr><td>Correlación entre features</td><td class="win">La elimina por diseño (PCs ortogonales)</td><td>No la resuelve</td></tr>
+    <tr><td>Reducción de ruido</td><td class="win">Sí — los últimos PCs suelen ser ruido</td><td>Solo si eliminas features ruidosas</td></tr>
+    <tr><td>Requiere escalar</td><td>Sí (crítico)</td><td>Depende del método</td></tr>
+    <tr><td>Linealidad</td><td>Solo captura relaciones lineales</td><td class="win">Agnóstica a la estructura</td></tr>
+    <tr><td>Cuándo usar</td><td class="win">Muchas features correlacionadas, necesitas comprimir</td><td class="win">Necesitas saber qué features importan</td></tr>
+  </table>
+
+  <div class="info-box">💡 En la práctica se usan juntos: Feature Selection primero (eliminar ruido obvio y features irrelevantes) y luego PCA si la dimensionalidad sigue siendo alta o hay multicolinealidad.</div>
+</section>
+
+<!-- ─── 9. CUÁNDO NO USAR PCA ─────────────────────────────────────── -->
+<section class="section">
+  <div class="tag"><span class="dot" style="background:var(--coral);"></span>Limitaciones</div>
+  <h2>Cuándo PCA no es la respuesta</h2>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Relaciones no lineales</h3>
+      <p>PCA solo captura estructura lineal. Si los datos viven en una variedad no lineal (e.g. espiral suiza), usa Kernel PCA, UMAP o t-SNE.</p>
+    </div>
+    <div class="card">
+      <h3>Necesitas interpretabilidad</h3>
+      <p>"PC1 es una combinación de 20 variables" no le sirve al cliente. Si debes explicar el modelo, Feature Selection o modelos con importancia de features son mejores.</p>
+    </div>
+    <div class="card">
+      <h3>Outliers graves</h3>
+      <p>PCA clásico es sensible a outliers (maximiza varianza, que los outliers inflan). Usar Robust PCA o escalar con RobustScaler antes.</p>
+    </div>
+    <div class="card">
+      <h3>Datos categóricos</h3>
+      <p>PCA asume variables continuas. Para categorías usa MCA (Multiple Correspondence Analysis) o encoding adecuado antes.</p>
+    </div>
+  </div>
+
+  <!-- SVG: lineal vs no lineal -->
+  <svg viewBox="0 0 760 160" xmlns="http://www.w3.org/2000/svg">
+    <!-- caso lineal -->
+    <text x="190" y="20" fill="#4fd1c5" font-family="DM Mono" font-size="11" text-anchor="middle">PCA funciona bien</text>
+    <ellipse cx="190" cy="95" rx="120" ry="45" fill="none" stroke="#26262c" stroke-width="1" transform="rotate(-30 190 95)"/>
+    <circle cx="120" cy="120" r="3.5" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="145" cy="108" r="3.5" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="165" cy="96"  r="3.5" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="185" cy="85"  r="3.5" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="210" cy="74"  r="3.5" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="230" cy="63"  r="3.5" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="255" cy="52"  r="3.5" fill="#4fd1c5" opacity="0.8"/>
+    <line x1="100" y1="135" x2="265" y2="40" stroke="#ff5d5d" stroke-width="2"/>
+    <text x="190" y="148" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">estructura lineal → PC1 lo captura</text>
+
+    <!-- caso no lineal -->
+    <text x="570" y="20" fill="#ff5d5d" font-family="DM Mono" font-size="11" text-anchor="middle">PCA falla (no lineal)</text>
+    <!-- espiral -->
+    <path d="M570,95 Q620,60 600,30 Q560,10 520,40 Q490,70 520,100 Q555,130 610,120 Q650,105 655,75" fill="none" stroke="#4fd1c5" stroke-width="2" stroke-dasharray="3 2"/>
+    <circle cx="570" cy="95" r="3" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="600" cy="75" r="3" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="600" cy="45" r="3" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="570" cy="28" r="3" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="535" cy="38" r="3" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="512" cy="70" r="3" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="525" cy="100" r="3" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="560" cy="120" r="3" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="605" cy="115" r="3" fill="#4fd1c5" opacity="0.8"/>
+    <circle cx="645" cy="90"  r="3" fill="#4fd1c5" opacity="0.8"/>
+    <!-- PC1 que no captura bien -->
+    <line x1="510" y1="90" x2="660" y2="70" stroke="#ff5d5d" stroke-width="1.5" stroke-dasharray="5 3"/>
+    <text x="570" y="148" fill="#8a8a92" font-family="DM Mono" font-size="10" text-anchor="middle">PC1 pierde la estructura → usa UMAP/t-SNE</text>
+  </svg>
+</section>
+
+<!-- ─── 10. CHECKLIST PRÁCTICA ────────────────────────────────────── -->
+<section class="section">
+  <div class="tag"><span class="dot" style="background:var(--teal);"></span>Práctica obligatoria · Checklist</div>
+  <h2>Lo que se espera en el sprint</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div><h4>EDA y correlaciones</h4><p>Heatmap de correlación. Identifica grupos de features muy correlacionadas — esas son candidatas a colapsar en PCs. Visualiza la matriz de dispersión si p es manejable.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div><h4>Escalar con StandardScaler</h4><p>Siempre antes de PCA. Nunca usar MinMaxScaler para PCA (no centra). Ajustar el scaler solo sobre train, transformar train y test por separado.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div><h4>PCA completo → scree plot</h4><p>Instanciar PCA sin n_components. Graficar varianza individual y acumulada. Identificar el codo. Justificar el k elegido con ese gráfico.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div><h4>PCA con k elegido → transformar</h4><p>Ajustar PCA(n_components=k) sobre X_train. Transformar train y test. El resultado es tu nuevo dataset reducido para el modelo.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div><h4>Visualización PC1 vs PC2</h4><p>Scatter coloreado por clase/cluster. ¿Se separan los grupos en el espacio de PCs? Incluye también el biplot con flechas de loadings.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div><h4>Modelo antes vs después</h4><p>Entrena el mismo modelo (e.g. KNN, SVM, Random Forest) con las features originales y con los PCs. Compara accuracy / F1 / tiempo de entrenamiento.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div><h4>Feature Selection como alternativa</h4><p>Probar SelectKBest (f_classif o mutual_info) o eliminación basada en varianza / correlación. Comparar con PCA. Concluir cuál funciona mejor y por qué.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Apuntes de apoyo — Bloque 4, Sprint 14 · Modelos No Supervisados II – PCA y Feature Selection · Unidad 1: PCA
+</footer>
+
+</div><!-- end wrap -->
+
+<!-- ─── SCRIPT: DEMO PCA 2D ───────────────────────────────────────── -->
+<script>
+(function(){
+  const canvas = document.getElementById('pcaCanvas');
+  const ctx    = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const corrSel = document.getElementById('corrSelect');
+  const nSel    = document.getElementById('nSelect');
+  const runBtn  = document.getElementById('runPCA');
+  const varPC1  = document.getElementById('varPC1');
+  const varPC2  = document.getElementById('varPC2');
+  const angleEl = document.getElementById('anglePC1');
+
+  let pts = [];
+
+  function randn(){
+    let u=0, v=0;
+    while(u===0) u=Math.random();
+    while(v===0) v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+
+  function generate(){
+    const r = parseFloat(corrSel.value);
+    const n = parseInt(nSel.value);
+    pts = [];
+    for(let i=0;i<n;i++){
+      const z1 = randn(), z2 = randn();
+      const x  = z1;
+      const y  = r*z1 + Math.sqrt(1-r*r)*z2;
+      pts.push([x, y]);
+    }
+  }
+
+  function mean(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+
+  function pca2d(data){
+    const xs = data.map(p=>p[0]), ys = data.map(p=>p[1]);
+    const mx = mean(xs), my = mean(ys);
+    const cx = xs.map(x=>x-mx), cy = ys.map(y=>y-my);
+    // cov matrix
+    const n = data.length;
+    const cxx = cx.reduce((s,v,i)=>s+v*cx[i],0)/n;
+    const cxy = cx.reduce((s,v,i)=>s+v*cy[i],0)/n;
+    const cyy = cy.reduce((s,v,i)=>s+v*cy[i],0)/n;
+    // eigenvalores 2x2 analítico
+    const trace = cxx+cyy;
+    const det   = cxx*cyy - cxy*cxy;
+    const disc  = Math.sqrt(Math.max(0,(trace/2)**2 - det));
+    const l1 = trace/2 + disc;
+    const l2 = trace/2 - disc;
+    // eigenvector para l1
+    let vx, vy;
+    if(Math.abs(cxy) > 1e-10){
+      vx = l1 - cyy; vy = cxy;
+    } else {
+      vx = 1; vy = 0;
+    }
+    const norm = Math.sqrt(vx*vx+vy*vy);
+    vx /= norm; vy /= norm;
+    const totalVar = l1+l2;
+    return {
+      mean:[mx,my],
+      v1:[vx,vy], l1,
+      v2:[-vy,vx], l2,
+      r1: totalVar>0 ? l1/totalVar : 0,
+      r2: totalVar>0 ? l2/totalVar : 0
+    };
+  }
+
+  function toCanvas(x, y, scaleX, scaleY, ox, oy){
+    return [ox + x*scaleX, oy - y*scaleY];
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle='#1a1a1f'; ctx.lineWidth=1;
+    for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    const scale = 80;
+    const ox = W/2, oy = H/2;
+
+    // ejes mundo
+    ctx.strokeStyle='#26262c'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(0,oy); ctx.lineTo(W,oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox,0); ctx.lineTo(ox,H); ctx.stroke();
+
+    // puntos
+    pts.forEach(p=>{
+      const [cx2,cy2] = toCanvas(p[0], p[1], scale, scale, ox, oy);
+      ctx.beginPath();
+      ctx.arc(cx2, cy2, 4, 0, Math.PI*2);
+      ctx.fillStyle='#4fd1c5';
+      ctx.globalAlpha=0.65;
+      ctx.fill();
+      ctx.globalAlpha=1;
+    });
+
+    // PCA
+    const res = pca2d(pts);
+    const [mx2, my2] = toCanvas(res.mean[0], res.mean[1], scale, scale, ox, oy);
+
+    // centroide
+    ctx.beginPath(); ctx.arc(mx2,my2,5,0,Math.PI*2);
+    ctx.fillStyle='#f0b94d'; ctx.fill();
+
+    // PC1
+    const len1 = Math.sqrt(res.l1)*scale;
+    ctx.beginPath();
+    ctx.moveTo(mx2 - res.v1[0]*len1, my2 + res.v1[1]*len1);
+    ctx.lineTo(mx2 + res.v1[0]*len1, my2 - res.v1[1]*len1);
+    ctx.strokeStyle='#ff5d5d'; ctx.lineWidth=2.5;
+    ctx.stroke();
+    // punta flecha PC1
+    const ax1 = mx2 + res.v1[0]*len1, ay1 = my2 - res.v1[1]*len1;
+    ctx.fillStyle='#ff5d5d';
+    ctx.beginPath(); ctx.arc(ax1,ay1,5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ff5d5d';
+    ctx.font='bold 14px Syne,sans-serif';
+    ctx.fillText('PC1', ax1+8, ay1-6);
+
+    // PC2
+    const len2 = Math.sqrt(Math.max(0,res.l2))*scale;
+    ctx.beginPath();
+    ctx.moveTo(mx2 - res.v2[0]*len2, my2 + res.v2[1]*len2);
+    ctx.lineTo(mx2 + res.v2[0]*len2, my2 - res.v2[1]*len2);
+    ctx.strokeStyle='#9c8cf0'; ctx.lineWidth=2;
+    ctx.stroke();
+    const ax2 = mx2 + res.v2[0]*len2, ay2 = my2 - res.v2[1]*len2;
+    ctx.fillStyle='#9c8cf0';
+    ctx.beginPath(); ctx.arc(ax2,ay2,4,0,Math.PI*2); ctx.fill();
+    ctx.font='bold 13px Syne,sans-serif';
+    ctx.fillText('PC2', ax2+6, ay2-5);
+
+    // stats
+    varPC1.textContent  = (res.r1*100).toFixed(1)+'% ';
+    varPC2.textContent  = (res.r2*100).toFixed(1)+'% ';
+    const ang = Math.atan2(res.v1[1], res.v1[0])*180/Math.PI;
+    angleEl.textContent = ang.toFixed(1)+'° ';
+  }
+
+  function run(){
+    generate();
+    draw();
+  }
+
+  runBtn.addEventListener('click', run);
+  run();
+})();
+</script>
+
+</body>
+</html>
