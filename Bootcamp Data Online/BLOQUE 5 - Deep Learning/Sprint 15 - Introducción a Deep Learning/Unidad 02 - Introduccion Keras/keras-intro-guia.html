@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introducción a Keras · Guía Teórica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0d0d0f;
+    --bg-panel: #151517;
+    --bg-card: #1a1a1d;
+    --border: #2a2a2e;
+    --text: #e8e6e3;
+    --text-dim: #9a9891;
+    --accent: #ff4d4d;
+    --accent-soft: rgba(255,77,77,0.12);
+    --blue: #6ea8ff;
+    --green: #7ee787;
+    --yellow: #ffd166;
+    --purple: #c792ea;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.65;
+    font-size: 16px;
+  }
+  ::selection{ background: var(--accent-soft); color: var(--accent);}
+
+  header.top{
+    padding: 48px 24px 32px;
+    border-bottom: 1px solid var(--border);
+    text-align:center;
+    background: radial-gradient(circle at 50% 0%, rgba(255,77,77,0.08), transparent 60%);
+  }
+  header.top .eyebrow{
+    font-family:'DM Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 3px;
+    font-size: 12px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  header.top h1{
+    font-family:'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(28px, 5vw, 48px);
+    letter-spacing: -1px;
+  }
+  header.top p{
+    color: var(--text-dim);
+    max-width: 600px;
+    margin: 16px auto 0;
+    font-size: 15px;
+  }
+
+  nav.toc{
+    max-width: 900px;
+    margin: 32px auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  nav.toc a{
+    display:block;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    text-decoration:none;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: border-color .15s, transform .15s;
+  }
+  nav.toc a:hover{ border-color: var(--accent); transform: translateY(-2px);}
+  nav.toc a span{
+    display:block;
+    font-family:'DM Mono', monospace;
+    color: var(--accent);
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  main{
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 20px 24px 100px;
+  }
+
+  section.block{
+    margin-top: 64px;
+    scroll-margin-top: 24px;
+  }
+  section.block .tag{
+    font-family:'DM Mono', monospace;
+    color: var(--accent);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  section.block h2{
+    font-family:'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+  h3{
+    font-family:'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 19px;
+    margin: 32px 0 12px;
+    color: var(--text);
+  }
+  h3.sub{ color: var(--blue); }
+  p{ margin-bottom: 14px; color: #d6d4d0; }
+  strong{ color: var(--text); font-weight: 700;}
+  em.term{ color: var(--accent); font-style: normal; font-weight: 600;}
+  code.inline{
+    font-family:'DM Mono', monospace;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--yellow);
+  }
+
+  ul, ol{ margin: 12px 0 18px 22px; }
+  li{ margin-bottom: 8px; color: #d6d4d0;}
+  li strong{ color: var(--text);}
+
+  .card{
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin: 20px 0;
+  }
+  .card.analogy{ border-left: 3px solid var(--yellow); }
+  .card.analogy .label{ color: var(--yellow); }
+  .card.key{ border-left: 3px solid var(--green); }
+  .card.key .label{ color: var(--green); }
+  .card.warn{ border-left: 3px solid var(--accent); }
+  .card.warn .label{ color: var(--accent); }
+  .card .label{
+    font-family:'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+
+  pre.code{
+    background: #101012;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13.5px;
+    overflow-x: auto;
+    margin: 14px 0;
+    line-height: 1.55;
+  }
+  pre.code .c{ color: var(--text-dim); } /* comment */
+  pre.code .k{ color: var(--purple); }   /* keyword */
+  pre.code .s{ color: var(--green); }    /* string */
+  pre.code .n{ color: var(--blue); }     /* name/func */
+  pre.code .num{ color: var(--yellow); } /* number */
+
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14.5px;
+  }
+  th, td{
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  th{
+    font-family:'DM Mono', monospace;
+    color: var(--accent);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  td{ color: #d6d4d0; }
+  tr:last-child td{ border-bottom: none; }
+  td code, th code{
+    font-family:'DM Mono', monospace;
+    color: var(--yellow);
+    font-size: 0.92em;
+  }
+
+  .flow{
+    display:flex;
+    align-items:center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+  .flow .step{
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+  }
+  .flow .arrow{ color: var(--accent); }
+
+  .grid2{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 18px 0;
+  }
+  @media (max-width: 640px){ .grid2{ grid-template-columns: 1fr; } }
+  .grid2 .cell{
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .grid2 .cell h4{
+    font-family:'Syne', sans-serif;
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: var(--blue);
+  }
+  .grid2 .cell p{ font-size: 13.5px; margin: 0; color: var(--text-dim); }
+
+  footer{
+    text-align:center;
+    padding: 40px 24px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .backtop{
+    display:inline-block;
+    margin-top: 24px;
+    font-family:'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 20px;
+  }
+  .backtop:hover{ color: var(--accent); border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="eyebrow">The Bridge · Deep Learning · Tutorial Keras</div>
+  <h1>Introducción a Keras</h1>
+  <p>Guía teórica de repaso — la lógica y sintaxis de Keras explicadas, sin ejercicios a resolver. Código de ejemplo solo para entender el "cómo se escribe", no para practicar.</p>
+</header>
+
+<nav class="toc">
+  <a href="#ejemplo"><span>01</span>Introducción — Ejemplo</a>
+  <a href="#topologia"><span>02</span>Construcción de Topología</a>
+  <a href="#inicializadores"><span>03</span>Inicializadores y Capas</a>
+  <a href="#activacion"><span>04</span>Activación y Optimizador</a>
+  <a href="#entrenamiento"><span>05</span>Entrenamiento</a>
+  <a href="#evaluacion"><span>06</span>Evaluación</a>
+  <a href="#regresion"><span>07</span>Modelado Regresión</a>
+  <a href="#adicionales"><span>08</span>Elementos Adicionales</a>
+</nav>
+
+<main>
+
+  <!-- 01 EJEMPLO -->
+  <section class="block" id="ejemplo">
+    <div class="tag">01 · Panorama</div>
+    <h2>Introducción — Ejemplo</h2>
+
+    <p><em class="term">Keras</em> es la API de alto nivel de TensorFlow para construir y entrenar redes neuronales. Su filosofía es que definir una red se parezca lo más posible a describirla con palabras: "una capa de 64 neuronas, luego otra de 32, luego la salida" — sin tener que programar a mano las matemáticas de cada neurona.</p>
+
+    <div class="card analogy">
+      <div class="label">Analogía</div>
+      <p>Si backpropagation y gradient descent son el "motor" del coche, Keras es el volante y el salpicadero: te da controles simples (<code class="inline">Dense(64)</code>, <code class="inline">model.fit()</code>...) para dirigir todo ese motor matemático sin tener que construirlo pieza a pieza.</p>
+    </div>
+
+    <h3>El flujo de trabajo típico en Keras</h3>
+    <div class="flow">
+      <div class="step">1. Definir topología</div><div class="arrow">→</div>
+      <div class="step">2. Compilar</div><div class="arrow">→</div>
+      <div class="step">3. Entrenar (fit)</div><div class="arrow">→</div>
+      <div class="step">4. Evaluar</div><div class="arrow">→</div>
+      <div class="step">5. Predecir</div>
+    </div>
+
+    <p>Un ejemplo mínimo de principio a fin, para tener el mapa completo antes de entrar en detalle en cada paso:</p>
+
+    <pre class="code"><span class="k">from</span> tensorflow<span class="k">.</span>keras<span class="k">.</span>models <span class="k">import</span> Sequential
+<span class="k">from</span> tensorflow<span class="k">.</span>keras<span class="k">.</span>layers <span class="k">import</span> Dense
+
+<span class="c"># 1. Definir la topología (arquitectura)</span>
+model = Sequential([
+    Dense(<span class="num">64</span>, activation=<span class="s">'relu'</span>, input_shape=(<span class="num">10</span>,)),
+    Dense(<span class="num">32</span>, activation=<span class="s">'relu'</span>),
+    Dense(<span class="num">1</span>, activation=<span class="s">'sigmoid'</span>)  <span class="c"># salida binaria</span>
+])
+
+<span class="c"># 2. Compilar: cómo va a aprender</span>
+model.compile(optimizer=<span class="s">'adam'</span>, loss=<span class="s">'binary_crossentropy'</span>, metrics=[<span class="s">'accuracy'</span>])
+
+<span class="c"># 3. Entrenar</span>
+model.fit(X_train, y_train, epochs=<span class="num">20</span>, batch_size=<span class="num">32</span>)
+
+<span class="c"># 4. Evaluar</span>
+model.evaluate(X_test, y_test)
+
+<span class="c"># 5. Predecir</span>
+model.predict(X_new)</pre>
+
+    <p>Cada una de estas cinco líneas de intención corresponde a una de las píldoras siguientes. Vamos a desgranarlas.</p>
+  </section>
+
+  <!-- 02 TOPOLOGIA -->
+  <section class="block" id="topologia">
+    <div class="tag">02 · Arquitectura</div>
+    <h2>Construcción de Topología</h2>
+
+    <p>En Keras hay dos formas principales de definir la arquitectura de una red:</p>
+
+    <h3 class="sub">Sequential API</h3>
+    <p>La forma más simple: apilas capas una detrás de otra, en orden, como una lista. Sirve para la mayoría de arquitecturas "lineales" (una entrada, una salida, sin ramificaciones).</p>
+
+    <pre class="code">model = Sequential([
+    Dense(<span class="num">64</span>, activation=<span class="s">'relu'</span>, input_shape=(<span class="num">10</span>,)),
+    Dense(<span class="num">32</span>, activation=<span class="s">'relu'</span>),
+    Dense(<span class="num">1</span>)
+])</pre>
+
+    <h3 class="sub">Functional API</h3>
+    <p>Más flexible: defines cada capa como una función que se aplica sobre la anterior, y luego declaras el modelo indicando input y output. Necesaria para arquitecturas con varias entradas/salidas, ramificaciones, o conexiones que "saltan" capas.</p>
+
+    <pre class="code"><span class="k">from</span> tensorflow<span class="k">.</span>keras<span class="k">.</span>layers <span class="k">import</span> Input, Dense
+<span class="k">from</span> tensorflow<span class="k">.</span>keras<span class="k">.</span>models <span class="k">import</span> Model
+
+inputs = Input(shape=(<span class="num">10</span>,))
+x = Dense(<span class="num">64</span>, activation=<span class="s">'relu'</span>)(inputs)
+x = Dense(<span class="num">32</span>, activation=<span class="s">'relu'</span>)(x)
+outputs = Dense(<span class="num">1</span>)(x)
+
+model = Model(inputs=inputs, outputs=outputs)</pre>
+
+    <div class="card key">
+      <div class="label">¿Cuál usar?</div>
+      <p>Para la inmensa mayoría de tus proyectos de bootcamp, <code class="inline">Sequential</code> es suficiente y más legible. El Functional API se reserva para arquitecturas más avanzadas (por ejemplo, redes con dos ramas de entrada distintas que se combinan más adelante).</p>
+    </div>
+
+    <h3>La forma de entrada: <code class="inline">input_shape</code></h3>
+    <p>Solo la primera capa necesita saber la forma de los datos de entrada (cuántas features tiene cada ejemplo). Las capas siguientes ya "saben" su input porque es el output de la capa anterior — Keras lo infiere automáticamente.</p>
+  </section>
+
+  <!-- 03 INICIALIZADORES -->
+  <section class="block" id="inicializadores">
+    <div class="tag">03 · Configuración de capas</div>
+    <h2>Inicializadores y Capas</h2>
+
+    <h3>Tipos de capas más comunes</h3>
+    <table>
+      <tr><th>Capa</th><th>Para qué sirve</th></tr>
+      <tr><td><code>Dense</code></td><td>Capa totalmente conectada — la básica del MLP</td></tr>
+      <tr><td><code>Dropout</code></td><td>Apaga aleatoriamente un % de neuronas durante entrenamiento (regularización)</td></tr>
+      <tr><td><code>BatchNormalization</code></td><td>Normaliza las activaciones entre capas, estabiliza el entrenamiento</td></tr>
+      <tr><td><code>Flatten</code></td><td>Convierte datos multidimensionales (ej. imagen 2D) en un vector plano</td></tr>
+      <tr><td><code>Input</code></td><td>Punto de entrada del modelo (solo en Functional API)</td></tr>
+    </table>
+
+    <pre class="code"><span class="k">from</span> tensorflow<span class="k">.</span>keras<span class="k">.</span>layers <span class="k">import</span> Dense, Dropout, BatchNormalization
+
+model = Sequential([
+    Dense(<span class="num">64</span>, activation=<span class="s">'relu'</span>, input_shape=(<span class="num">10</span>,)),
+    BatchNormalization(),
+    Dropout(<span class="num">0.3</span>),  <span class="c"># apaga el 30% de las neuronas</span>
+    Dense(<span class="num">32</span>, activation=<span class="s">'relu'</span>),
+    Dense(<span class="num">1</span>, activation=<span class="s">'sigmoid'</span>)
+])</pre>
+
+    <h3>Inicializadores de pesos</h3>
+    <p>Recordando el HTML anterior: los pesos no pueden inicializarse todos igual. Keras usa por defecto <code class="inline">glorot_uniform</code> (también llamado Xavier), pero puedes especificar otros:</p>
+
+    <pre class="code">Dense(<span class="num">64</span>, activation=<span class="s">'relu'</span>, kernel_initializer=<span class="s">'he_normal'</span>)</pre>
+
+    <table>
+      <tr><th>Inicializador</th><th>Cuándo se usa típicamente</th></tr>
+      <tr><td><code>glorot_uniform</code> (Xavier)</td><td>Por defecto en Keras; buena opción general con sigmoid/tanh</td></tr>
+      <tr><td><code>he_normal</code></td><td>Recomendado cuando se usa ReLU en las capas</td></tr>
+      <tr><td><code>zeros</code></td><td>Habitual para inicializar el <em>bias</em> (no los pesos)</td></tr>
+    </table>
+
+    <div class="card warn">
+      <div class="label">No es algo que sueles tocar</div>
+      <p>En la práctica, rara vez cambiarás el inicializador manualmente — los valores por defecto de Keras funcionan bien en la mayoría de casos. Conviene entender que existe, más que memorizar cuándo cambiarlo.</p>
+    </div>
+  </section>
+
+  <!-- 04 ACTIVACION Y OPTIMIZADOR -->
+  <section class="block" id="activacion">
+    <div class="tag">04 · Configuración de aprendizaje</div>
+    <h2>Funciones de Activación y Optimizador</h2>
+
+    <h3 class="sub">Activaciones en Keras</h3>
+    <p>Se pasan como string dentro de la capa, o como capa aparte si necesitas más control:</p>
+
+    <pre class="code">Dense(<span class="num">64</span>, activation=<span class="s">'relu'</span>)          <span class="c"># forma más común</span>
+
+<span class="c"># equivalente, como capa separada</span>
+<span class="k">from</span> tensorflow<span class="k">.</span>keras<span class="k">.</span>layers <span class="k">import</span> Activation
+Dense(<span class="num">64</span>)
+Activation(<span class="s">'relu'</span>)</pre>
+
+    <table>
+      <tr><th>String en Keras</th><th>Dónde se usa normalmente</th></tr>
+      <tr><td><code>'relu'</code></td><td>Capas ocultas</td></tr>
+      <tr><td><code>'sigmoid'</code></td><td>Salida — clasificación binaria</td></tr>
+      <tr><td><code>'softmax'</code></td><td>Salida — clasificación multiclase</td></tr>
+      <tr><td><code>None</code> / <code>'linear'</code></td><td>Salida — regresión (sin activación, valor libre)</td></tr>
+    </table>
+
+    <h3 class="sub">Optimizadores en <code class="inline">compile()</code></h3>
+    <p>Se especifican al compilar el modelo. Puedes pasarlos como string (config por defecto) o como objeto (para ajustar hiperparámetros como el learning rate):</p>
+
+    <pre class="code"><span class="c"># forma simple</span>
+model.compile(optimizer=<span class="s">'adam'</span>, loss=<span class="s">'mse'</span>)
+
+<span class="c"># forma con control del learning rate</span>
+<span class="k">from</span> tensorflow<span class="k">.</span>keras<span class="k">.</span>optimizers <span class="k">import</span> Adam
+model.compile(optimizer=Adam(learning_rate=<span class="num">0.001</span>), loss=<span class="s">'mse'</span>)</pre>
+
+    <div class="card key">
+      <div class="label">Idea clave</div>
+      <p><code class="inline">compile()</code> es donde le dices a la red <strong>cómo</strong> va a aprender: qué optimizador (cómo ajusta los pesos), qué loss (cómo mide el error) y qué métricas quieres monitorizar (accuracy, mae...) mientras entrena. No entrena nada todavía — solo configura el entrenamiento.</p>
+    </div>
+  </section>
+
+  <!-- 05 ENTRENAMIENTO -->
+  <section class="block" id="entrenamiento">
+    <div class="tag">05 · Ejecución</div>
+    <h2>Entrenamiento</h2>
+
+    <p>El entrenamiento en sí ocurre con <code class="inline">model.fit()</code>:</p>
+
+    <pre class="code">history = model.fit(
+    X_train, y_train,
+    epochs=<span class="num">50</span>,
+    batch_size=<span class="num">32</span>,
+    validation_data=(X_val, y_val)
+)</pre>
+
+    <table>
+      <tr><th>Parámetro</th><th>Qué controla</th></tr>
+      <tr><td><code>epochs</code></td><td>Cuántas veces pasa por todo el dataset de entrenamiento</td></tr>
+      <tr><td><code>batch_size</code></td><td>Cuántos ejemplos procesa antes de actualizar los pesos</td></tr>
+      <tr><td><code>validation_data</code></td><td>Datos aparte para medir el rendimiento en cada epoch sin entrenar con ellos (detecta overfitting)</td></tr>
+      <tr><td><code>validation_split</code></td><td>Alternativa: reserva automáticamente un % de <code>X_train</code> como validación</td></tr>
+    </table>
+
+    <h3>El objeto <code class="inline">history</code></h3>
+    <p><code class="inline">fit()</code> devuelve un objeto con la evolución del loss y las métricas en cada epoch — es lo que normalmente se grafica para ver si el modelo converge bien o está sobreajustando:</p>
+
+    <pre class="code">history.history[<span class="s">'loss'</span>]        <span class="c"># loss en train, por epoch</span>
+history.history[<span class="s">'val_loss'</span>]    <span class="c"># loss en validación, por epoch</span></pre>
+
+    <div class="card analogy">
+      <div class="label">Cómo leerlo</div>
+      <p>Si <code class="inline">loss</code> baja pero <code class="inline">val_loss</code> empieza a subir de nuevo tras cierto punto, es la señal clásica de overfitting: el modelo está memorizando el train set en vez de generalizar. Es el mismo patrón que ya conoces de train/test en ML clásico, solo que aquí lo ves epoch a epoch.</p>
+    </div>
+  </section>
+
+  <!-- 06 EVALUACION -->
+  <section class="block" id="evaluacion">
+    <div class="tag">06 · Validación</div>
+    <h2>Evaluación</h2>
+
+    <pre class="code">loss, accuracy = model.evaluate(X_test, y_test)
+<span class="k">print</span>(<span class="s">f"Loss: {loss}, Accuracy: {accuracy}"</span>)</pre>
+
+    <p><code class="inline">evaluate()</code> calcula el loss y las métricas definidas en <code class="inline">compile()</code>, pero sobre datos que el modelo <strong>no ha visto durante el entrenamiento</strong> — igual que el <code class="inline">.score()</code> o el classification_report que ya usas con sklearn.</p>
+
+    <h3>Predicciones individuales</h3>
+    <pre class="code">predictions = model.predict(X_new)</pre>
+
+    <div class="card warn">
+      <div class="label">Cuidado con clasificación</div>
+      <p>En clasificación, <code class="inline">predict()</code> devuelve <strong>probabilidades</strong> (por la activación sigmoid/softmax), no la clase directamente. Necesitas un paso extra para convertirlas en etiquetas:</p>
+    </div>
+
+    <pre class="code"><span class="c"># binaria</span>
+clases = (predictions > <span class="num">0.5</span>).astype(<span class="s">"int32"</span>)
+
+<span class="c"># multiclase</span>
+<span class="k">import</span> numpy <span class="k">as</span> np
+clases = np.argmax(predictions, axis=<span class="num">1</span>)</pre>
+  </section>
+
+  <!-- 07 REGRESION -->
+  <section class="block" id="regresion">
+    <div class="tag">07 · Caso práctico</div>
+    <h2>Modelado de Regresión</h2>
+
+    <p>Para regresión (predecir un número continuo, como el precio de una reserva), la arquitectura cambia en dos puntos clave respecto a clasificación:</p>
+
+    <div class="grid2">
+      <div class="cell">
+        <h4>Capa de salida</h4>
+        <p><strong>1 neurona, sin activación</strong> (o <code class="inline">'linear'</code>) — el output puede ser cualquier número real, no una probabilidad entre 0 y 1.</p>
+      </div>
+      <div class="cell">
+        <h4>Función de pérdida</h4>
+        <p><strong>MSE o MAE</strong> en vez de crossentropy — mide distancia numérica, no error de clasificación.</p>
+      </div>
+    </div>
+
+    <pre class="code">model = Sequential([
+    Dense(<span class="num">64</span>, activation=<span class="s">'relu'</span>, input_shape=(<span class="num">10</span>,)),
+    Dense(<span class="num">32</span>, activation=<span class="s">'relu'</span>),
+    Dense(<span class="num">1</span>)  <span class="c"># sin activación: salida = número real</span>
+])
+
+model.compile(
+    optimizer=<span class="s">'adam'</span>,
+    loss=<span class="s">'mse'</span>,       <span class="c"># Mean Squared Error</span>
+    metrics=[<span class="s">'mae'</span>]  <span class="c"># Mean Absolute Error, más interpretable</span>
+)</pre>
+
+    <div class="card key">
+      <div class="label">Idea clave</div>
+      <p>La arquitectura de una red para regresión y otra para clasificación es prácticamente idéntica en las capas ocultas — lo único que cambia sistemáticamente es <strong>la capa de salida</strong> y <strong>la loss function</strong>, exactamente igual que decidías <code class="inline">RandomForestRegressor</code> vs <code class="inline">RandomForestClassifier</code> en sklearn.</p>
+    </div>
+  </section>
+
+  <!-- 08 ADICIONALES -->
+  <section class="block" id="adicionales">
+    <div class="tag">08 · Utilidades</div>
+    <h2>Elementos Adicionales</h2>
+
+    <h3 class="sub">Callbacks</h3>
+    <p>Funciones que se ejecutan automáticamente durante <code class="inline">fit()</code>, en momentos concretos (final de cada epoch, por ejemplo). Los más usados:</p>
+
+    <pre class="code"><span class="k">from</span> tensorflow<span class="k">.</span>keras<span class="k">.</span>callbacks <span class="k">import</span> EarlyStopping, ModelCheckpoint
+
+early_stop = EarlyStopping(
+    monitor=<span class="s">'val_loss'</span>,
+    patience=<span class="num">5</span>,          <span class="c"># espera 5 epochs sin mejora antes de parar</span>
+    restore_best_weights=<span class="k">True</span>
+)
+
+checkpoint = ModelCheckpoint(
+    <span class="s">'mejor_modelo.keras'</span>,
+    save_best_only=<span class="k">True</span>
+)
+
+model.fit(X_train, y_train, epochs=<span class="num">100</span>,
+          validation_data=(X_val, y_val),
+          callbacks=[early_stop, checkpoint])</pre>
+
+    <table>
+      <tr><th>Callback</th><th>Qué hace</th></tr>
+      <tr><td><code>EarlyStopping</code></td><td>Detiene el entrenamiento si la métrica de validación deja de mejorar</td></tr>
+      <tr><td><code>ModelCheckpoint</code></td><td>Guarda el modelo automáticamente cuando mejora</td></tr>
+      <tr><td><code>ReduceLROnPlateau</code></td><td>Reduce el learning rate si el entrenamiento se estanca</td></tr>
+    </table>
+
+    <h3 class="sub">Guardar y cargar modelos</h3>
+    <pre class="code">model.save(<span class="s">'mi_modelo.keras'</span>)
+
+<span class="k">from</span> tensorflow<span class="k">.</span>keras<span class="k">.</span>models <span class="k">import</span> load_model
+modelo_cargado = load_model(<span class="s">'mi_modelo.keras'</span>)</pre>
+
+    <h3 class="sub"><code class="inline">model.summary()</code></h3>
+    <p>Imprime la arquitectura completa: capas, forma de salida de cada una, y número de parámetros entrenables. Es el primer comando que se ejecuta después de definir cualquier modelo, para verificar que la topología es la esperada.</p>
+
+    <pre class="code">model.summary()
+
+<span class="c"># Model: "sequential"
+# ┌─────────────────┬──────────────┬───────────┐
+# │ Layer (type)     │ Output Shape │ Param #   │
+# ├─────────────────┼──────────────┼───────────┤
+# │ dense (Dense)     │ (None, 64)   │ 704       │
+# │ dense_1 (Dense)   │ (None, 32)   │ 2080      │
+# │ dense_2 (Dense)   │ (None, 1)    │ 33        │
+# └─────────────────┴──────────────┴───────────┘
+# Total params: 2,817</span></pre>
+
+    <div class="card key">
+      <div class="label">Para no perder de vista</div>
+      <p>Todo el "vocabulario Keras" (<code class="inline">Sequential</code>, <code class="inline">compile</code>, <code class="inline">fit</code>, <code class="inline">evaluate</code>, <code class="inline">predict</code>) es solo una capa de sintaxis sobre los conceptos que ya viste en el HTML de teoría: topología, activaciones, backprop, gradient descent. Keras no introduce ideas nuevas — te da comandos cortos para expresar esas ideas sin escribir las matemáticas a mano.</p>
+    </div>
+
+    <a class="backtop" href="#ejemplo">↑ Volver al inicio</a>
+  </section>
+
+</main>
+
+<footer>The Bridge · Deep Learning — Introducción a Keras · Guía Teórica</footer>
+
+</body>
+</html>
