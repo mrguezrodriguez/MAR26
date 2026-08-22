@@ -1,0 +1,24 @@
+# Entorno virtual
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Datos y modelos (suelen ser pesados)
+*.h5
+*.keras
+*.pkl
+
+# Sistema
+.DS_Store
+Thumbs.db
