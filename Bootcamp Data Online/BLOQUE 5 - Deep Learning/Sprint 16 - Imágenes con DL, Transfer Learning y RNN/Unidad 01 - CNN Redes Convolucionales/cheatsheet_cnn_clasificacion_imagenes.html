@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheatsheet: clasificación de imágenes con CNN</title>
+<style>
+:root { --texto:#E8E6DF; --suave:#A19F96; --borde:#3D3C38; --fondo:#1B1A17;
+        --tarjeta:#232220; --codigo:#26251F; --acento:#AFA9EC; }
+* { box-sizing:border-box; }
+body { margin:0; padding:48px 24px 96px; background:var(--fondo); color:var(--texto);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.7; }
+main { max-width:840px; margin:0 auto; }
+h1 { font-size:30px; font-weight:500; margin:0 0 8px; color:#F5F3EC; }
+h2 { font-size:22px; font-weight:500; margin:56px 0 16px; padding-bottom:8px;
+     border-bottom:1px solid var(--borde); color:#F5F3EC; }
+h3 { font-size:17px; font-weight:500; margin:32px 0 12px; color:var(--acento); }
+p, li { font-size:16px; }
+a { color:#85B7EB; }
+hr { border:none; border-top:1px solid var(--borde); margin:40px 0; }
+code { background:var(--codigo); padding:2px 6px; border-radius:4px; font-size:14px; color:#EDD9B8;
+       font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+pre { background:var(--codigo); padding:16px 20px; border-radius:8px; overflow-x:auto;
+      border:1px solid var(--borde); }
+pre code { background:none; padding:0; font-size:13.5px; line-height:1.6; color:#DCD9CF; }
+table { border-collapse:collapse; width:100%; margin:20px 0; font-size:15px; }
+th, td { border:1px solid var(--borde); padding:8px 12px; text-align:left; vertical-align:top; }
+th { background:var(--codigo); font-weight:500; color:#F5F3EC; }
+figure { margin:28px 0; padding:12px 8px; border:1px solid var(--borde); border-radius:12px;
+         background:var(--tarjeta); }
+figure svg { display:block; width:100%; height:auto; }
+strong { font-weight:500; color:#F5F3EC; }
+blockquote { border-left:3px solid var(--borde); margin:20px 0; padding:4px 0 4px 20px; color:var(--suave); }
+</style>
+</head>
+<body>
+<main>
+<h1>Cheatsheet: clasificación de imágenes con CNN (Keras)</h1>
+<p>Guion para resolver cualquier práctica del tipo "clasifica estas imágenes en N clases con una red convolucional".</p>
+<hr />
+<h2>0. Antes de escribir nada</h2>
+<p>Tres preguntas que evitan rehacer trabajo:</p>
+<ul>
+<li><strong>¿Dónde está la etiqueta?</strong> En el nombre del fichero, en el nombre de la carpeta, o en un CSV aparte. Determina cómo construyes la <code>y</code>.</li>
+<li><strong>¿Cuántas clases hay?</strong> Decide la capa de salida y la loss (tabla en el punto 4).</li>
+<li><strong>¿Cuántas imágenes y de qué tamaño?</strong> Decide si cabe en memoria o necesitas generadores.</li>
+</ul>
+<p><strong>Nunca cargues antes de mirar.</strong> Un <code>os.listdir</code> es instantáneo y te da la regla del nombre; cargar 5000 imágenes tarda minutos.</p>
+<pre><code class="language-python">import os
+
+ruta = &quot;./data&quot;
+for carpeta in sorted(os.listdir(ruta)):
+    ruta_carpeta = os.path.join(ruta, carpeta)
+    if os.path.isdir(ruta_carpeta):
+        ficheros = os.listdir(ruta_carpeta)
+        print(carpeta, &quot;-&gt;&quot;, len(ficheros), &quot;imágenes&quot;)
+        print(&quot;   ejemplos:&quot;, ficheros[:5])
+</code></pre>
+<hr />
+<h2>1. Carga de datos</h2>
+<pre><code class="language-python">import numpy as np
+import cv2
+
+TAM = 32
+
+def cargar_imagenes(lista_directorios):
+    X = []
+    y = []
+    nombres = []
+
+    for directorio in lista_directorios:
+        for fichero in sorted(os.listdir(directorio)):
+            ruta_imagen = directorio + &quot;/&quot; + fichero
+
+            imagen = cv2.imread(ruta_imagen)
+            imagen = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
+            imagen = cv2.resize(imagen, (TAM, TAM))
+            X.append(imagen)
+
+            clase = fichero.split(&quot;.&quot;)[0]
+            if clase == &quot;cat&quot;:
+                y.append(0)
+            else:
+                y.append(1)
+
+            nombres.append(ruta_imagen)
+
+    return np.array(X), np.array(y), nombres
+</code></pre>
+<p><strong>Las cuatro cosas que hay que hacer siempre:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Paso</th>
+<th>Por qué</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>cvtColor BGR2RGB</strong></td>
+<td>OpenCV lee los canales al revés. Sin esto, al pintar las imágenes salen azuladas</td>
+</tr>
+<tr>
+<td><strong>resize a un tamaño fijo</strong></td>
+<td>La capa Dense final tiene un número fijo de pesos: todas las entradas deben tener la misma forma</td>
+</tr>
+<tr>
+<td><strong>Guardar los nombres</strong></td>
+<td>Para poder identificar qué fichero es cada predicción. Reconstruirlo después es un lío</td>
+</tr>
+<tr>
+<td><strong>sorted()</strong></td>
+<td>Garantiza que X, y y nombres queden siempre en el mismo orden y sea reproducible</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Con PIL en vez de cv2:</strong> <code>Image.open(ruta).convert("RGB").resize((TAM, TAM))</code> y luego <code>np.array(imagen)</code>. El <code>convert("RGB")</code> es obligatorio ahí: si alguna imagen es en escala de grises llega con forma <code>(32, 32)</code> en vez de <code>(32, 32, 3)</code> y el <code>np.array(X)</code> falla.</p>
+<hr />
+<h2>2. Preparación</h2>
+<pre><code class="language-python"># Normalizar
+X_train = X_train / 255.0
+X_test = X_test / 255.0
+
+# Barajar (solo train, nunca test)
+from sklearn.utils import shuffle
+X_train, y_train, nombres_train = shuffle(X_train, y_train, nombres_train, random_state=42)
+</code></pre>
+<p><strong>Normalizar:</strong> con píxeles de 0 a 255 los valores intermedios se disparan al pasar por las capas, los gradientes salen enormes y el entrenamiento oscila sin converger. Entre 0 y 1 el descenso del gradiente avanza estable.</p>
+<p><strong>Barajar:</strong> si cargas los datos por carpetas de clase, la <code>y</code> queda ordenada (todos los 0 y luego todos los 1). <code>validation_split</code> aparta el último 20% <strong>sin barajar</strong>, así que validarías contra una sola clase. Síntoma inconfundible: <strong>val_accuracy = 0.0000</strong> en las primeras épocas.</p>
+<p>El shuffle va <strong>solo al train</strong>. El test se queda ordenado para poder emparejar predicciones con nombres de fichero.</p>
+<hr />
+<h2>3. Mini-EDA</h2>
+<p>Con imágenes no hay nulos, ni outliers, ni correlaciones. Lo que sí se mira:</p>
+<pre><code class="language-python">print(&quot;Forma:&quot;, X_train.shape)
+print(&quot;Rango:&quot;, X_train.min(), &quot;-&quot;, X_train.max())
+print(&quot;Balance:&quot;, np.bincount(y_train))
+print(&quot;Nulos:&quot;, np.isnan(X_train).sum())
+
+# ¿Hay atajos por brillo?
+print(&quot;Brillo clase 0:&quot;, X_train[y_train == 0].mean())
+print(&quot;Brillo clase 1:&quot;, X_train[y_train == 1].mean())
+</code></pre>
+<p>Gráficos que aportan:</p>
+<ul>
+<li><strong>Cuadrícula de imágenes al azar</strong> con su etiqueta. Confirma que la carga fue bien y que las etiquetas están donde deben.</li>
+<li><strong>Histograma de píxeles por clase.</strong> Si se solapan, el color no separa las clases.</li>
+<li><strong>Imagen media de cada clase</strong> (<code>X_train[y_train == 0].mean(axis=0)</code>). Si salen dos manchas iguales, no hay atajos estadísticos.</li>
+</ul>
+<p><strong>Qué se concluye de esto:</strong> si ninguna estadística global separa las clases, el modelo está obligado a aprender patrones espaciales locales. Es lo que justifica usar una CNN y no un modelo tabular sobre píxeles aplanados.</p>
+<p><strong>Balance de clases:</strong> si están equilibradas, el accuracy es fiable y el suelo a superar es 1/N. Si no lo están, hay que mirar precision, recall y f1.</p>
+<hr />
+<h2>4. Arquitectura</h2>
+<pre><code class="language-python">from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+
+model = Sequential()
+
+model.add(Conv2D(32, (3, 3), activation=&quot;relu&quot;, padding=&quot;same&quot;, input_shape=(32, 32, 3)))
+model.add(MaxPooling2D((2, 2)))
+
+model.add(Conv2D(64, (3, 3), activation=&quot;relu&quot;, padding=&quot;same&quot;))
+model.add(MaxPooling2D((2, 2)))
+
+model.add(Conv2D(128, (3, 3), activation=&quot;relu&quot;, padding=&quot;same&quot;))
+model.add(MaxPooling2D((2, 2)))
+
+model.add(Flatten())
+model.add(Dense(128, activation=&quot;relu&quot;))
+model.add(Dropout(0.5))
+model.add(Dense(1, activation=&quot;sigmoid&quot;))
+
+model.compile(optimizer=&quot;adam&quot;, loss=&quot;binary_crossentropy&quot;, metrics=[&quot;accuracy&quot;])
+model.summary()
+</code></pre>
+<h3>El patrón</h3>
+<p>Bloques <strong>Conv + Pooling</strong> repetidos, luego <strong>Flatten</strong>, luego <strong>Dense</strong> de clasificación. Es siempre el mismo esquema.</p>
+<figure><svg viewBox="0 0 680 330" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Cómo funciona una convolución</title>
+<desc>Una ventana de 3x3 recorre la imagen de entrada y cada posición produce un valor en el mapa de características.</desc>
+<defs><marker id="af" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#A19F96" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="340" y="36" text-anchor="middle" font-size="12" fill="#A19F96">La misma ventana recorre toda la imagen buscando un patrón</text>
+<rect x="70" y="60" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="92" y="60" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="114" y="60" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="136" y="60" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="158" y="60" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="180" y="60" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="202" y="60" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="224" y="60" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="70" y="82" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="92" y="82" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="114" y="82" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="136" y="82" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="158" y="82" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="180" y="82" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="202" y="82" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="224" y="82" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="70" y="104" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="92" y="104" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="114" y="104" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="136" y="104" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="158" y="104" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="180" y="104" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="202" y="104" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="224" y="104" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="70" y="126" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="92" y="126" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="114" y="126" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="136" y="126" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="158" y="126" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="180" y="126" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="202" y="126" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="224" y="126" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="70" y="148" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="92" y="148" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="114" y="148" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="136" y="148" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="158" y="148" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="180" y="148" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="202" y="148" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="224" y="148" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="70" y="170" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="92" y="170" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="114" y="170" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="136" y="170" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="158" y="170" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="180" y="170" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="202" y="170" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="224" y="170" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="70" y="192" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="92" y="192" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="114" y="192" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="136" y="192" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="158" y="192" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="180" y="192" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="202" y="192" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="224" y="192" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="70" y="214" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="92" y="214" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="114" y="214" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="136" y="214" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="158" y="214" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="180" y="214" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="202" y="214" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/><rect x="224" y="214" width="22" height="22" fill="#33322E" stroke="#4A4844" stroke-width="0.5"/>
+<rect x="136" y="126" width="66" height="66" fill="none" stroke="#7A776F" stroke-width="1" stroke-dasharray="4 3"/>
+<rect x="180" y="170" width="66" height="66" fill="none" stroke="#7A776F" stroke-width="1" stroke-dasharray="4 3"/>
+<rect x="92" y="82" width="66" height="66" fill="#854F0B" fill-opacity="0.7" stroke="#FAC775" stroke-width="1.5"/>
+<text x="158" y="258" text-anchor="middle" font-size="14" font-weight="500" fill="#E8E6DF">imagen de entrada</text>
+<text x="158" y="276" text-anchor="middle" font-size="12" fill="#A19F96">32x32 píxeles</text>
+<path d="M164 115 C 250 100, 340 92, 432 92" fill="none" stroke="#A19F96" stroke-width="1.5" marker-end="url(#af)"/>
+<text x="300" y="80" text-anchor="middle" font-size="12" fill="#FAC775">kernel 3x3</text>
+<rect x="440" y="82" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="462" y="82" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="484" y="82" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="506" y="82" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="528" y="82" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="550" y="82" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="440" y="104" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="462" y="104" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="484" y="104" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="506" y="104" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="528" y="104" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="550" y="104" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="440" y="126" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="462" y="126" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="484" y="126" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="506" y="126" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="528" y="126" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="550" y="126" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="440" y="148" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="462" y="148" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="484" y="148" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="506" y="148" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="528" y="148" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="550" y="148" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="440" y="170" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="462" y="170" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="484" y="170" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="506" y="170" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="528" y="170" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="550" y="170" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="440" y="192" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="462" y="192" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="484" y="192" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="506" y="192" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="528" y="192" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/><rect x="550" y="192" width="22" height="22" fill="#3C3489" stroke="#7F77DD" stroke-width="0.5"/>
+<rect x="440" y="82" width="22" height="22" fill="#AFA9EC" stroke="#CECBF6" stroke-width="1"/>
+<text x="506" y="258" text-anchor="middle" font-size="14" font-weight="500" fill="#E8E6DF">mapa de características</text>
+<text x="506" y="276" text-anchor="middle" font-size="12" fill="#A19F96">un valor por posición</text>
+<text x="340" y="308" text-anchor="middle" font-size="12" fill="#A19F96">Como pasa por todos los sitios, detecta el patrón esté donde esté</text>
+</svg></figure>
+<h3>Qué hace cada pieza</h3>
+<ul>
+<li><strong>Conv2D:</strong> una ventanita (kernel 3x3) recorre toda la imagen buscando un patrón. Como pasa por todos los sitios, detecta el patrón esté donde esté: eso es la invarianza a la posición.</li>
+<li><strong>Número de filtros:</strong> cuántos patrones distintos busca esa capa a la vez.</li>
+<li><strong>MaxPooling2D:</strong> reduce la imagen a la mitad quedándose con el máximo de cada 2x2. Menos cálculo, menos sobreajuste, y hace que las capas siguientes vean una zona más grande de la imagen original.</li>
+<li><strong>Flatten:</strong> convierte los mapas 2D en un vector para poder conectarlos a la Dense.</li>
+<li><strong>Dropout:</strong> apaga neuronas al azar durante el entrenamiento. Impide que la red dependa de neuronas concretas, o sea, que memorice.</li>
+<li><strong>relu:</strong> deja pasar los positivos y anula los negativos. Sin activación, apilar capas equivale matemáticamente a una sola.</li>
+<li><strong>padding="same":</strong> rellena los bordes con ceros para que la convolución no recorte la imagen. Solo el pooling reduce.</li>
+</ul>
+<figure><svg viewBox="0 0 680 300" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>El volumen a lo largo de los bloques convolucionales</title>
+<desc>Cada bloque reduce la resolución a la mitad y aumenta el número de filtros, hasta el aplanado y la salida.</desc>
+<defs><marker id="av" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#A19F96" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="340" y="36" text-anchor="middle" font-size="12" fill="#A19F96">Cada bloque estrecha el volumen y lo hace más profundo</text>
+<rect x="81" y="101" width="96" height="96" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="74" y="94" width="96" height="96" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="67" y="87" width="96" height="96" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="60" y="80" width="96" height="96" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/>
+<text x="119" y="238" text-anchor="middle" font-size="14" font-weight="500" fill="#CECBF6">32x32</text>
+<text x="119" y="256" text-anchor="middle" font-size="12" fill="#AFA9EC">32 filtros</text>
+<line x1="196" y1="142" x2="238" y2="142" stroke="#A19F96" stroke-width="1.5" marker-end="url(#av)"/>
+<rect x="280" y="126" width="68" height="68" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="274" y="120" width="68" height="68" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="268" y="114" width="68" height="68" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="262" y="108" width="68" height="68" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="256" y="102" width="68" height="68" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="250" y="96" width="68" height="68" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/>
+<text x="301" y="238" text-anchor="middle" font-size="14" font-weight="500" fill="#CECBF6">16x16</text>
+<text x="301" y="256" text-anchor="middle" font-size="12" fill="#AFA9EC">64 filtros</text>
+<line x1="360" y1="142" x2="402" y2="142" stroke="#A19F96" stroke-width="1.5" marker-end="url(#av)"/>
+<rect x="449" y="143" width="46" height="46" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="444" y="138" width="46" height="46" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="439" y="133" width="46" height="46" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="434" y="128" width="46" height="46" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="429" y="123" width="46" height="46" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="424" y="118" width="46" height="46" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="419" y="113" width="46" height="46" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/><rect x="414" y="108" width="46" height="46" rx="3" fill="#3C3489" stroke="#AFA9EC" stroke-width="0.5"/>
+<text x="461" y="238" text-anchor="middle" font-size="14" font-weight="500" fill="#CECBF6">8x8</text>
+<text x="461" y="256" text-anchor="middle" font-size="12" fill="#AFA9EC">128 filtros</text>
+<line x1="504" y1="142" x2="530" y2="142" stroke="#A19F96" stroke-width="1.5" marker-end="url(#av)"/>
+<rect x="540" y="94" width="20" height="96" rx="4" fill="#444441" stroke="#B4B2A9" stroke-width="0.5"/>
+<text x="550" y="238" text-anchor="middle" font-size="12" fill="#A19F96">flatten</text>
+<line x1="562" y1="142" x2="586" y2="142" stroke="#A19F96" stroke-width="1.5" marker-end="url(#av)"/>
+<rect x="596" y="120" width="44" height="44" rx="8" fill="#712B13" stroke="#F0997B" stroke-width="0.5"/>
+<text x="618" y="238" text-anchor="middle" font-size="12" fill="#F0997B">salida</text>
+<text x="340" y="286" text-anchor="middle" font-size="12" fill="#A19F96">Menos resolución, más patrones distintos detectados a la vez</text>
+</svg></figure>
+<h3>Progresión de filtros</h3>
+<p><strong>32 → 64 → 128</strong>, siempre creciente. Las primeras capas detectan patrones simples (bordes, manchas) y hay pocos tipos. Las siguientes combinan esos patrones, y las combinaciones posibles son muchas más. Ir al revés (128 → 64 → 32) no tiene sentido.</p>
+<p>Los números concretos no son sagrados: 16 → 32 → 64 funciona igual y entrena más rápido.</p>
+<h3>Capa de salida y loss</h3>
+<table>
+<thead>
+<tr>
+<th>Problema</th>
+<th>Última capa</th>
+<th>Loss</th>
+<th>Formato de y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2 clases</strong></td>
+<td><code>Dense(1, activation="sigmoid")</code></td>
+<td><code>binary_crossentropy</code></td>
+<td>0 y 1</td>
+</tr>
+<tr>
+<td><strong>N clases</strong></td>
+<td><code>Dense(N, activation="softmax")</code></td>
+<td><code>sparse_categorical_crossentropy</code></td>
+<td>0, 1, 2...</td>
+</tr>
+<tr>
+<td><strong>N clases (one-hot)</strong></td>
+<td><code>Dense(N, activation="softmax")</code></td>
+<td><code>categorical_crossentropy</code></td>
+<td>vectores one-hot</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Van siempre en pareja.</strong> Salida y loss no se combinan libremente.</p>
+<hr />
+<h2>5. Entrenamiento</h2>
+<pre><code class="language-python">from tensorflow.keras.callbacks import EarlyStopping
+
+early_stopping = EarlyStopping(monitor=&quot;val_loss&quot;,
+                               patience=5,
+                               restore_best_weights=True)
+
+history = model.fit(X_train, y_train,
+                    epochs=50,
+                    batch_size=32,
+                    validation_split=0.2,
+                    callbacks=[early_stopping])
+</code></pre>
+<p><strong>EarlyStopping</strong> vigila la <code>val_loss</code>. Cuando el modelo pasa de aprender a memorizar, la loss de train sigue bajando pero la de validación empieza a subir. Ahí corta.</p>
+<ul>
+<li><strong>patience:</strong> épocas sin mejora antes de rendirse. 5 si la curva es limpia, 10 o más si es ruidosa (con augmentation siempre lo es).</li>
+<li><strong>restore_best_weights=True:</strong> imprescindible. Sin esto te quedas con los pesos de la última época, que son peores que el mejor punto. Con esto, Keras rebobina.</li>
+</ul>
+<p><strong>Recuerda:</strong> si vuelves a lanzar <code>fit</code> sin recrear el modelo, Keras continúa desde donde estaba. Para entrenar de cero hay que reejecutar la celda del <code>Sequential()</code> completa.</p>
+<hr />
+<h2>6. Lectura de las curvas</h2>
+<pre><code class="language-python">plt.figure(figsize=(12, 4))
+
+plt.subplot(1, 2, 1)
+plt.plot(history.history[&quot;loss&quot;], label=&quot;train&quot;)
+plt.plot(history.history[&quot;val_loss&quot;], label=&quot;validación&quot;)
+plt.title(&quot;Loss&quot;)
+plt.xlabel(&quot;Época&quot;)
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(history.history[&quot;accuracy&quot;], label=&quot;train&quot;)
+plt.plot(history.history[&quot;val_accuracy&quot;], label=&quot;validación&quot;)
+plt.title(&quot;Accuracy&quot;)
+plt.xlabel(&quot;Época&quot;)
+plt.legend()
+
+plt.show()
+
+mejor_epoca = np.argmin(history.history[&quot;val_loss&quot;])
+print(&quot;Mejor época:&quot;, mejor_epoca + 1)
+print(&quot;Épocas entrenadas:&quot;, len(history.history[&quot;loss&quot;]))
+</code></pre>
+<figure><svg viewBox="0 0 680 270" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Tres formas típicas de las curvas de loss</title>
+<desc>Buen ajuste con ambas curvas bajando juntas, sobreajuste con la validación subiendo, e infraajuste con las dos planas y altas.</desc>
+<line x1="40" y1="26" x2="66" y2="26" stroke="#85B7EB" stroke-width="2"/>
+<text x="74" y="30" font-size="12" fill="#A19F96">train</text>
+<line x1="130" y1="26" x2="156" y2="26" stroke="#EF9F27" stroke-width="2"/>
+<text x="164" y="30" font-size="12" fill="#A19F96">validación</text>
+<rect x="40" y="52" width="180" height="120" rx="6" fill="#26251F" fill-opacity="0.6" stroke="#4A4844" stroke-width="0.5"/>
+<polyline points="50,66 84,96 124,122 174,144 212,156" fill="none" stroke="#85B7EB" stroke-width="2"/>
+<polyline points="50,72 84,104 124,130 174,150 212,164" fill="none" stroke="#EF9F27" stroke-width="2"/>
+<text x="130" y="196" text-anchor="middle" font-size="14" font-weight="500" fill="#5DCAA5">Buen ajuste</text>
+<text x="130" y="216" text-anchor="middle" font-size="12" fill="#A19F96">bajan juntas</text>
+<text x="130" y="234" text-anchor="middle" font-size="12" fill="#A19F96">deja que siga</text>
+<rect x="250" y="52" width="180" height="120" rx="6" fill="#26251F" fill-opacity="0.6" stroke="#4A4844" stroke-width="0.5"/>
+<polyline points="260,66 294,96 334,122 384,144 422,158" fill="none" stroke="#85B7EB" stroke-width="2"/>
+<polyline points="260,72 294,106 326,126 364,106 422,68" fill="none" stroke="#EF9F27" stroke-width="2"/>
+<circle cx="326" cy="126" r="4" fill="#F09595"/>
+<text x="340" y="196" text-anchor="middle" font-size="14" font-weight="500" fill="#F09595">Sobreajuste</text>
+<text x="340" y="216" text-anchor="middle" font-size="12" fill="#A19F96">la validación sube</text>
+<text x="340" y="234" text-anchor="middle" font-size="12" fill="#A19F96">augmentation, dropout</text>
+<rect x="460" y="52" width="180" height="120" rx="6" fill="#26251F" fill-opacity="0.6" stroke="#4A4844" stroke-width="0.5"/>
+<polyline points="470,78 514,74 564,77 604,75 632,76" fill="none" stroke="#85B7EB" stroke-width="2"/>
+<polyline points="470,86 514,83 564,86 604,84 632,85" fill="none" stroke="#EF9F27" stroke-width="2"/>
+<text x="550" y="196" text-anchor="middle" font-size="14" font-weight="500" fill="#EF9F27">Infraajuste</text>
+<text x="550" y="216" text-anchor="middle" font-size="12" fill="#A19F96">planas y altas</text>
+<text x="550" y="234" text-anchor="middle" font-size="12" fill="#A19F96">red más grande</text>
+</svg></figure>
+<p><strong>Mira la loss, no el accuracy.</strong> El accuracy solo cuenta aciertos; la loss mide además con cuánta confianza acierta o falla.</p>
+<table>
+<thead>
+<tr>
+<th>Qué ves</th>
+<th>Qué significa</th>
+<th>Qué hacer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ambas bajan juntas</td>
+<td>Aprende y generaliza</td>
+<td>Nada, va bien</td>
+</tr>
+<tr>
+<td>Train baja, validación sube</td>
+<td><strong>Sobreajuste</strong>: memoriza el train</td>
+<td>Augmentation, más Dropout, red más pequeña</td>
+</tr>
+<tr>
+<td>Las dos planas y altas</td>
+<td><strong>Infraajuste</strong>: no aprende</td>
+<td>Red más grande, más épocas, revisar los datos</td>
+</tr>
+<tr>
+<td>Validación muy ruidosa</td>
+<td>Normal con augmentation</td>
+<td>Subir la paciencia</td>
+</tr>
+</tbody>
+</table>
+<p><strong>La distancia entre las dos curvas es la medida del sobreajuste.</strong> 80% en train que se traducen en 75% fuera valen más que 92% en train que se quedan en 74%.</p>
+<p><strong>Caso raro pero informativo:</strong> val_accuracy sube mientras val_loss empeora. No es contradictorio: el modelo acierta alguna imagen más pero falla con mucha más confianza que antes.</p>
+<hr />
+<h2>7. Evaluación</h2>
+<pre><code class="language-python">from sklearn.metrics import classification_report, confusion_matrix
+import seaborn as sns
+
+loss_test, accuracy_test = model.evaluate(X_test, y_test)
+print(&quot;Accuracy en test:&quot;, accuracy_test)
+
+probabilidades = model.predict(X_test).flatten()
+predicciones = (probabilidades &gt; 0.5).astype(int)
+
+print(classification_report(y_test, predicciones, target_names=[&quot;clase0&quot;, &quot;clase1&quot;]))
+
+matriz = confusion_matrix(y_test, predicciones)
+
+plt.figure(figsize=(5, 4))
+sns.heatmap(matriz, annot=True, fmt=&quot;d&quot;, cmap=&quot;Blues&quot;,
+            xticklabels=[&quot;clase0&quot;, &quot;clase1&quot;],
+            yticklabels=[&quot;clase0&quot;, &quot;clase1&quot;])
+plt.xlabel(&quot;Predicción&quot;)
+plt.ylabel(&quot;Real&quot;)
+plt.show()
+</code></pre>
+<p><strong><code>predict</code> no devuelve clases, devuelve probabilidades.</strong> Hay que aplicar el umbral tú.</p>
+<ul>
+<li><strong>Binario (sigmoid):</strong> un solo número por imagen. <code>(probabilidades &gt; 0.5).astype(int)</code></li>
+<li><strong>Multiclase (softmax):</strong> N números por imagen que suman 1. <code>np.argmax(probabilidades, axis=1)</code></li>
+</ul>
+<p><strong>Guarda siempre las probabilidades sin tocar.</strong> Cualquier análisis de confianza sale de ahí.</p>
+<p><strong>Matriz de confusión:</strong> filas = clase real, columnas = predicha. La diagonal son aciertos. Mira si los errores están repartidos o si el modelo tiene manía a una clase: si el recall de una clase es mucho menor que el de otra, ante la duda el modelo tira hacia la mayoritaria en sus predicciones.</p>
+<hr />
+<h2>8. Analizar los errores por confianza</h2>
+<figure><svg viewBox="0 0 680 320" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>La función sigmoide y el umbral de decisión</title>
+<desc>Curva en forma de S entre 0 y 1, con el umbral 0.5 partiendo la decisión y los extremos aplanados.</desc>
+<text x="340" y="36" text-anchor="middle" font-size="12" fill="#A19F96">La sigmoide comprime cualquier número al rango 0 a 1</text>
+<rect x="90" y="58" width="510" height="90" fill="#712B13" fill-opacity="0.28"/>
+<rect x="90" y="148" width="510" height="90" fill="#085041" fill-opacity="0.28"/>
+<line x1="90" y1="148" x2="600" y2="148" stroke="#7A776F" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="345" y1="58" x2="345" y2="238" stroke="#7A776F" stroke-width="1" stroke-dasharray="5 4"/>
+<path d="M90 234 C 210 230, 275 216, 345 148 C 415 80, 480 66, 600 62" fill="none" stroke="#AFA9EC" stroke-width="2.5"/>
+<circle cx="345" cy="148" r="4.5" fill="#CECBF6"/>
+<text x="80" y="66" text-anchor="end" font-size="12" fill="#A19F96">1.0</text>
+<text x="80" y="152" text-anchor="end" font-size="12" fill="#A19F96">0.5</text>
+<text x="80" y="242" text-anchor="end" font-size="12" fill="#A19F96">0.0</text>
+<text x="500" y="102" text-anchor="middle" font-size="14" font-weight="500" fill="#F0997B">predice clase 1</text>
+<text x="180" y="200" text-anchor="middle" font-size="14" font-weight="500" fill="#5DCAA5">predice clase 0</text>
+<text x="345" y="262" text-anchor="middle" font-size="12" fill="#A19F96">z (salida de la neurona)</text>
+<text x="340" y="296" text-anchor="middle" font-size="12" fill="#A19F96">En los extremos la curva se aplana: 0.99 es mucha más confianza que 0.90</text>
+</svg></figure>
+<p>Con salida sigmoide, <strong>la probabilidad es siempre la de la clase 1</strong>. La de la clase 0 es lo que falta para llegar a 1. Por eso los dos tipos de error se ordenan en sentidos contrarios:</p>
+<ul>
+<li><strong>Clase 0 fallada</strong> (predicha como 1): peor cuanto <strong>más alta</strong> la probabilidad → <code>reverse=True</code></li>
+<li><strong>Clase 1 fallada</strong> (predicha como 0): peor cuanto <strong>más baja</strong> la probabilidad → orden normal</li>
+</ul>
+<pre><code class="language-python">indices_clase0_fallados = []
+indices_clase1_fallados = []
+
+for i in range(len(y_test)):
+    if y_test[i] == 0 and predicciones[i] == 1:
+        indices_clase0_fallados.append(i)
+    if y_test[i] == 1 and predicciones[i] == 0:
+        indices_clase1_fallados.append(i)
+
+clase0_ordenados = sorted(indices_clase0_fallados, key=lambda i: probabilidades[i], reverse=True)
+clase1_ordenados = sorted(indices_clase1_fallados, key=lambda i: probabilidades[i])
+
+peores_clase0 = clase0_ordenados[:int(len(clase0_ordenados) * 0.1)]
+peores_clase1 = clase1_ordenados[:int(len(clase1_ordenados) * 0.1)]
+</code></pre>
+<p><strong>El truco del índice:</strong> las listas guardan posiciones, no imágenes. Como <code>X_test</code>, <code>y_test</code>, <code>probabilidades</code> y <code>nombres_test</code> se construyeron en el mismo orden, la posición 347 significa lo mismo en las cuatro. Por eso el test no se baraja.</p>
+<p>Para verlas:</p>
+<pre><code class="language-python">plt.figure(figsize=(15, 4))
+for posicion, i in enumerate(peores_clase0):
+    plt.subplot(2, 8, posicion + 1)
+    plt.imshow(X_test[i])
+    plt.title(str(round(probabilidades[i], 3)), fontsize=9)
+    plt.axis(&quot;off&quot;)
+plt.show()
+</code></pre>
+<p><code>enumerate</code> da a la vez la posición (para el subplot) y el valor guardado (el índice de la imagen).</p>
+<hr />
+<h2>9. Image Augmentation</h2>
+<p>Cuando hay sobreajuste y no puedes conseguir más datos.</p>
+<pre><code class="language-python">from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+datagen = ImageDataGenerator(
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    horizontal_flip=True,
+    zoom_range=0.2
+)
+</code></pre>
+<p><strong>La idea:</strong> un animal sigue siendo el mismo si lo giras o lo desplazas, pero para la red es una matriz completamente distinta. Multiplicas el dataset efectivo sin conseguir una sola imagen nueva, y la red <strong>no puede memorizar porque nunca ve dos veces la misma foto</strong>.</p>
+<p><strong>Genera variaciones plausibles, no cualquier deformación.</strong> <code>vertical_flip</code> no se pone con fotos de animales: un gato boca abajo no existe en producción. Sí tendría sentido con imágenes de satélite o microscopía.</p>
+<p>Míralas antes de entrenar:</p>
+<pre><code class="language-python">plt.figure(figsize=(12, 3))
+imagen = X_train[0].reshape(1, 32, 32, 3)
+i = 0
+for lote in datagen.flow(imagen, batch_size=1):
+    plt.subplot(1, 5, i + 1)
+    plt.imshow(lote[0])
+    plt.axis(&quot;off&quot;)
+    i = i + 1
+    if i == 5:
+        break
+plt.show()
+</code></pre>
+<p>El <code>reshape</code> es porque el generador espera un lote, no una imagen suelta. El <code>break</code> es obligatorio: <code>flow()</code> es un generador infinito.</p>
+<h3>Entrenar con el generador</h3>
+<pre><code class="language-python">X_val = X_train[3200:]
+y_val = y_train[3200:]
+X_train2 = X_train[:3200]
+y_train2 = y_train[:3200]
+
+early_stopping2 = EarlyStopping(monitor=&quot;val_loss&quot;, patience=10, restore_best_weights=True)
+
+history2 = model2.fit(datagen.flow(X_train2, y_train2, batch_size=32),
+                      epochs=100,
+                      validation_data=(X_val, y_val),
+                      callbacks=[early_stopping2])
+</code></pre>
+<p><strong>Tres cambios obligatorios:</strong></p>
+<ol>
+<li><strong>La validación se separa a mano.</strong> <code>validation_split</code> no funciona con generadores.</li>
+<li><strong>La validación NO lleva augmentation.</strong> Se valida con imágenes reales: es el rendimiento sobre fotos normales lo que quieres medir.</li>
+<li><strong>Más paciencia y más épocas.</strong> El problema es más difícil, la curva más ruidosa y el modelo tarda mucho más en converger.</li>
+</ol>
+<p><strong>Qué esperar:</strong> arranca peor y aprende más despacio, pero sigue mejorando durante muchas más épocas en lugar de estancarse. El cambio importante no es ganar unos puntos de accuracy, es que se levanta el techo de lo que el modelo puede aprender con los mismos datos.</p>
+<hr />
+<h2>10. Comparar dos modelos</h2>
+<pre><code class="language-python">comunes = set(peores_clase0_modelo1) &amp; set(peores_clase0_modelo2)
+print(&quot;Coincidencias:&quot;, len(comunes))
+for i in comunes:
+    print(nombres_test[i])
+</code></pre>
+<p><code>set()</code> convierte la lista en conjunto y <code>&amp;</code> da los elementos presentes en ambos.</p>
+<p><strong>Por qué importa:</strong> una imagen que falla un solo modelo puede ser una peculiaridad de ese modelo. Una que fallan dos modelos entrenados de forma distinta, ambos con alta confianza, apunta a que la ambigüedad está en la imagen y no en el clasificador.</p>
+<hr />
+<h2>Errores frecuentes</h2>
+<table>
+<thead>
+<tr>
+<th>Síntoma</th>
+<th>Causa</th>
+<th>Solución</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>val_accuracy = 0.0000</strong></td>
+<td>Datos ordenados por clase</td>
+<td>Barajar el train</td>
+</tr>
+<tr>
+<td>Las imágenes salen azuladas</td>
+<td>Falta cvtColor con cv2</td>
+<td><code>cv2.cvtColor(img, cv2.COLOR_BGR2RGB)</code></td>
+</tr>
+<tr>
+<td><code>np.array(X)</code> da array de objetos</td>
+<td>Formas mezcladas (alguna en gris)</td>
+<td><code>.convert("RGB")</code> con PIL</td>
+</tr>
+<tr>
+<td>La loss se vuelve <code>nan</code></td>
+<td>Sin normalizar, o hay NaN en los datos</td>
+<td>Dividir entre 255, comprobar <code>np.isnan</code></td>
+</tr>
+<tr>
+<td>El <code>fit</code> continúa donde estaba</td>
+<td>No se recreó el modelo</td>
+<td>Reejecutar la celda del <code>Sequential()</code></td>
+</tr>
+<tr>
+<td>Error de forma en la primera capa</td>
+<td><code>input_shape</code> no coincide</td>
+<td>Sale de <code>X_train.shape[1:]</code></td>
+</tr>
+<tr>
+<td>Los subplots no salen juntos</td>
+<td>Varios <code>plt.show()</code></td>
+<td>Un <code>figure</code> al principio, un <code>show()</code> al final</td>
+</tr>
+<tr>
+<td>Bucle infinito con <code>datagen.flow</code></td>
+<td>Es un generador sin fin</td>
+<td>Poner un <code>break</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Guion mínimo</h2>
+<ol>
+<li>Explorar los directorios sin cargar nada</li>
+<li>Cargar con resize y guardar los nombres</li>
+<li>Normalizar y barajar el train</li>
+<li>Mini-EDA: formas, balance, imágenes, brillo por clase</li>
+<li>Arquitectura: bloques Conv+Pool crecientes, Flatten, Dense, Dropout, salida según el número de clases</li>
+<li>Entrenar con EarlyStopping y <code>restore_best_weights</code></li>
+<li>Curvas: mirar la distancia entre train y validación</li>
+<li>Evaluar sobre test: accuracy, classification report, matriz de confusión</li>
+<li>Si hay sobreajuste, repetir con augmentation y comparar</li>
+</ol>
+</main>
+</body>
+</html>
