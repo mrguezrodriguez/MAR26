@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El listón · de una regla con multiplicadores a una red que ve y recuerda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tinta:#14202E;
+  --tinta-2:#4A5A6B;
+  --tinta-3:#7A8896;
+  --papel:#EDEFF1;
+  --papel-2:#F8F9FA;
+  --pizarra:#16283A;
+  --cal:#0D7C63;
+  --cal-claro:#E0F0EA;
+  --liston:#D4356B;
+  --liston-claro:#FBE7EE;
+  --ambar:#B87A0C;
+  --ambar-claro:#FBF0DA;
+  --linea:#CBD4DA;
+  --rail:56px;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;
+  --texto:"Source Serif 4",Georgia,serif;
+  --dato:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{
+  margin:0;
+  background:var(--papel);
+  background-image:linear-gradient(var(--linea) .5px,transparent .5px),linear-gradient(90deg,var(--linea) .5px,transparent .5px);
+  background-size:28px 28px;
+  background-position:-1px -1px;
+  color:var(--tinta);
+  font-family:var(--texto);
+  font-size:17px;
+  line-height:1.65;
+}
+
+
+/* ---------- Paginación ---------- */
+.pagina{display:none}
+.pagina.activa{display:block;animation:entrar .28s ease-out}
+@keyframes entrar{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pagina.activa{animation:none}}
+.pagina .unidad{margin-top:0;border-top:none;padding-top:0}
+
+.indice{margin-top:56px;padding-top:30px;border-top:2px solid var(--tinta)}
+.indice-h{font-family:var(--display);font-weight:800;font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
+.indice-p{color:var(--tinta-2);margin-bottom:30px}
+.fichas{display:grid;gap:14px}
+.ficha{background:var(--papel-2);border:1px solid var(--linea);border-left:3px solid var(--liston);padding:18px 20px}
+.ficha:hover{border-color:var(--tinta-3);border-left-color:var(--liston)}
+.ficha-meta{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;font-family:var(--dato);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tinta-3);margin-bottom:9px}
+.ficha-t{font-family:var(--display);font-size:21px;font-weight:600;margin:0 0 10px;line-height:1.2}
+.ficha-t a{color:var(--tinta);text-decoration:none}
+.ficha-t a:hover,.ficha-t a:focus-visible{color:var(--liston)}
+.ficha-lista{list-style:none;padding:0;margin:0;display:grid;gap:2px}
+.ficha-lista li{margin:0}
+.ficha-lista li::before{content:"→";color:var(--tinta-3);font-family:var(--dato);font-size:11px;margin-right:8px}
+.ficha-lista a{font-size:15px;color:var(--tinta-2);text-decoration:none;line-height:1.45}
+.ficha-lista a:hover,.ficha-lista a:focus-visible{color:var(--cal);text-decoration:underline}
+
+.en-pagina{display:flex;flex-wrap:wrap;gap:6px;padding:34px 0 4px;margin-bottom:22px}
+.en-pagina a{font-family:var(--dato);font-size:11.5px;letter-spacing:.02em;color:var(--tinta-2);text-decoration:none;border:1px solid var(--linea);background:var(--papel-2);padding:5px 10px;border-radius:2px}
+.en-pagina a:hover,.en-pagina a:focus-visible{border-color:var(--liston);color:var(--liston)}
+
+.paginacion{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:70px;padding-top:24px;border-top:2px solid var(--tinta)}
+.paginacion a{font-family:var(--display);font-size:17px;font-weight:600;line-height:1.25;color:var(--tinta);text-decoration:none;border:1px solid var(--linea);background:var(--papel-2);padding:14px 16px}
+.paginacion a:hover,.paginacion a:focus-visible{border-color:var(--liston);color:var(--liston)}
+.paginacion span{display:block;font-family:var(--dato);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tinta-3);font-weight:400;margin-bottom:5px}
+.pag-sig{text-align:right}
+@media (max-width:560px){.paginacion{grid-template-columns:1fr}.pag-sig{text-align:left}}
+a:focus-visible{outline:2px solid var(--cal);outline-offset:3px}
+
+/* ---------- Barra superior ---------- */
+.barra{
+  position:sticky;top:0;z-index:50;
+  background:var(--pizarra);
+  border-bottom:1px solid #2C4257;
+}
+.barra-int{
+  max-width:880px;margin:0 auto;
+  display:flex;align-items:stretch;gap:2px;
+  padding:0 14px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.barra-int::-webkit-scrollbar{display:none}
+.barra a{
+  position:relative;flex:0 0 auto;
+  display:flex;flex-direction:column;justify-content:center;gap:1px;
+  padding:9px 13px 10px;
+  text-decoration:none;white-space:nowrap;
+  border-bottom:3px solid transparent;
+}
+.barra .et{
+  font-family:var(--dato);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:#6F8A9E;
+}
+.barra .tt{
+  font-family:var(--display);font-size:14px;font-weight:600;letter-spacing:-.01em;
+  color:#B9CAD6;
+}
+.barra a:hover .tt,.barra a:focus-visible .tt{color:#fff}
+.barra a:hover .et,.barra a:focus-visible .et{color:#9FB3C2}
+.barra a[aria-current="true"]{border-bottom-color:var(--liston);background:#1E3346}
+.barra a[aria-current="true"] .tt{color:#fff}
+.barra a[aria-current="true"] .et{color:var(--liston)}
+.barra a:focus-visible{outline:2px solid var(--cal);outline-offset:-3px}
+.avance{height:2px;background:var(--liston);width:0;transition:width .1s linear}
+[id^="h-"]{scroll-margin-top:90px}
+
+/* ---------- Estructura ---------- */
+.envoltorio{max-width:820px;margin:0 auto;padding:0 28px 120px}
+@media (max-width:720px){
+  body{font-size:16px}
+  .barra .et{display:none}
+  .barra a{padding:11px 12px}
+  .envoltorio{padding:0 18px 80px}
+}
+
+/* ---------- Portada ---------- */
+.portada{padding:56px 0 40px}
+.cejilla{
+  font-family:var(--dato);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--liston);font-weight:600;margin:0 0 18px;
+}
+.portada h1{
+  font-family:var(--display);font-weight:800;font-size:clamp(38px,7vw,68px);
+  line-height:1.02;letter-spacing:-.03em;margin:0 0 22px;
+}
+.portada h1 em{font-style:normal;color:var(--liston)}
+.entradilla{font-size:20px;line-height:1.55;color:var(--tinta-2);max-width:60ch;margin:0}
+.tesis{
+  margin:36px 0 0;padding:22px 26px;
+  background:var(--pizarra);color:#EAF0F4;border-radius:2px;
+  font-family:var(--display);font-size:20px;line-height:1.45;font-weight:400;
+}
+.tesis strong{color:#FFD166;font-weight:600}
+
+/* ---------- Secciones ---------- */
+.unidad{
+  margin:80px 0 0;padding-top:26px;border-top:2px solid var(--tinta);
+}
+.unidad-meta{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;
+  font-family:var(--dato);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tinta-3);margin-bottom:10px;
+}
+.unidad-meta .sprint{color:#fff;background:var(--tinta);padding:3px 8px;border-radius:2px;font-weight:600;letter-spacing:.1em}
+.unidad h2{
+  font-family:var(--display);font-weight:800;font-size:clamp(28px,4.6vw,42px);
+  line-height:1.08;letter-spacing:-.02em;margin:0 0 8px;
+}
+.unidad>p.sumario{font-size:19px;color:var(--tinta-2);margin:0 0 8px;max-width:62ch}
+
+h3{
+  font-family:var(--display);font-weight:600;font-size:23px;letter-spacing:-.01em;
+  margin:46px 0 12px;line-height:1.2;
+}
+h4{font-family:var(--display);font-weight:600;font-size:18px;margin:30px 0 8px}
+p{margin:0 0 18px;max-width:68ch}
+strong{font-weight:600}
+a{color:var(--cal)}
+
+ul,ol{max-width:66ch;padding-left:22px;margin:0 0 18px}
+li{margin-bottom:9px}
+li::marker{color:var(--liston)}
+
+/* ---------- Piezas ---------- */
+.formula{
+  font-family:var(--dato);font-size:15px;
+  background:var(--papel-2);border:1px solid var(--linea);border-left:3px solid var(--liston);
+  padding:16px 18px;margin:0 0 20px;overflow-x:auto;line-height:1.8;
+}
+.formula .liston-tok{color:var(--liston);font-weight:600}
+.formula .peso-tok{color:var(--cal);font-weight:600}
+code{font-family:var(--dato);font-size:.88em;background:#E2E7EA;padding:1px 5px;border-radius:2px}
+pre{
+  font-family:var(--dato);font-size:13.5px;line-height:1.65;
+  background:var(--pizarra);color:#DCE6EC;padding:20px 22px;margin:0 0 20px;
+  overflow-x:auto;border-radius:2px;
+}
+pre .c{color:#7E96A8;font-style:italic}
+pre .k{color:#FF8FB1}
+pre .s{color:#8FD9BC}
+pre .n{color:#FFD166}
+
+figure{margin:26px 0 26px;padding:0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{
+  font-family:var(--dato);font-size:12px;line-height:1.6;color:var(--tinta-3);
+  margin-top:10px;padding-left:12px;border-left:2px solid var(--linea);max-width:64ch;
+}
+
+.nota{
+  border:1px solid var(--linea);border-top:3px solid var(--cal);
+  background:var(--papel-2);padding:18px 20px;margin:0 0 22px;
+}
+.nota .etiqueta{
+  font-family:var(--dato);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--cal);font-weight:600;display:block;margin-bottom:8px;
+}
+.nota p:last-child{margin-bottom:0}
+.nota.aviso{border-top-color:var(--liston)}
+.nota.aviso .etiqueta{color:var(--liston)}
+
+table{border-collapse:collapse;width:100%;margin:0 0 22px;font-size:15px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--linea);vertical-align:top}
+th{font-family:var(--dato);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--tinta-3);font-weight:600}
+td:first-child{font-family:var(--dato);font-size:13.5px;color:var(--tinta)}
+
+/* ---------- Laboratorios interactivos ---------- */
+.lab{
+  border:1px solid var(--linea);background:var(--papel-2);
+  margin:30px 0;padding:0;
+}
+.lab-cabecera{
+  background:var(--pizarra);color:#fff;padding:12px 20px;
+  font-family:var(--dato);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;
+  display:flex;justify-content:space-between;gap:12px;align-items:center;
+}
+.lab-cabecera span{color:#8FD9BC;letter-spacing:.06em;text-transform:none;font-weight:400}
+.lab-cuerpo{padding:22px 20px}
+.controles{display:grid;gap:14px;margin-top:18px}
+.control{display:grid;grid-template-columns:130px 1fr 62px;gap:12px;align-items:center}
+.control label{font-family:var(--dato);font-size:12px;color:var(--tinta-2);line-height:1.3}
+.control output{font-family:var(--dato);font-size:14px;font-weight:600;text-align:right}
+input[type=range]{width:100%;accent-color:var(--liston);height:22px}
+@media (max-width:520px){
+  .control{grid-template-columns:1fr 52px;grid-template-areas:"l l" "s o"}
+  .control label{grid-area:l}
+  .control input{grid-area:s}
+  .control output{grid-area:o}
+}
+input[type=range]:focus-visible{outline:2px solid var(--cal);outline-offset:3px}
+.marcador{
+  display:flex;flex-wrap:wrap;gap:20px;margin-top:18px;padding-top:16px;border-top:1px solid var(--linea);
+}
+.marcador div{font-family:var(--dato);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--tinta-3)}
+.marcador b{display:block;font-size:26px;letter-spacing:-.02em;color:var(--tinta);font-weight:600;margin-top:2px}
+.botonera{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+button.preset{
+  font-family:var(--dato);font-size:12px;padding:7px 12px;cursor:pointer;
+  background:#fff;border:1px solid var(--linea);color:var(--tinta-2);border-radius:2px;
+}
+button.preset:hover{border-color:var(--tinta-2);color:var(--tinta)}
+button.preset[aria-pressed="true"]{background:var(--tinta);border-color:var(--tinta);color:#fff}
+button.preset:focus-visible{outline:2px solid var(--cal);outline-offset:2px}
+
+.conv-zona{display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:640px){.conv-zona{grid-template-columns:1fr 1fr}}
+.conv-titulo{font-family:var(--dato);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--tinta-3);margin-bottom:8px}
+.cuentas{
+  font-family:var(--dato);font-size:12.5px;line-height:1.9;
+  background:var(--pizarra);color:#DCE6EC;padding:16px 18px;margin-top:18px;min-height:112px;border-radius:2px;
+}
+.cuentas .res{color:#FFD166;font-weight:600}
+.cuentas .vacio{color:#7E96A8;font-style:italic}
+
+.mapa{
+  margin:70px 0 0;padding:26px;background:var(--pizarra);color:#DCE6EC;border-radius:2px;
+}
+.mapa h2{font-family:var(--display);color:#fff;font-size:26px;margin:0 0 6px;font-weight:800}
+.mapa p{color:#9FB3C2;max-width:none}
+.mapa table{margin-bottom:0}
+.mapa th{color:#7E96A8;border-bottom-color:#2C4257}
+.mapa td{border-bottom-color:#2C4257;color:#DCE6EC}
+.mapa td:first-child{color:#8FD9BC}
+</style>
+</head>
+<body>
+
+<nav class="barra" aria-label="Páginas">
+  <div class="barra-int"><a href="#pg-indice"><span class="tt">Índice</span></a><a href="#pg-base"><span class="et">Base</span><span class="tt">El listón</span></a><a href="#pg-s15u1"><span class="et">Sprint 15·1</span><span class="tt">Intro Deep Learning</span></a><a href="#pg-s15u2"><span class="et">Sprint 15·2</span><span class="tt">Keras</span></a><a href="#pg-s16u1"><span class="et">Sprint 16·1</span><span class="tt">CNN</span></a><a href="#pg-s16u2"><span class="et">Sprint 16·2</span><span class="tt">Transfer Learning</span></a><a href="#pg-s16u3"><span class="et">Sprint 16·3</span><span class="tt">RNN y series</span></a><a href="#pg-mapa"><span class="et">Cierre</span><span class="tt">El mapa</span></a></div>
+  <div class="avance" id="avance" aria-hidden="true"></div>
+</nav>
+
+<main class="envoltorio">
+<div class="pagina" id="pg-indice">
+<header class="portada">
+  <p class="cejilla">Bootcamp · Sprint 15 y 16 · Deep Learning</p>
+  <h1>Todo es un <em>listón</em></h1>
+  <p class="entradilla">Una red neuronal no esconde ninguna idea nueva. Esconde <strong>la misma idea repetida millones de veces</strong>: multiplicar cada cosa por cuánto importa, sumarlo todo y comparar el resultado con un listón. Este documento estira esa única frase hasta las redes convolucionales, el transfer learning y las series temporales.</p>
+  <div class="tesis">
+    «Aprueba si <strong>2</strong>·(estudio) + <strong>1</strong>·(sueño) pasa de <strong>10</strong>.»<br>
+    Los multiplicadores son los <strong>pesos</strong>. El 10 es el <strong>listón</strong> (el bias). Todo lo demás son variaciones de esto.
+  </div>
+</header>
+<section class="indice">
+  <h2 class="indice-h">Índice</h2>
+  <p class="indice-p">Seis páginas. Cada una añade una sola idea nueva sobre la anterior. Puedes ir a una sección concreta o abrir la página entera.</p>
+  <div class="fichas"><article class="ficha">
+  <div class="ficha-meta"><span class="sprint">Base</span><span>La única fórmula que hay que entender</span></div>
+  <h3 class="ficha-t"><a href="#pg-base">La regla, la fórmula y el código son lo mismo</a></h3>
+  <ol class="ficha-lista"><li><a href="#h-base-0">Los tres nombres del mismo número</a></li><li><a href="#h-base-1">De dónde sale la idea: la neurona biológica</a></li><li><a href="#h-base-2">Muévelo tú</a></li><li><a href="#h-base-3">Por qué sale una recta y no otra cosa</a></li></ol>
+</article><article class="ficha">
+  <div class="ficha-meta"><span class="sprint">Sprint 15 · U1</span><span>Introducción al Deep Learning</span></div>
+  <h3 class="ficha-t"><a href="#pg-s15u1">Cuando una recta no llega: apilar listones</a></h3>
+  <ol class="ficha-lista"><li><a href="#h-s15u1-0">El caso que rompe la neurona sola</a></li><li><a href="#h-s15u1-1">La solución: que un listón juzgue las opiniones de otros listones</a></li><li><a href="#h-s15u1-2">Por qué la activación no es opcional (esto sí es importante)</a></li><li><a href="#h-s15u1-3">El catálogo de activaciones y cuándo se usa cada una</a></li><li><a href="#h-s15u1-4">Cómo aprende: el bucle completo</a></li></ol>
+</article><article class="ficha">
+  <div class="ficha-meta"><span class="sprint">Sprint 15 · U2</span><span>Introducción a Keras</span></div>
+  <h3 class="ficha-t"><a href="#pg-s15u2">Keras es un catálogo de listones</a></h3>
+  <ol class="ficha-lista"><li><a href="#h-s15u2-0">El ejemplo completo con penguins</a></li><li><a href="#h-s15u2-1">Leer model.summary() y verificar las cuentas a mano</a></li><li><a href="#h-s15u2-2">Ver la curva</a></li></ol>
+</article><article class="ficha">
+  <div class="ficha-meta"><span class="sprint">Sprint 16 · U1</span><span>Redes Convolucionales (CNN)</span></div>
+  <h3 class="ficha-t"><a href="#pg-s16u1">Un listón pequeño que se pasea por la imagen</a></h3>
+  <ol class="ficha-lista"><li><a href="#h-s16u1-0">Primer problema: los números no caben</a></li><li><a href="#h-s16u1-1">Segundo problema, y este es el de verdad</a></li><li><a href="#h-s16u1-2">La idea: pesos compartidos</a></li><li><a href="#h-s16u1-8">La otra forma de verlo: el filtro es una plantilla</a></li><li><a href="#h-s16u1-3">El vocabulario, ahora que ya lo has visto funcionar</a></li><li><a href="#h-s16u1-4">¿Cuánto mide la salida? Cuenta las posiciones</a></li><li><a href="#h-s16u1-5">La fórmula completa, con stride y padding</a></li><li><a href="#h-s16u1-6">Por qué se apilan: la jerarquía</a></li><li><a href="#h-s16u1-7">Una CNN completa</a></li></ol>
+</article><article class="ficha">
+  <div class="ficha-meta"><span class="sprint">Sprint 16 · U2</span><span>Transfer Learning y Fine-Tuning</span></div>
+  <h3 class="ficha-t"><a href="#pg-s16u2">Aprovechar listones que ya están bien puestos</a></h3>
+  <ol class="ficha-lista"><li><a href="#h-s16u2-0">La lógica</a></li><li><a href="#h-s16u2-1">Fase 1 · Extracción de características</a></li><li><a href="#h-s16u2-2">Fase 2 · Fine-tuning</a></li><li><a href="#h-s16u2-3">Qué estrategia según tu caso</a></li></ol>
+</article><article class="ficha">
+  <div class="ficha-meta"><span class="sprint">Sprint 16 · U3</span><span>Redes Recurrentes (RNN) y Series</span></div>
+  <h3 class="ficha-t"><a href="#pg-s16u3">El mismo listón, pero que se acuerda de lo anterior</a></h3>
+  <ol class="ficha-lista"><li><a href="#h-s16u3-0">Por qué una Dense no vale aquí</a></li><li><a href="#h-s16u3-1">El añadido: una entrada más, que es su propia salida anterior</a></li><li><a href="#h-s16u3-2">El problema: la memoria se desvanece</a></li><li><a href="#h-s16u3-3">LSTM y GRU: listones que deciden qué guardar</a></li><li><a href="#h-s16u3-4">La parte que de verdad cuesta: preparar los datos</a></li></ol>
+</article><article class="ficha">
+  <div class="ficha-meta"><span class="sprint">Cierre</span><span>Resumen general</span></div>
+  <h3 class="ficha-t"><a href="#pg-mapa">El mapa completo en una tabla</a></h3>
+  <ol class="ficha-lista"></ol>
+</article></div>
+</section>
+</div>
+<div class="pagina" id="pg-base">
+<nav class="en-pagina" aria-label="En esta página"><a href="#h-base-0">Los tres nombres del mismo número</a><a href="#h-base-1">De dónde sale la idea: la neurona biológica</a><a href="#h-base-2">Muévelo tú</a><a href="#h-base-3">Por qué sale una recta y no otra cosa</a></nav>
+<section class="unidad">
+  <div class="unidad-meta"><span class="sprint">Base</span><span>La única fórmula que hay que entender</span></div>
+  <h2>La regla, la fórmula y el código son lo mismo</h2>
+  <p class="sumario">Antes de tocar Keras conviene ver que la frase de arriba, la notación matemática y las tres líneas de Python son literalmente el mismo objeto escrito de tres maneras.</p>
+
+  <div class="formula">
+regla    :  <span class="peso-tok">2</span>·estudio + <span class="peso-tok">1</span>·sueño  &gt;  <span class="liston-tok">10</span>
+despejar :  <span class="peso-tok">2</span>·estudio + <span class="peso-tok">1</span>·sueño <span class="liston-tok">− 10</span>  &gt;  0
+fórmula  :  z = <span class="peso-tok">w₁</span>x₁ + <span class="peso-tok">w₂</span>x₂ + <span class="liston-tok">b</span>        salida = 1 si z &gt; 0
+vectorial:  z = <span class="peso-tok">w</span>·x + <span class="liston-tok">b</span>                  (producto escalar)
+  </div>
+
+  <p>El paso de la primera a la segunda línea es el que aclara el diagrama del perceptrón que has visto en clase: esa neurona de arriba con un <code>1</code> fijo dentro existe solo para arrastrar el <strong>−10</strong> a la suma pase lo que pase. Por eso se dibuja como una entrada más con su propio peso <code>w₀</code>. Es el listón disfrazado de entrada.</p>
+
+  <h3 id="h-base-0">Los tres nombres del mismo número</h3>
+  <table>
+    <thead><tr><th>En la frase</th><th>En la fórmula</th><th>En Keras</th></tr></thead>
+    <tbody>
+      <tr><td>multiplicador</td><td>w (weight)</td><td><code>layer.get_weights()[0]</code></td></tr>
+      <tr><td>listón</td><td>b (bias)</td><td><code>layer.get_weights()[1]</code></td></tr>
+      <tr><td>la suma antes de decidir</td><td>z (logit, pre-activación)</td><td>salida de <code>Dense</code> sin activación</td></tr>
+      <tr><td>la decisión final</td><td>a = f(z)</td><td><code>activation="relu"</code>, <code>"softmax"</code>…</td></tr>
+    </tbody>
+  </table>
+
+
+  <h3 id="h-base-1">De dónde sale la idea: la neurona biológica</h3>
+  <p>El nombre «red neuronal» no es marketing. El perceptrón se diseñó en 1958 mirando cómo funciona una neurona de verdad, y la correspondencia es sorprendentemente literal.</p>
+
+  <figure>
+    <svg viewBox="0 0 560 320" role="img" aria-label="Comparación entre una neurona biológica y una neurona artificial dividida en función lineal y función de activación">
+      <g font-family="IBM Plex Mono" font-size="11">
+      <path d="M30 100 L52 132 M22 140 L52 148 M30 190 L54 168 M46 210 L62 178 M76 216 L82 186" fill="none" stroke="#B87A0C" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M30 100 L18 84 M30 100 L38 78 M22 140 L6 134 M46 210 L40 228 M76 216 L78 236" fill="none" stroke="#B87A0C" stroke-width="1.8" stroke-linecap="round"/>
+      <ellipse cx="82" cy="152" rx="30" ry="26" fill="#FBF0DA" stroke="#B87A0C" stroke-width="2"/>
+      <circle cx="82" cy="152" r="8" fill="#B87A0C"/>
+      <path d="M112 152 H196" stroke="#B87A0C" stroke-width="2.5"/>
+      <ellipse cx="130" cy="152" rx="12" ry="7" fill="#FBF0DA" stroke="#B87A0C" stroke-width="1.5"/>
+      <ellipse cx="158" cy="152" rx="12" ry="7" fill="#FBF0DA" stroke="#B87A0C" stroke-width="1.5"/>
+      <ellipse cx="186" cy="152" rx="12" ry="7" fill="#FBF0DA" stroke="#B87A0C" stroke-width="1.5"/>
+      <path d="M196 152 L214 138 M196 152 L216 152 M196 152 L214 166" fill="none" stroke="#B87A0C" stroke-width="1.8" stroke-linecap="round"/>
+      <text x="40" y="66" text-anchor="middle" fill="#7A8896">dendritas</text>
+      <text x="82" y="196" text-anchor="middle" fill="#7A8896">soma</text>
+      <text x="158" y="132" text-anchor="middle" fill="#7A8896">axón</text>
+      <text x="118" y="266" text-anchor="middle" fill="#14202E">recibe · acumula · dispara</text>
+      <text x="118" y="284" text-anchor="middle" fill="#7A8896">si supera −55 mV, y siempre igual de fuerte</text>
+
+      <path d="M236 152 H268" stroke="#7A8896" stroke-width="1.5" marker-end="url(#flb)"/>
+      <defs><marker id="flb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#7A8896" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+
+      <circle cx="308" cy="56" r="17" fill="#F8F9FA" stroke="#7A8896"/><text x="308" y="60" text-anchor="middle" fill="#14202E" font-size="10">x₀=1</text>
+      <circle cx="308" cy="112" r="17" fill="#F8F9FA" stroke="#7A8896"/><text x="308" y="116" text-anchor="middle" fill="#14202E">x₁</text>
+      <circle cx="308" cy="168" r="17" fill="#F8F9FA" stroke="#7A8896"/><text x="308" y="172" text-anchor="middle" fill="#14202E">x₂</text>
+      <circle cx="308" cy="246" r="17" fill="#F8F9FA" stroke="#7A8896"/><text x="308" y="250" text-anchor="middle" fill="#14202E">xₙ</text>
+      <text x="308" y="215" text-anchor="middle" fill="#7A8896" font-size="16">⋮</text>
+      <path d="M326 62 L402 128" stroke="#D4356B" stroke-width="1.6" marker-end="url(#flr)"/>
+      <path d="M326 116 L402 140" stroke="#0D7C63" stroke-width="1.6" marker-end="url(#flg)"/>
+      <path d="M326 168 L402 158" stroke="#0D7C63" stroke-width="1.6" marker-end="url(#flg)"/>
+      <path d="M326 240 L402 178" stroke="#0D7C63" stroke-width="1.6" marker-end="url(#flg)"/>
+      <defs>
+        <marker id="flr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#D4356B" stroke-width="1.5" stroke-linecap="round"/></marker>
+        <marker id="flg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#0D7C63" stroke-width="1.5" stroke-linecap="round"/></marker>
+      </defs>
+      <text x="358" y="86" text-anchor="middle" fill="#D4356B" font-size="12">b</text>
+      <text x="356" y="120" text-anchor="middle" fill="#0D7C63" font-size="12">w₁</text>
+      <text x="356" y="152" text-anchor="middle" fill="#0D7C63" font-size="12">w₂</text>
+      <text x="352" y="216" text-anchor="middle" fill="#0D7C63" font-size="12">wₙ</text>
+
+      <circle cx="452" cy="152" r="46" fill="#E0F0EA" stroke="#0D7C63" stroke-width="2"/>
+      <line x1="452" y1="108" x2="452" y2="196" stroke="#0D7C63" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <text x="428" y="160" text-anchor="middle" fill="#14202E" font-size="22" font-weight="600">z</text>
+      <text x="476" y="160" text-anchor="middle" fill="#14202E" font-size="22" font-weight="600">f</text>
+      <path d="M500 152 H542" stroke="#14202E" stroke-width="2" marker-end="url(#flk)"/>
+      <defs><marker id="flk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#14202E" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+      <text x="521" y="142" text-anchor="middle" fill="#14202E" font-size="13">y</text>
+      <text x="418" y="266" text-anchor="middle" fill="#14202E">z: la suma con el listón</text>
+      <text x="418" y="284" text-anchor="middle" fill="#7A8896">función lineal</text>
+      <text x="418" y="302" text-anchor="middle" fill="#7A8896">↑</text>
+      <text x="508" y="266" text-anchor="middle" fill="#14202E">f: decidir</text>
+      <text x="508" y="284" text-anchor="middle" fill="#7A8896">activación</text>
+      <text x="508" y="302" text-anchor="middle" fill="#7A8896">↑</text>
+      </g>
+    </svg>
+    <figcaption>Ese círculo azul de la diapositiva parece una sola cosa, pero la línea de puntos marca dos operaciones distintas: primero se acumula (z), después se decide (f). Y una neurona real hace exactamente eso, con un listón medido en milivoltios.</figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th>Neurona biológica</th><th>Neurona artificial</th><th>En tu regla</th></tr></thead>
+    <tbody>
+      <tr><td>dendritas</td><td>entradas x₁ … xₙ</td><td>estudio, sueño</td></tr>
+      <tr><td>fuerza de cada sinapsis</td><td>pesos w₁ … wₙ</td><td>el 2 y el 1</td></tr>
+      <tr><td>soma: acumula la carga</td><td>z = w·x + b</td><td>hacer la suma</td></tr>
+      <tr><td>umbral de disparo (≈ −55 mV)</td><td>bias b + activación</td><td><strong>el listón: 10</strong></td></tr>
+      <tr><td>potencial de acción por el axón</td><td>salida y</td><td>aprueba / suspende</td></tr>
+    </tbody>
+  </table>
+
+  <p>Lo más bonito de la comparación es el umbral. Una neurona real cumple la <strong>ley del todo o nada</strong>: por debajo de unos −55 milivoltios no pasa nada, y en cuanto lo supera dispara siempre con la misma intensidad. No dispara «a medias». Eso es literalmente la función escalón del diagrama de tu clase: un listón físico, medido en voltios.</p>
+
+  <div class="nota aviso">
+    <span class="etiqueta">Hasta aquí llega la analogía</span>
+    <p>Es inspiración, no una copia. Una neurona real es una célula con canales iónicos, neurotransmisores y comportamiento temporal; tienes 86.000 millones y cada una se conecta con miles. Y sobre todo: <strong>el cerebro no hace backpropagation</strong>. Nadie sabe cómo ajusta el cerebro sus «pesos», pero desde luego no recorriendo la red hacia atrás con la regla de la cadena. Una red neuronal no simula un cerebro: le tomó prestada una idea muy concreta —acumular entradas ponderadas y disparar al superar un umbral— y la convirtió en algo que se puede derivar y optimizar.</p>
+  </div>
+
+  <h3 id="h-base-2">Muévelo tú</h3>
+  <p>Abajo tienes pingüinos reales del dataset <code>penguins</code> de Seaborn, con dos medidas: largo del pico y largo de la aleta. Mueve los dos multiplicadores y el listón hasta separar las dos especies. No hay truco: eso <em>exactamente</em> es lo que hace el entrenamiento, solo que automáticamente y con muchos más números.</p>
+
+  <div class="lab">
+    <div class="lab-cabecera">Laboratorio 01 · Un perceptrón a mano <span id="p-estado">ajusta los mandos</span></div>
+    <div class="lab-cuerpo">
+      <div class="botonera">
+        <button class="preset" data-p="mal" aria-pressed="true">Empezar mal</button>
+        <button class="preset" data-p="ok">Una solución razonable</button>
+        <button class="preset" data-p="solo-pico">Solo mirar el pico</button>
+      </div>
+      <svg id="p-svg" viewBox="0 0 520 330" role="img" aria-label="Gráfico de dispersión de pingüinos con una frontera de decisión ajustable"></svg>
+      <div class="controles">
+        <div class="control">
+          <label for="w1">w₁ · cuánto cuenta el pico</label>
+          <input type="range" id="w1" min="-3" max="3" step="0.1" value="0.5">
+          <output id="w1o">0.5</output>
+        </div>
+        <div class="control">
+          <label for="w2">w₂ · cuánto cuenta la aleta</label>
+          <input type="range" id="w2" min="-3" max="3" step="0.1" value="-1.2">
+          <output id="w2o">-1.2</output>
+        </div>
+        <div class="control">
+          <label for="bb">b · el listón</label>
+          <input type="range" id="bb" min="-3" max="3" step="0.1" value="0.3">
+          <output id="bbo">0.3</output>
+        </div>
+      </div>
+      <div class="marcador">
+        <div>Aciertos<b id="p-acc">—</b></div>
+        <div>Bien clasificados<b id="p-n">—</b></div>
+        <div>Fórmula activa<b id="p-f" style="font-size:15px;line-height:1.5">—</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nota">
+    <span class="etiqueta">Lo que acabas de hacer se llama entrenar</span>
+    <p>Has mirado los aciertos, has movido un mando, has vuelto a mirar. Eso es <strong>descenso de gradiente</strong> hecho a mano. La única diferencia es que el gradiente le dice a la máquina <em>hacia qué lado</em> mover cada mando y <em>cuánto</em>, en vez de ir a tientas.</p>
+  </div>
+
+  <h3 id="h-base-3">Por qué sale una recta y no otra cosa</h3>
+  <p>Los puntos que quedan justo empatados en el listón (z = 0) forman una recta porque el intercambio entre las dos variables es <strong>siempre el mismo</strong>: si subes el pico 1 mm, la aleta tiene que bajar siempre la misma cantidad (w₁/w₂) para mantener el empate. Una tasa de cambio constante es la definición de recta.</p>
+  <p>Y aquí está el límite duro de una sola neurona: una suma de multiplicaciones <em>no puede</em> producir un intercambio que varíe según dónde estés. Por eso una neurona sola solo dibuja rectas — en 3 variables, un plano; en n variables, un <strong>hiperplano</strong>. Es siempre lo mismo: una superficie plana que parte el espacio en dos.</p>
+</section>
+<nav class="paginacion"><a class="pag-ant" href="#pg-indice"><span>Volver al</span>Índice</a><a class="pag-sig" href="#pg-s15u1"><span>Siguiente</span>Cuando una recta no llega: apilar listones</a></nav>
+</div>
+<div class="pagina" id="pg-s15u1">
+<nav class="en-pagina" aria-label="En esta página"><a href="#h-s15u1-0">El caso que rompe la neurona sola</a><a href="#h-s15u1-1">La solución: que un listón juzgue las opiniones de otros listones</a><a href="#h-s15u1-2">Por qué la activación no es opcional (esto sí es importante)</a><a href="#h-s15u1-3">El catálogo de activaciones y cuándo se usa cada una</a><a href="#h-s15u1-4">Cómo aprende: el bucle completo</a></nav>
+<section class="unidad" id="s15u1">
+  <div class="unidad-meta"><span class="sprint">Sprint 15 · U1</span><span>Introducción al Deep Learning</span></div>
+  <h2>Cuando una recta no llega: apilar listones</h2>
+  <p class="sumario">De la neurona suelta al perceptrón multicapa. Qué añade cada capa, por qué la función de activación no es un adorno, y qué está pasando de verdad cuando llamas a <code>fit()</code>.</p>
+
+  <h3 id="h-s15u1-0">El caso que rompe la neurona sola</h3>
+  <p>Imagina cuatro alumnos y esta regla real: <em>aprueban los que estudian mucho y duermen mucho, y también los que estudian poco y duermen poco</em> (los primeros porque se lo curran, los segundos porque van a clase de mañana y no necesitan). Suspenden los desequilibrados. Es el problema <strong>XOR</strong>, y es el clásico contraejemplo del perceptrón.</p>
+
+  <figure>
+    <svg viewBox="0 0 520 320" role="img" aria-label="Cuatro puntos en disposición XOR con tres rectas que no consiguen separarlos">
+      <line x1="80" y1="290" x2="380" y2="290" stroke="#CBD4DA" stroke-width="1"/>
+      <line x1="80" y1="30" x2="80" y2="290" stroke="#CBD4DA" stroke-width="1"/>
+      <line x1="220" y1="30" x2="220" y2="290" stroke="#7A8896" stroke-width="1" stroke-dasharray="5 5"/>
+      <line x1="80" y1="160" x2="380" y2="160" stroke="#7A8896" stroke-width="1" stroke-dasharray="5 5"/>
+      <line x1="90" y1="285" x2="375" y2="45" stroke="#7A8896" stroke-width="1" stroke-dasharray="5 5"/>
+      <circle cx="120" cy="250" r="9" fill="#E0F0EA" stroke="#0D7C63" stroke-width="1.5"/>
+      <circle cx="330" cy="70" r="9" fill="#E0F0EA" stroke="#0D7C63" stroke-width="1.5"/>
+      <circle cx="330" cy="250" r="9" fill="#FBE7EE" stroke="#D4356B" stroke-width="1.5"/>
+      <circle cx="120" cy="70" r="9" fill="#FBE7EE" stroke="#D4356B" stroke-width="1.5"/>
+      <text x="120" y="312" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">poco</text>
+      <text x="330" y="312" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">mucho</text>
+      <text x="230" y="312" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">estudio →</text>
+      <text x="68" y="254" text-anchor="end" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">poco</text>
+      <text x="68" y="74" text-anchor="end" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">mucho</text>
+      <text x="68" y="24" text-anchor="end" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">sueño</text>
+      <circle cx="410" cy="66" r="7" fill="#E0F0EA" stroke="#0D7C63" stroke-width="1.5"/>
+      <text x="426" y="71" font-family="IBM Plex Mono" font-size="12" fill="#14202E">aprueba</text>
+      <circle cx="410" cy="96" r="7" fill="#FBE7EE" stroke="#D4356B" stroke-width="1.5"/>
+      <text x="426" y="101" font-family="IBM Plex Mono" font-size="12" fill="#14202E">suspende</text>
+    </svg>
+    <figcaption>Prueba a colocar una sola recta que deje los dos verdes a un lado. No existe. Da igual qué pesos y qué listón elijas: una neurona no puede resolver esto.</figcaption>
+  </figure>
+
+  <h3 id="h-s15u1-1">La solución: que un listón juzgue las opiniones de otros listones</h3>
+  <p>Pon dos neuronas en paralelo. Cada una traza su propia recta y emite su propia opinión: <em>«yo digo que sí»</em> / <em>«yo digo que no»</em>. Ahora pon una tercera neurona <strong>cuyas entradas no sean los datos, sino esas dos opiniones</strong>:</p>
+
+  <div class="formula">
+neurona A (capa oculta):  a₁ = f( <span class="peso-tok">w</span>·x + <span class="liston-tok">b</span> )   ← su recta
+neurona B (capa oculta):  a₂ = f( <span class="peso-tok">w</span>·x + <span class="liston-tok">b</span> )   ← otra recta
+neurona C (salida)     :  y  = f( <span class="peso-tok">w₁</span>a₁ + <span class="peso-tok">w₂</span>a₂ + <span class="liston-tok">b</span> )
+                              ↑ mismos multiplicadores, mismo listón,
+                                pero aplicados a opiniones, no a milímetros
+  </div>
+
+  <p>Eso es una <strong>capa oculta</strong>. Y con varias rectas combinadas puedes encerrar regiones: dos rectas hacen una franja, tres hacen un triángulo, veinte hacen algo que ya parece una curva. La frontera deja de ser plana.</p>
+
+  <figure>
+    <svg viewBox="0 0 520 300" role="img" aria-label="Tres rectas combinadas encierran una región triangular alrededor de un grupo de puntos">
+      <path d="M200 60 L120 235 L340 215 Z" fill="#FBE7EE" stroke="none"/>
+      <line x1="240" y1="10" x2="60" y2="285" stroke="#D4356B" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <line x1="70" y1="245" x2="400" y2="212" stroke="#D4356B" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <line x1="160" y1="10" x2="400" y2="270" stroke="#D4356B" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <circle cx="200" cy="150" r="7" fill="#D4356B"/><circle cx="230" cy="180" r="7" fill="#D4356B"/>
+      <circle cx="180" cy="195" r="7" fill="#D4356B"/><circle cx="250" cy="140" r="7" fill="#D4356B"/>
+      <circle cx="215" cy="205" r="7" fill="#D4356B"/><circle cx="165" cy="130" r="7" fill="#D4356B"/>
+      <circle cx="70" cy="80" r="7" fill="#B4B2A9"/><circle cx="380" cy="90" r="7" fill="#B4B2A9"/>
+      <circle cx="420" cy="180" r="7" fill="#B4B2A9"/><circle cx="90" cy="290" r="7" fill="#B4B2A9"/>
+      <circle cx="330" cy="280" r="7" fill="#B4B2A9"/><circle cx="60" cy="180" r="7" fill="#B4B2A9"/>
+      <text x="425" y="70" font-family="IBM Plex Mono" font-size="12" fill="#D4356B">3 neuronas</text>
+      <text x="425" y="88" font-family="IBM Plex Mono" font-size="12" fill="#D4356B">= 3 rectas</text>
+      <text x="425" y="106" font-family="IBM Plex Mono" font-size="12" fill="#D4356B">= 1 triángulo</text>
+    </svg>
+    <figcaption>Cada neurona de la capa oculta aporta un corte recto. La capa siguiente decide qué combinación de cortes cuenta. Con suficientes cortes se aproxima cualquier forma: eso es el teorema de aproximación universal.</figcaption>
+  </figure>
+
+  <h3 id="h-s15u1-2">Por qué la activación no es opcional (esto sí es importante)</h3>
+  <p>Aquí está la trampa. Si las neuronas de la capa oculta no aplican ninguna función y sueltan la suma tal cual, apilar capas <strong>no sirve absolutamente de nada</strong>. Con números:</p>
+
+  <div class="formula">
+capa 1:  a = 2x + 1
+capa 2:  y = 3a − 4
+
+sustituyendo:  y = 3(2x + 1) − 4  =  6x + 3 − 4  =  <span class="liston-tok">6x − 1</span>
+
+→ dos capas... que son otra vez una sola recta.
+  </div>
+
+  <p>Multiplicar y sumar sobre algo que ya era una multiplicación y una suma sigue siendo una multiplicación y una suma. Cien capas lineales colapsan en una sola recta. Necesitas meter <strong>algo que no sea recto</strong> entre capa y capa. Eso es la función de activación, y su único trabajo es <em>doblar</em>.</p>
+
+  <h3 id="h-s15u1-3">El catálogo de activaciones y cuándo se usa cada una</h3>
+
+  <figure>
+    <svg viewBox="0 0 520 200" role="img" aria-label="Comparación de las funciones escalón, sigmoide y ReLU">
+      <g>
+        <line x1="20" y1="120" x2="150" y2="120" stroke="#CBD4DA"/><line x1="85" y1="30" x2="85" y2="175" stroke="#CBD4DA"/>
+        <path d="M20 155 L85 155 L85 55 L150 55" fill="none" stroke="#7A8896" stroke-width="2.5"/>
+        <text x="85" y="194" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#7A8896">escalón</text>
+      </g>
+      <g>
+        <line x1="190" y1="120" x2="320" y2="120" stroke="#CBD4DA"/><line x1="255" y1="30" x2="255" y2="175" stroke="#CBD4DA"/>
+        <path d="M190 154 C222 154 234 56 255 105 C276 154 288 56 320 56" fill="none" stroke="#0D7C63" stroke-width="2.5"/>
+        <text x="255" y="194" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#0D7C63">sigmoide</text>
+      </g>
+      <g>
+        <line x1="360" y1="120" x2="490" y2="120" stroke="#CBD4DA"/><line x1="425" y1="30" x2="425" y2="175" stroke="#CBD4DA"/>
+        <path d="M360 120 L425 120 L490 45" fill="none" stroke="#D4356B" stroke-width="2.5"/>
+        <text x="425" y="194" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#D4356B">ReLU</text>
+      </g>
+    </svg>
+    <figcaption>El escalón corta en seco. La sigmoide es la versión suavizada. La ReLU simplemente aplasta a cero lo negativo y deja pasar lo positivo tal cual.</figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th>Activación</th><th>Qué hace</th><th>Dónde va</th></tr></thead>
+    <tbody>
+      <tr><td>escalón</td><td>0 o 1, sin matices</td><td>solo histórico: no es derivable, así que no se puede entrenar con él</td></tr>
+      <tr><td>sigmoid</td><td>aplasta cualquier número al rango 0–1</td><td>salida en clasificación <strong>binaria</strong></td></tr>
+      <tr><td>softmax</td><td>reparte 100% de probabilidad entre N clases</td><td>salida en clasificación <strong>multiclase</strong> (3 especies de pingüino)</td></tr>
+      <tr><td>relu</td><td><code>max(0, z)</code></td><td>capas ocultas, por defecto: rápida y no satura</td></tr>
+      <tr><td>tanh</td><td>aplasta al rango −1 a 1</td><td>capas ocultas, habitual en RNN clásicas</td></tr>
+      <tr><td>(ninguna)</td><td>deja z tal cual</td><td>salida en <strong>regresión</strong>: predecir un precio, una temperatura</td></tr>
+    </tbody>
+  </table>
+
+  <div class="nota aviso">
+    <span class="etiqueta">El error más típico del sprint</span>
+    <p>Poner <code>softmax</code> en las capas ocultas o <code>relu</code> en la salida de una regresión de precios. Regla mental: <strong>las ocultas doblan (relu), la salida traduce</strong> al formato de la respuesta que pides.</p>
+  </div>
+
+  <h3 id="h-s15u1-4">Cómo aprende: el bucle completo</h3>
+  <p>Ahora ya se puede contar sin magia lo que pasa dentro de <code>fit()</code>. Es un bucle de cuatro pasos que se repite miles de veces:</p>
+  <ol>
+    <li><strong>Forward pass.</strong> Los datos entran, cada capa hace su suma ponderada y su activación, sale una predicción. Al principio los pesos son aleatorios, así que la predicción es basura.</li>
+    <li><strong>Loss (pérdida).</strong> Un número que mide <em>cuánta</em> basura. <code>categorical_crossentropy</code> para multiclase, <code>binary_crossentropy</code> para sí/no, <code>mse</code> para regresión. Es la nota del examen.</li>
+    <li><strong>Backpropagation.</strong> Se recorre la red hacia atrás repartiendo culpa: cuánto ha contribuido cada peso al error. Técnicamente es la regla de la cadena de las derivadas, pero la intuición es <em>reparto de responsabilidad</em>.</li>
+    <li><strong>Optimizador.</strong> Mueve cada peso un poquito en la dirección que baja el error. El tamaño de ese poquito es el <strong>learning rate</strong>. <code>adam</code> es el que usarás por defecto.</li>
+  </ol>
+
+  <div class="formula">
+peso_nuevo = peso_viejo − <span class="liston-tok">learning_rate</span> × <span class="peso-tok">(culpa de este peso en el error)</span>
+
+learning rate alto  → zancadas largas, se pasa de largo y no converge
+learning rate bajo  → pasitos, tarda una eternidad o se atasca
+  </div>
+
+  <table>
+    <thead><tr><th>Término</th><th>Qué es en realidad</th></tr></thead>
+    <tbody>
+      <tr><td>epoch (época)</td><td>una pasada completa por <strong>todos</strong> los datos de entrenamiento</td></tr>
+      <tr><td>batch_size</td><td>cuántos ejemplos mira antes de mover los pesos una vez</td></tr>
+      <tr><td>iteración</td><td>una actualización de pesos = un batch procesado</td></tr>
+      <tr><td>overfitting</td><td>se ha aprendido los datos de memoria: acierta en train y falla en validation</td></tr>
+      <tr><td>dropout</td><td>apaga neuronas al azar en cada paso para que ninguna se vuelva imprescindible</td></tr>
+    </tbody>
+  </table>
+
+  <div class="nota">
+    <span class="etiqueta">Cómo se lee una curva de entrenamiento</span>
+    <p>Si <code>loss</code> baja y <code>val_loss</code> baja: bien. Si <code>loss</code> baja y <code>val_loss</code> <em>sube</em>: overfitting, corta con <code>EarlyStopping</code>. Si ninguna de las dos se mueve: el learning rate está mal, o los datos no están escalados, o la arquitectura se queda corta.</p>
+  </div>
+</section>
+<nav class="paginacion"><a class="pag-ant" href="#pg-base"><span>Anterior</span>La regla, la fórmula y el código son lo mismo</a><a class="pag-sig" href="#pg-s15u2"><span>Siguiente</span>Keras es un catálogo de listones</a></nav>
+</div>
+<div class="pagina" id="pg-s15u2">
+<nav class="en-pagina" aria-label="En esta página"><a href="#h-s15u2-0">El ejemplo completo con penguins</a><a href="#h-s15u2-1">Leer model.summary() y verificar las cuentas a mano</a><a href="#h-s15u2-2">Ver la curva</a></nav>
+<section class="unidad" id="s15u2">
+  <div class="unidad-meta"><span class="sprint">Sprint 15 · U2</span><span>Introducción a Keras</span></div>
+  <h2>Keras es un catálogo de listones</h2>
+  <p class="sumario">Cada línea de código que vas a escribir corresponde a una pieza concreta de lo anterior. Si sabes a qué corresponde, dejas de copiar plantillas.</p>
+
+  <table>
+    <thead><tr><th>Código</th><th>Traducción</th></tr></thead>
+    <tbody>
+      <tr><td>Sequential</td><td>«las capas van en fila india, la salida de una es la entrada de la siguiente»</td></tr>
+      <tr><td>Dense(16)</td><td>16 listones, cada uno conectado a <strong>todas</strong> las entradas anteriores</td></tr>
+      <tr><td>input_shape</td><td>cuántos números entran por ejemplo (4 medidas del pingüino)</td></tr>
+      <tr><td>compile</td><td>elegir la nota (loss) y cómo se corrigen los pesos (optimizer)</td></tr>
+      <tr><td>fit</td><td>arrancar el bucle de los cuatro pasos</td></tr>
+      <tr><td>evaluate</td><td>nota final con datos que nunca ha visto</td></tr>
+      <tr><td>predict</td><td>usarlo de verdad</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="h-s15u2-0">El ejemplo completo con penguins</h3>
+  <pre><span class="c"># 1. Datos</span>
+<span class="k">import</span> seaborn <span class="k">as</span> sns
+<span class="k">import</span> pandas <span class="k">as</span> pd
+<span class="k">from</span> sklearn.model_selection <span class="k">import</span> train_test_split
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+
+df = sns.load_dataset(<span class="s">"penguins"</span>)
+df = df.dropna()                      <span class="c"># un NaN rompe toda la suma</span>
+
+X = df[[<span class="s">"bill_length_mm"</span>, <span class="s">"bill_depth_mm"</span>,
+        <span class="s">"flipper_length_mm"</span>, <span class="s">"body_mass_g"</span>]]
+y = pd.get_dummies(df[<span class="s">"species"</span>])    <span class="c"># 3 columnas 0/1, una por especie</span>
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=<span class="n">0.2</span>, random_state=<span class="n">42</span>)
+
+scaler = StandardScaler()             <span class="c"># el peso va en miles, el pico en decenas</span>
+X_train = scaler.fit_transform(X_train)
+X_test  = scaler.transform(X_test)    <span class="c"># transform, NO fit_transform</span>
+
+<span class="c"># 2. Modelo</span>
+<span class="k">from</span> tensorflow.keras.models <span class="k">import</span> Sequential
+<span class="k">from</span> tensorflow.keras.layers <span class="k">import</span> Dense
+
+modelo = Sequential([
+    Dense(<span class="n">16</span>, activation=<span class="s">"relu"</span>, input_shape=(<span class="n">4</span>,)),
+    Dense(<span class="n">8</span>,  activation=<span class="s">"relu"</span>),
+    Dense(<span class="n">3</span>,  activation=<span class="s">"softmax"</span>)   <span class="c"># 3 especies</span>
+])
+
+modelo.compile(optimizer=<span class="s">"adam"</span>,
+               loss=<span class="s">"categorical_crossentropy"</span>,
+               metrics=[<span class="s">"accuracy"</span>])
+
+<span class="c"># 3. Entrenar</span>
+historia = modelo.fit(X_train, y_train,
+                      epochs=<span class="n">50</span>,
+                      batch_size=<span class="n">16</span>,
+                      validation_split=<span class="n">0.2</span>)
+
+<span class="c"># 4. Evaluar</span>
+perdida, acierto = modelo.evaluate(X_test, y_test)
+<span class="k">print</span>(<span class="s">"acierto:"</span>, acierto)</pre>
+
+  <div class="nota aviso">
+    <span class="etiqueta">Los dos fallos que te van a costar una tarde</span>
+    <p><code>scaler.fit_transform()</code> sobre el test: le estás filtrando información del test al modelo (<em>data leakage</em>). En test siempre <code>transform()</code> a secas.</p>
+    <p>Y que el número de neuronas de la última capa no coincida con el número de clases. 3 especies → <code>Dense(3)</code>. Ni 1 ni 2.</p>
+  </div>
+
+  <h3 id="h-s15u2-1">Leer <code>model.summary()</code> y verificar las cuentas a mano</h3>
+  <p>Esta es la mejor forma de comprobar que has entendido lo anterior. Keras te dice cuántos parámetros tiene el modelo, y ese número lo puedes calcular tú:</p>
+
+  <div class="formula">
+parámetros de una capa Dense = (<span class="peso-tok">entradas × neuronas</span>) + <span class="liston-tok">neuronas</span>
+                                 ↑ un peso por conexión    ↑ un listón por neurona
+
+Dense(16) desde 4 entradas :  4×16 + 16 = <span class="n">80</span>
+Dense(8)  desde 16         : 16×8  + 8  = <span class="n">136</span>
+Dense(3)  desde 8          :  8×3  + 3  = <span class="n">27</span>
+                                    total = <span class="n">243</span> parámetros
+  </div>
+
+  <p>243 números que ajustar. Todos son o bien un «cuánto cuenta esto» o bien un «cuál es el listón». Nada más. Retén ese número, porque en la siguiente unidad va a explotar.</p>
+
+  <h3 id="h-s15u2-2">Ver la curva</h3>
+  <pre><span class="k">import</span> matplotlib.pyplot <span class="k">as</span> plt
+
+plt.plot(historia.history[<span class="s">"loss"</span>], label=<span class="s">"train"</span>)
+plt.plot(historia.history[<span class="s">"val_loss"</span>], label=<span class="s">"validation"</span>)
+plt.legend()
+plt.show()   <span class="c"># si val_loss remonta hacia arriba: overfitting</span></pre>
+
+  <pre><span class="k">from</span> tensorflow.keras.callbacks <span class="k">import</span> EarlyStopping
+
+parada = EarlyStopping(monitor=<span class="s">"val_loss"</span>,
+                       patience=<span class="n">5</span>,
+                       restore_best_weights=<span class="k">True</span>)
+
+modelo.fit(X_train, y_train, epochs=<span class="n">200</span>,
+           validation_split=<span class="n">0.2</span>, callbacks=[parada])</pre>
+  <p><code>patience=5</code> significa: si <code>val_loss</code> no mejora en 5 épocas seguidas, para y devuelve los pesos del mejor momento. Es la forma barata de no tener que adivinar el número de épocas.</p>
+</section>
+<nav class="paginacion"><a class="pag-ant" href="#pg-s15u1"><span>Anterior</span>Cuando una recta no llega: apilar listones</a><a class="pag-sig" href="#pg-s16u1"><span>Siguiente</span>Un listón pequeño que se pasea por la imagen</a></nav>
+</div>
+<div class="pagina" id="pg-s16u1">
+<nav class="en-pagina" aria-label="En esta página"><a href="#h-s16u1-0">Primer problema: los números no caben</a><a href="#h-s16u1-1">Segundo problema, y este es el de verdad</a><a href="#h-s16u1-2">La idea: pesos compartidos</a><a href="#h-s16u1-8">La otra forma de verlo: el filtro es una plantilla</a><a href="#h-s16u1-3">El vocabulario, ahora que ya lo has visto funcionar</a><a href="#h-s16u1-4">¿Cuánto mide la salida? Cuenta las posiciones</a><a href="#h-s16u1-5">La fórmula completa, con stride y padding</a><a href="#h-s16u1-6">Por qué se apilan: la jerarquía</a><a href="#h-s16u1-7">Una CNN completa</a></nav>
+<section class="unidad" id="s16u1">
+  <div class="unidad-meta"><span class="sprint">Sprint 16 · U1</span><span>Redes Convolucionales (CNN)</span></div>
+  <h2>Un listón pequeño que se pasea por la imagen</h2>
+  <p class="sumario">Las CNN no introducen matemáticas nuevas. Introducen dos trucos de organización sobre exactamente la misma suma ponderada.</p>
+
+  <h3 id="h-s16u1-0">Primer problema: los números no caben</h3>
+  <p>Una foto de 224×224 en color son 224 × 224 × 3 = <strong>150.528 números</strong> por imagen. Si la metes en una <code>Dense(128)</code> como la de los pingüinos:</p>
+
+  <div class="formula">
+pingüinos :      4 entradas × 16 neuronas +  16 = <span class="n">80</span> parámetros
+una foto  : 150.528 entradas × 128 neuronas + 128 = <span class="n">19.267.712</span> parámetros
+
+...y eso es solo la <span class="liston-tok">primera capa</span>.
+  </div>
+
+  <h3 id="h-s16u1-1">Segundo problema, y este es el de verdad</h3>
+  <p>Imagina que entrenas esa red densa con fotos de gatos centrados. Aprende que «el píxel 4.312 suele ser oreja». Ahora le pasas la misma foto desplazada tres píxeles a la derecha: <strong>todos los pesos apuntan al sitio equivocado</strong> y hay que aprenderlo todo otra vez para esa posición. Y otra vez para cada posición posible.</p>
+  <p>Es absurdo, porque un borde es un borde esté donde esté. El conocimiento «esto es un borde vertical» debería valer para toda la imagen.</p>
+
+  <h3 id="h-s16u1-2">La idea: pesos compartidos</h3>
+  <p>En vez de un peso por píxel, defines <strong>un listón diminuto de 3×3</strong> — nueve multiplicadores y un bias — y lo deslizas por toda la imagen calculando la misma suma ponderada en cada posición. Ese listón se llama <strong>kernel</strong> o <strong>filtro</strong>.</p>
+
+  <div class="formula">
+Dense    :  z = w₁x₁ + w₂x₂ + … + w₁₅₀₅₂₈x₁₅₀₅₂₈ + b     ← un peso por píxel
+Conv2D   :  z = w₁x₁ + … + w₉x₉ + b                       ← 9 pesos, reutilizados
+            ...repetido en cada posición de la imagen
+  </div>
+
+  <p>Nueve pesos y un listón: <strong>10 parámetros</strong> frente a 19 millones. Y como es el mismo filtro en todas partes, si aprende a detectar un borde vertical, lo detecta en cualquier esquina de la foto. Eso se llama <strong>invarianza a la traslación</strong>.</p>
+
+  <style>
+  .rejilla{display:grid;gap:2px;width:max-content;max-width:100%}
+  .celda{width:30px;height:30px;display:grid;place-items:center;font-family:var(--dato);font-size:10px;border:1px solid transparent}
+  .celda.foco{border-color:#D4356B;border-width:2px}
+  .celda.activa{outline:2px solid #14202E;outline-offset:-2px}
+  #conv-out .celda{cursor:crosshair}
+  .kernel-caja{display:grid;grid-template-columns:repeat(3,46px);gap:3px;margin-top:6px}
+  .kernel-caja input{width:46px;height:34px;text-align:center;font-family:var(--dato);font-size:13px;border:1px solid var(--linea);background:#fff;color:var(--tinta)}
+  .kernel-caja input:focus-visible{outline:2px solid var(--cal);outline-offset:1px}
+  @media (max-width:400px){.celda{width:24px;height:24px;font-size:9px}}
+  </style>
+
+  <div class="lab">
+    <div class="lab-cabecera">Laboratorio 02 · La convolución paso a paso <span id="c-estado">pasa el ratón por la salida</span></div>
+    <div class="lab-cuerpo">
+      <div class="botonera">
+        <button class="preset" data-k="vert" aria-pressed="true">Detectar bordes verticales</button>
+        <button class="preset" data-k="horiz">Bordes horizontales</button>
+        <button class="preset" data-k="blur">Desenfocar</button>
+        <button class="preset" data-k="sharp">Enfocar</button>
+      </div>
+      <div class="conv-zona">
+        <div>
+          <div class="conv-titulo">Entrada · imagen 8×8 en gris</div>
+          <div class="rejilla" id="conv-in"></div>
+          <div class="conv-titulo" style="margin-top:16px">El filtro (kernel) 3×3 · editable</div>
+          <div class="kernel-caja" id="conv-k"></div>
+        </div>
+        <div>
+          <div class="conv-titulo">Salida · feature map 6×6</div>
+          <div class="rejilla" id="conv-out"></div>
+          <div class="conv-titulo" style="margin-top:16px">Qué está detectando</div>
+          <p style="font-size:14px;color:var(--tinta-2);margin:0" id="c-explica"></p>
+        </div>
+      </div>
+      <div class="cuentas" id="conv-cuentas"><span class="vacio">Pasa el ratón (o el dedo) por una casilla de la salida para ver su cuenta completa.</span></div>
+    </div>
+  </div>
+
+  <div class="nota">
+    <span class="etiqueta">Fíjate en esto</span>
+    <p>Con el filtro de bordes verticales, la salida se enciende <strong>solo en las columnas donde el gris cambia</strong>, y se queda a cero en las zonas planas. El filtro no «sabe» qué es un borde: simplemente sus multiplicadores están puestos de forma que la suma solo se dispara cuando la izquierda y la derecha son distintas. Y en una CNN real <strong>esos nueve números no los pones tú: los aprende el entrenamiento</strong>, exactamente igual que aprendía el 2 y el 1 de los pingüinos.</p>
+  </div>
+
+
+  <h3 id="h-s16u1-8">La otra forma de verlo: el filtro es una plantilla</h3>
+  <p>Hasta ahora hemos leído el filtro como «detector de cambios». Hay una segunda lectura, equivalente y más general: <strong>el filtro es un dibujo de lo que estás buscando</strong>, y la suma mide cuánto se le parece el trozo de imagen.</p>
+  <p>El motivo es aritmético y se ve sin esfuerzo: al multiplicar casilla con casilla, <strong>solo salen números grandes donde un valor alto coincide con un peso alto</strong>. Si el trozo tiene la misma forma que la plantilla, los altos caen encima de los altos y la suma se dispara. Si no coincide, cada producto se queda en nada.</p>
+
+  <figure>
+    <svg viewBox="0 0 600 250" role="img" aria-label="Un filtro con forma de diagonal aplicado a tres trozos de imagen distintos">
+<g font-family="IBM Plex Mono">
+<text x="30" y="44" font-size="12" fill="#0D7C63">el filtro (la plantilla)</text>
+<rect x="30" y="56" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="47.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="67" y="56" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="84.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="104" y="56" width="34" height="34" rx="3" fill="#E0F0EA" stroke="#0D7C63"/><text x="121.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0D7C63">30</text><rect x="30" y="93" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="47.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="67" y="93" width="34" height="34" rx="3" fill="#E0F0EA" stroke="#0D7C63"/><text x="84.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0D7C63">30</text><rect x="104" y="93" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="121.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="30" y="130" width="34" height="34" rx="3" fill="#E0F0EA" stroke="#0D7C63"/><text x="47.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0D7C63">30</text><rect x="67" y="130" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="84.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="104" y="130" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="121.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text>
+<text x="84" y="200" text-anchor="middle" font-size="12" fill="#7A8896">busco esta</text>
+<text x="84" y="216" text-anchor="middle" font-size="12" fill="#7A8896">diagonal</text>
+
+<text x="160" y="118" text-anchor="middle" font-size="20" fill="#7A8896">→</text>
+
+<text x="200" y="44" font-size="12" fill="#14202E">A · sí la tiene</text>
+<rect x="200" y="56" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="217.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="237" y="56" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="254.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="274" y="56" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="291.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="200" y="93" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="217.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="237" y="93" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="254.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="274" y="93" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="291.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="200" y="130" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="217.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="237" y="130" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="254.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="274" y="130" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="291.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text>
+<text x="254" y="200" text-anchor="middle" font-size="13" fill="#14202E">= 4500</text>
+<text x="254" y="217" text-anchor="middle" font-size="11" fill="#0D7C63">¡mucho!</text>
+
+<text x="330" y="44" font-size="12" fill="#14202E">B · la contraria</text>
+<rect x="330" y="56" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="347.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="367" y="56" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="384.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="404" y="56" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="421.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="330" y="93" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="347.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="367" y="93" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="384.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="404" y="93" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="421.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="330" y="130" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="347.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="367" y="130" width="34" height="34" rx="3" fill="#F8F9FA" stroke="#CBD4DA"/><text x="384.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#7A8896">0</text><rect x="404" y="130" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="421.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text>
+<text x="384" y="200" text-anchor="middle" font-size="13" fill="#14202E">= 0</text>
+<text x="384" y="217" text-anchor="middle" font-size="11" fill="#7A8896">nada</text>
+
+<text x="460" y="44" font-size="12" fill="#14202E">C · todo claro</text>
+<rect x="460" y="56" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="477.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="497" y="56" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="514.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="534" y="56" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="551.0" y="73.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="460" y="93" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="477.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="497" y="93" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="514.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="534" y="93" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="551.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="460" y="130" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="477.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="497" y="130" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="514.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text><rect x="534" y="130" width="34" height="34" rx="3" fill="#FBF0DA" stroke="#B87A0C"/><text x="551.0" y="147.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B87A0C">50</text>
+<text x="514" y="200" text-anchor="middle" font-size="13" fill="#14202E">= 4500</text>
+<text x="514" y="217" text-anchor="middle" font-size="11" fill="#D4356B">¿¿también??</text>
+</g>
+</svg>
+    <figcaption>La plantilla busca una diagonal. El trozo A la tiene y suma 4500. El trozo B tiene la diagonal contraria y suma 0. Hasta aquí, perfecto.</figcaption>
+  </figure>
+
+  <div class="formula">
+Trozo A:  (50×30) + (50×30) + (50×30)  = <span class="n">4500</span>   ← coinciden los tres
+Trozo B:  ( 0×30) + ( 0×30) + ( 0×30)  = <span class="n">0</span>      ← no coincide ninguno
+  </div>
+
+  <div class="nota aviso">
+    <span class="etiqueta">El agujero que tiene esta explicación</span>
+    <p>Mira el trozo C: es un cuadrado <strong>todo claro, sin ninguna diagonal</strong>. Y sin embargo también da 4500, igual que A. Compruébalo: los tres pesos de 30 caen sobre tres 50 y dan lo mismo.</p>
+    <p>O sea que con pesos solo positivos, el filtro no distingue «hay lo que busco» de «hay mucha luz». Se dispara con cualquier zona brillante.</p>
+  </div>
+
+  <h4>Cómo se arregla: pesos negativos</h4>
+  <p>La solución es que la plantilla no solo diga qué <em>tiene</em> que haber, sino también qué <strong>no</strong> tiene que haber. Pones números negativos en las casillas que deberían estar vacías, para que <em>resten</em> si aparece algo ahí.</p>
+
+  <div class="formula">
+plantilla nueva:   −15  −15   <span class="peso-tok">30</span>
+                   −15   <span class="peso-tok">30</span>  −15
+                    <span class="peso-tok">30</span>  −15  −15
+
+Trozo A (la diagonal):  3×(30×50) + 6×(−15×0)  = 4500 − 0    = <span class="n">4500</span>
+Trozo C (todo claro) :  3×(30×50) + 6×(−15×50) = 4500 − 4500 = <span class="n">0</span>
+  </div>
+
+  <p>Arreglado: A sigue dando 4500 y C ha pasado a 0. Y fíjate en el detalle: los pesos <strong>suman cero</strong> (3×30 − 6×15 = 0). Por eso una zona uniforme, sea clara u oscura, siempre se cancela.</p>
+
+  <div class="nota">
+    <span class="etiqueta">Las dos lecturas eran la misma</span>
+    <p>Ahora vuelve al filtro del laboratorio: <code>1, 0, −1</code>. También suma cero, también resta lo que no busca. «Detector de bordes» y «plantilla de un cambio de izquierda a derecha» son la misma cosa dicha de dos maneras.</p>
+    <p>Y esto explica por qué el resultado de la convolución <em>es una medición</em>: cada número del feature map responde a la pregunta <strong>«¿cuánto se parece este trozo concreto a lo que busca este filtro?»</strong>. Un número alto es un sí; un cero es un no.</p>
+  </div>
+
+  <h3 id="h-s16u1-3">El vocabulario, ahora que ya lo has visto funcionar</h3>
+  <table>
+    <thead><tr><th>Término</th><th>Qué es</th></tr></thead>
+    <tbody>
+      <tr><td>kernel / filtro</td><td>la matriz de multiplicadores (3×3, 5×5…) que se pasea</td></tr>
+      <tr><td>feature map</td><td>la imagen de salida: dónde y cuánto se ha activado ese filtro</td></tr>
+      <tr><td>filters=32</td><td>32 filtros distintos en paralelo → 32 feature maps → 32 cosas que detectar a la vez</td></tr>
+      <tr><td>stride</td><td>de cuánto en cuánto avanza. stride=2 salta de dos en dos y reduce la salida a la mitad</td></tr>
+      <tr><td>padding="valid"</td><td>sin relleno: la salida encoge (8×8 → 6×6, como arriba)</td></tr>
+      <tr><td>padding="same"</td><td>rodea de ceros para que la salida mida lo mismo que la entrada</td></tr>
+      <tr><td>MaxPooling2D(2,2)</td><td>de cada cuadrado 2×2 se queda con el máximo: reduce a la mitad y conserva «aquí había algo fuerte»</td></tr>
+      <tr><td>Flatten</td><td>estira todos los feature maps en una fila para poder enchufar Dense al final</td></tr>
+    </tbody>
+  </table>
+
+
+  <h3 id="h-s16u1-4">¿Cuánto mide la salida? Cuenta las posiciones</h3>
+  <p>La salida encoge, y no es arbitrario: <strong>mide exactamente el número de sitios donde el filtro cabe entero</strong>. Así que en vez de aprenderte una fórmula, cuenta.</p>
+  <p>Imagina una fila de 5 píxeles y un filtro de 3. Lo pegas al borde izquierdo: esa es la primera posición. Ahora lo vas corriendo de uno en uno hasta que su borde derecho toque el borde derecho de la imagen. ¿Cuántas veces se para?</p>
+
+  <figure>
+    <svg viewBox="0 0 520 250" role="img" aria-label="Un filtro de 3 posiciones sobre una fila de 5 píxeles: solo caben 3 posiciones">
+      <g font-family="IBM Plex Mono" font-size="12">
+      <rect x="110" y="40" width="56" height="40" fill="#F8F9FA" stroke="#7A8896"/>
+      <rect x="170" y="40" width="56" height="40" fill="#F8F9FA" stroke="#7A8896"/>
+      <rect x="230" y="40" width="56" height="40" fill="#F8F9FA" stroke="#7A8896"/>
+      <rect x="290" y="40" width="56" height="40" fill="#F8F9FA" stroke="#7A8896"/>
+      <rect x="350" y="40" width="56" height="40" fill="#F8F9FA" stroke="#7A8896"/>
+      <text x="138" y="65" text-anchor="middle" fill="#14202E">1</text>
+      <text x="198" y="65" text-anchor="middle" fill="#14202E">2</text>
+      <text x="258" y="65" text-anchor="middle" fill="#14202E">3</text>
+      <text x="318" y="65" text-anchor="middle" fill="#14202E">4</text>
+      <text x="378" y="65" text-anchor="middle" fill="#14202E">5</text>
+      <text x="100" y="65" text-anchor="end" fill="#7A8896">m = 5</text>
+      <text x="110" y="26" fill="#7A8896">la imagen</text>
+
+      <rect x="108" y="100" width="180" height="30" fill="none" stroke="#D4356B" stroke-width="2" rx="3"/>
+      <text x="420" y="120" fill="#D4356B">posición 1</text>
+      <rect x="168" y="145" width="180" height="30" fill="none" stroke="#D4356B" stroke-width="2" rx="3"/>
+      <text x="420" y="165" fill="#D4356B">posición 2</text>
+      <rect x="228" y="190" width="180" height="30" fill="none" stroke="#D4356B" stroke-width="2" rx="3"/>
+      <text x="420" y="210" fill="#D4356B">posición 3</text>
+      <text x="100" y="120" text-anchor="end" fill="#7A8896">n = 3</text>
+      <text x="100" y="165" text-anchor="end" fill="#7A8896">↓</text>
+      <text x="100" y="210" text-anchor="end" fill="#7A8896">↓</text>
+      </g>
+    </svg>
+    <figcaption>Tres. No caben más: en la cuarta, el filtro se saldría de la imagen. Y como caben 3 posiciones, la salida mide 3.</figcaption>
+  </figure>
+
+  <div class="formula">
+posiciones = <span class="liston-tok">1</span> + (<span class="peso-tok">m</span> − <span class="peso-tok">n</span>)
+              ↑        ↑
+    la primera,   los pasos que
+    la de pegarse aún puedes dar
+    al borde      antes de salirte
+
+imagen 5×5, filtro 3×3  →  1 + (5 − 3) = <span class="n">3</span>   →  salida 3×3
+imagen 8×8, filtro 3×3  →  1 + (8 − 3) = <span class="n">6</span>   →  salida 6×6
+  </div>
+
+  <p>Ese segundo caso es exactamente el del laboratorio de arriba: entraba una imagen 8×8 y salía un feature map 6×6. Ya sabes de dónde venía el 6.</p>
+
+  <div class="nota">
+    <span class="etiqueta">Por qué el «1 +» y no simplemente m − n</span>
+    <p>Es el clásico error de contar vallas en vez de huecos. Entre 5 y 3 hay <strong>2 pasos</strong>, pero has ocupado <strong>3 posiciones</strong>: la de salida y las dos a las que te has movido. Si te lías, cuenta con los dedos como en el dibujo: siempre sale uno más de lo que restas.</p>
+  </div>
+
+  <h3 id="h-s16u1-5">La fórmula completa, con stride y padding</h3>
+  <p>Los dos mandos de la tabla anterior modifican esa cuenta, y de forma que se entiende sola:</p>
+  <ul>
+    <li><strong>padding (p)</strong> rodea la imagen de ceros, así que hay <em>más sitio</em> donde apoyarse: la imagen efectiva pasa a medir m + 2p (un borde a cada lado).</li>
+    <li><strong>stride (s)</strong> es de cuánto en cuánto avanza. Si vas de 2 en 2, das la mitad de pasos: por eso se divide.</li>
+  </ul>
+
+  <div class="formula">
+salida = ⌊ (<span class="peso-tok">m</span> + 2<span class="peso-tok">p</span> − <span class="peso-tok">n</span>) / <span class="peso-tok">s</span> ⌋ + <span class="liston-tok">1</span>
+
+⌊ ⌋ = redondear hacia abajo (si el filtro no cabe entero, esa posición no cuenta)
+
+Con p = 0 y s = 1 vuelve a ser 1 + (m − n): el caso de siempre.
+  </div>
+
+  <table>
+    <thead><tr><th>Caso</th><th>Cuenta</th><th>Salida</th></tr></thead>
+    <tbody>
+      <tr><td>28×28, filtro 3, p=0, s=1</td><td>(28 + 0 − 3)/1 + 1</td><td>26×26 · encoge 2</td></tr>
+      <tr><td>28×28, filtro 3, <strong>p=1</strong>, s=1</td><td>(28 + 2 − 3)/1 + 1</td><td>28×28 · <strong>igual</strong> → esto es <code>padding="same"</code></td></tr>
+      <tr><td>28×28, filtro 3, p=0, <strong>s=2</strong></td><td>⌊(28 − 3)/2⌋ + 1</td><td>13×13 · casi la mitad</td></tr>
+      <tr><td>28×28, filtro 5, p=0, s=1</td><td>(28 − 5)/1 + 1</td><td>24×24 · encoge 4</td></tr>
+      <tr><td>MaxPooling2D(2,2)</td><td>filtro 2, stride 2</td><td>la mitad exacta: 28 → 14</td></tr>
+    </tbody>
+  </table>
+
+  <div class="nota">
+    <span class="etiqueta">Dos consecuencias que sí importan en la práctica</span>
+    <p><strong>Por qué los filtros son siempre impares (3, 5, 7).</strong> Para que <code>padding="same"</code> funcione hace falta p = (n−1)/2, y eso solo da un número entero si n es impar. Con un filtro par tendrías que poner más relleno a un lado que al otro. Además, un filtro impar tiene <em>píxel central</em>: el resultado se puede colocar justo encima del píxel que estabas mirando.</p>
+    <p><strong>Por qué sin padding la red no puede ser muy profunda.</strong> Si cada capa te come 2 píxeles, con filtros 3×3 y una imagen de 32×32 te quedas sin imagen en 15 capas. Por eso las arquitecturas profundas usan <code>padding="same"</code> en las convoluciones y dejan que sea el <strong>pooling</strong> quien reduzca el tamaño, de forma controlada y cuando tú decides.</p>
+  </div>
+
+  <div class="formula">
+parámetros de un Conv2D = (<span class="peso-tok">alto × ancho × canales_entrada</span> + <span class="liston-tok">1</span>) × filtros
+
+Conv2D(32, (3,3)) sobre una imagen RGB:
+   (3 × 3 × 3 + 1) × 32 = 28 × 32 = <span class="n">896</span> parámetros
+
+Recuerda: la Dense equivalente pedía 19.267.712.
+  </div>
+
+  <h3 id="h-s16u1-6">Por qué se apilan: la jerarquía</h3>
+  <p>Un filtro 3×3 solo ve nueve píxeles. Poco. Pero cuando pones un segundo bloque convolucional <em>encima de la salida del primero</em>, sus nueve entradas ya no son nueve píxeles: son nueve <strong>detecciones</strong> del bloque anterior. Es la misma jugada que la capa oculta del MLP juzgando opiniones en vez de milímetros, ahora en 2D.</p>
+
+  <figure>
+    <svg viewBox="0 0 520 190" role="img" aria-label="Jerarquía de capas convolucionales: de bordes a texturas a partes a objetos">
+      <rect x="10" y="60" width="96" height="70" fill="#F8F9FA" stroke="#CBD4DA"/>
+      <rect x="140" y="60" width="96" height="70" fill="#FBF0DA" stroke="#B87A0C"/>
+      <rect x="270" y="60" width="96" height="70" fill="#E0F0EA" stroke="#0D7C63"/>
+      <rect x="400" y="60" width="96" height="70" fill="#FBE7EE" stroke="#D4356B"/>
+      <text x="58" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#14202E">bloque 1</text>
+      <text x="58" y="110" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">bordes</text>
+      <text x="188" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#14202E">bloque 2</text>
+      <text x="188" y="110" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#B87A0C">texturas</text>
+      <text x="318" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#14202E">bloque 3</text>
+      <text x="318" y="110" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#0D7C63">partes</text>
+      <text x="448" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#14202E">Dense</text>
+      <text x="448" y="110" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#D4356B">objeto</text>
+      <path d="M112 95 H134" stroke="#7A8896" stroke-width="1.5" marker-end="url(#fl)"/>
+      <path d="M242 95 H264" stroke="#7A8896" stroke-width="1.5" marker-end="url(#fl)"/>
+      <path d="M372 95 H394" stroke="#7A8896" stroke-width="1.5" marker-end="url(#fl)"/>
+      <defs><marker id="fl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#7A8896" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+      <text x="260" y="165" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">cada bloque ve más superficie de la imagen original (campo receptivo)</text>
+    </svg>
+    <figcaption>Nadie programa esta jerarquía. Emerge sola del entrenamiento, porque es la forma más económica de bajar la pérdida.</figcaption>
+  </figure>
+
+  <h3 id="h-s16u1-7">Una CNN completa</h3>
+  <pre><span class="k">from</span> tensorflow.keras.models <span class="k">import</span> Sequential
+<span class="k">from</span> tensorflow.keras.layers <span class="k">import</span> Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+
+modelo = Sequential([
+    <span class="c"># bloque 1: detectar cosas simples</span>
+    Conv2D(<span class="n">32</span>, (<span class="n">3</span>,<span class="n">3</span>), activation=<span class="s">"relu"</span>, input_shape=(<span class="n">150</span>,<span class="n">150</span>,<span class="n">3</span>)),
+    MaxPooling2D(<span class="n">2</span>,<span class="n">2</span>),
+
+    <span class="c"># bloque 2: combinaciones de lo anterior</span>
+    Conv2D(<span class="n">64</span>, (<span class="n">3</span>,<span class="n">3</span>), activation=<span class="s">"relu"</span>),
+    MaxPooling2D(<span class="n">2</span>,<span class="n">2</span>),
+
+    <span class="c"># bloque 3</span>
+    Conv2D(<span class="n">128</span>, (<span class="n">3</span>,<span class="n">3</span>), activation=<span class="s">"relu"</span>),
+    MaxPooling2D(<span class="n">2</span>,<span class="n">2</span>),
+
+    <span class="c"># la cabeza: de detecciones a decisión</span>
+    Flatten(),
+    Dense(<span class="n">128</span>, activation=<span class="s">"relu"</span>),
+    Dropout(<span class="n">0.5</span>),
+    Dense(<span class="n">1</span>, activation=<span class="s">"sigmoid"</span>)   <span class="c"># perro o gato</span>
+])
+
+modelo.compile(optimizer=<span class="s">"adam"</span>,
+               loss=<span class="s">"binary_crossentropy"</span>,
+               metrics=[<span class="s">"accuracy"</span>])</pre>
+
+  <p>Fíjate en el patrón: <strong>Conv + Pool, Conv + Pool, Conv + Pool, Flatten, Dense</strong>. Los filtros van subiendo (32 → 64 → 128) mientras el tamaño espacial va bajando (150 → 75 → 37 → 18). Menos «dónde», más «qué».</p>
+
+  <div class="nota">
+    <span class="etiqueta">Data augmentation</span>
+    <p>Con pocas imágenes la red se aprende el dataset de memoria. La solución barata: generar variaciones al vuelo (giros, zoom, espejo) para que nunca vea dos veces exactamente la misma foto. En Keras, capas <code>RandomFlip</code>, <code>RandomRotation</code>, <code>RandomZoom</code> al principio del modelo, o <code>ImageDataGenerator</code> en el código más clásico.</p>
+  </div>
+</section>
+<nav class="paginacion"><a class="pag-ant" href="#pg-s15u2"><span>Anterior</span>Keras es un catálogo de listones</a><a class="pag-sig" href="#pg-s16u2"><span>Siguiente</span>Aprovechar listones que ya están bien puestos</a></nav>
+</div>
+<div class="pagina" id="pg-s16u2">
+<nav class="en-pagina" aria-label="En esta página"><a href="#h-s16u2-0">La lógica</a><a href="#h-s16u2-1">Fase 1 · Extracción de características</a><a href="#h-s16u2-2">Fase 2 · Fine-tuning</a><a href="#h-s16u2-3">Qué estrategia según tu caso</a></nav>
+<section class="unidad" id="s16u2">
+  <div class="unidad-meta"><span class="sprint">Sprint 16 · U2</span><span>Transfer Learning y Fine-Tuning</span></div>
+  <h2>Aprovechar listones que ya están bien puestos</h2>
+  <p class="sumario">Si los primeros bloques de cualquier CNN acaban aprendiendo bordes y texturas, entrenarlos otra vez desde cero con tus 800 fotos es tirar el tiempo. Hay modelos entrenados con 1,4 millones de imágenes que ya los tienen puestos.</p>
+
+  <h3 id="h-s16u2-0">La lógica</h3>
+  <p>Un borde es un borde en una foto de gatos, de radiografías o de tornillos. Los primeros bloques de una red entrenada con <strong>ImageNet</strong> ya han encontrado los filtros correctos para eso, y son filtros que tú, con un dataset pequeño, no lograrías aprender bien. Lo específico de <em>tu</em> problema está en las últimas capas.</p>
+
+  <figure>
+    <svg viewBox="0 0 520 200" role="img" aria-label="Modelo preentrenado congelado con una cabeza nueva entrenable">
+      <rect x="20" y="45" width="300" height="90" fill="#EDEFF1" stroke="#7A8896" stroke-dasharray="5 4"/>
+      <rect x="35" y="60" width="80" height="60" fill="#F8F9FA" stroke="#CBD4DA"/>
+      <rect x="130" y="60" width="80" height="60" fill="#F8F9FA" stroke="#CBD4DA"/>
+      <rect x="225" y="60" width="80" height="60" fill="#F8F9FA" stroke="#CBD4DA"/>
+      <text x="75" y="95" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">bloque 1</text>
+      <text x="170" y="95" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">bloque 2</text>
+      <text x="265" y="95" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">bloque 3</text>
+      <text x="170" y="34" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#7A8896">congelado · trainable = False</text>
+      <text x="170" y="160" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7A8896">pesos de ImageNet, no se tocan</text>
+      <rect x="360" y="45" width="130" height="90" fill="#FBE7EE" stroke="#D4356B" stroke-width="1.5"/>
+      <text x="425" y="88" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#D4356B">cabeza nueva</text>
+      <text x="425" y="106" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#D4356B">Dense(tus clases)</text>
+      <text x="425" y="34" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#D4356B">entrenable</text>
+      <path d="M326 90 H354" stroke="#14202E" stroke-width="1.5" marker-end="url(#fl2)"/>
+      <defs><marker id="fl2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#14202E" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+    </svg>
+    <figcaption>Fase 1: congelas todo lo que viene de ImageNet y solo entrenas la cabeza. Con 243 o unos miles de parámetros entrenables, unas pocas fotos bastan.</figcaption>
+  </figure>
+
+  <h3 id="h-s16u2-1">Fase 1 · Extracción de características</h3>
+  <pre><span class="k">from</span> tensorflow.keras.applications <span class="k">import</span> MobileNetV2
+<span class="k">from</span> tensorflow.keras.layers <span class="k">import</span> GlobalAveragePooling2D, Dense
+<span class="k">from</span> tensorflow.keras.models <span class="k">import</span> Sequential
+
+base = MobileNetV2(weights=<span class="s">"imagenet"</span>,
+                   include_top=<span class="k">False</span>,        <span class="c"># fuera su clasificador de 1000 clases</span>
+                   input_shape=(<span class="n">160</span>,<span class="n">160</span>,<span class="n">3</span>))
+
+base.trainable = <span class="k">False</span>                    <span class="c"># congelado</span>
+
+modelo = Sequential([
+    base,
+    GlobalAveragePooling2D(),               <span class="c"># resume cada feature map en 1 número</span>
+    Dense(<span class="n">128</span>, activation=<span class="s">"relu"</span>),
+    Dense(<span class="n">3</span>, activation=<span class="s">"softmax"</span>)        <span class="c"># TUS clases</span>
+])
+
+modelo.compile(optimizer=<span class="s">"adam"</span>,            <span class="c"># lr normal: 0.001</span>
+               loss=<span class="s">"categorical_crossentropy"</span>,
+               metrics=[<span class="s">"accuracy"</span>])
+
+modelo.fit(train, validation_data=val, epochs=<span class="n">10</span>)</pre>
+
+  <div class="nota aviso">
+    <span class="etiqueta">El fallo silencioso del transfer learning</span>
+    <p>Cada modelo preentrenado espera sus imágenes en un rango concreto (0–1, −1 a 1, o restando la media de ImageNet). Si le pasas píxeles en 0–255 no da error: simplemente acierta fatal y te vuelves loca buscando el problema. Usa siempre el <code>preprocess_input</code> de <em>ese</em> modelo:</p>
+    <pre style="margin-bottom:0"><span class="k">from</span> tensorflow.keras.applications.mobilenet_v2 <span class="k">import</span> preprocess_input</pre>
+  </div>
+
+  <h3 id="h-s16u2-2">Fase 2 · Fine-tuning</h3>
+  <p>Cuando la cabeza ya funciona, <strong>descongelas los últimos bloques</strong> del modelo base para que se adapten a tu dominio concreto. Los primeros los dejas congelados: los bordes ya están bien.</p>
+
+  <pre>base.trainable = <span class="k">True</span>
+
+<span class="c"># congelar todo menos los últimos 30 niveles</span>
+<span class="k">for</span> capa <span class="k">in</span> base.layers[:-<span class="n">30</span>]:
+    capa.trainable = <span class="k">False</span>
+
+<span class="c"># RECOMPILAR es obligatorio tras cambiar trainable</span>
+modelo.compile(
+    optimizer=Adam(learning_rate=<span class="n">1e-5</span>),   <span class="c"># 100x más pequeño</span>
+    loss=<span class="s">"categorical_crossentropy"</span>,
+    metrics=[<span class="s">"accuracy"</span>])
+
+modelo.fit(train, validation_data=val, epochs=<span class="n">10</span>)</pre>
+
+  <div class="nota">
+    <span class="etiqueta">Por qué el learning rate tiene que ser diminuto</span>
+    <p>Vuelve a la fórmula del ajuste: <code>peso − lr × culpa</code>. Los pesos de ImageNet ya están casi perfectos. Con un learning rate normal, la primera zancada los manda lejísimos y destruyes años de entrenamiento en dos batches. Con <code>1e-5</code> haces microajustes. A esto se le llama <em>catastrophic forgetting</em> cuando sale mal.</p>
+  </div>
+
+  <h3 id="h-s16u2-3">Qué estrategia según tu caso</h3>
+  <table>
+    <thead><tr><th>Tu dataset</th><th>Parecido a ImageNet</th><th>Qué hacer</th></tr></thead>
+    <tbody>
+      <tr><td>pequeño (cientos)</td><td>sí</td><td>solo cabeza nueva, todo congelado</td></tr>
+      <tr><td>pequeño (cientos)</td><td>no (rayos X, satélite)</td><td>cabeza nueva + descongelar solo los últimos bloques, con mucho cuidado</td></tr>
+      <tr><td>grande (decenas de miles)</td><td>sí</td><td>fine-tuning de buena parte de la red</td></tr>
+      <tr><td>grande (decenas de miles)</td><td>no</td><td>puedes plantearte entrenar desde cero</td></tr>
+    </tbody>
+  </table>
+
+  <p>El orden nunca cambia: <strong>primero la cabeza con todo congelado, después el fine-tuning</strong>. Si descongelas desde el principio, la cabeza está aún aleatoria, genera un error enorme, y ese error enorme se propaga hacia atrás y arrasa los pesos buenos.</p>
+</section>
+<nav class="paginacion"><a class="pag-ant" href="#pg-s16u1"><span>Anterior</span>Un listón pequeño que se pasea por la imagen</a><a class="pag-sig" href="#pg-s16u3"><span>Siguiente</span>El mismo listón, pero que se acuerda de lo anterior</a></nav>
+</div>
+<div class="pagina" id="pg-s16u3">
+<nav class="en-pagina" aria-label="En esta página"><a href="#h-s16u3-0">Por qué una Dense no vale aquí</a><a href="#h-s16u3-1">El añadido: una entrada más, que es su propia salida anterior</a><a href="#h-s16u3-2">El problema: la memoria se desvanece</a><a href="#h-s16u3-3">LSTM y GRU: listones que deciden qué guardar</a><a href="#h-s16u3-4">La parte que de verdad cuesta: preparar los datos</a></nav>
+<section class="unidad" id="s16u3">
+  <div class="unidad-meta"><span class="sprint">Sprint 16 · U3</span><span>Redes Recurrentes (RNN) y Series</span></div>
+  <h2>El mismo listón, pero que se acuerda de lo anterior</h2>
+  <p class="sumario">Hasta ahora cada ejemplo era independiente. Un pingüino no sabe nada del pingüino anterior. Pero en una serie temporal o en una frase, <strong>el orden es la información</strong>.</p>
+
+  <h3 id="h-s16u3-0">Por qué una Dense no vale aquí</h3>
+  <p>Si le pasas las ventas de los últimos 7 días a una <code>Dense</code>, para ella son siete columnas sueltas, como el pico y la aleta. No tiene ninguna noción de que la columna 7 va <em>después</em> de la 6. Y si mañana quieres darle 10 días en vez de 7, no puedes: el <code>input_shape</code> es fijo.</p>
+
+  <h3 id="h-s16u3-1">El añadido: una entrada más, que es su propia salida anterior</h3>
+  <p>Una neurona recurrente hace exactamente la misma suma ponderada de siempre, pero entre sus entradas mete <strong>lo que ella misma calculó en el instante anterior</strong>. Ese valor que se va arrastrando se llama <strong>estado oculto</strong> (<code>h</code>) y es la memoria de la red.</p>
+
+  <div class="formula">
+Dense :  h  = f( <span class="peso-tok">W</span>·x + <span class="liston-tok">b</span> )
+
+RNN   :  hₜ = f( <span class="peso-tok">Wₓ</span>·xₜ + <span class="peso-tok">W_h</span>·hₜ₋₁ + <span class="liston-tok">b</span> )
+                            ↑
+                 el único término nuevo de toda la unidad:
+                 «y cuánto cuenta lo que yo pensaba hace un paso»
+  </div>
+
+  <p>Nada más. <code>W_h</code> es un multiplicador como cualquier otro, y se aprende igual: cuánto debe pesar el pasado frente a lo que está entrando ahora.</p>
+
+  <figure>
+    <svg viewBox="0 0 520 230" role="img" aria-label="Una red recurrente desplegada en cuatro instantes de tiempo">
+      <g font-family="IBM Plex Mono" font-size="11">
+      <rect x="55" y="80" width="76" height="56" fill="#E0F0EA" stroke="#0D7C63" stroke-width="1.5"/>
+      <rect x="165" y="80" width="76" height="56" fill="#E0F0EA" stroke="#0D7C63" stroke-width="1.5"/>
+      <rect x="275" y="80" width="76" height="56" fill="#E0F0EA" stroke="#0D7C63" stroke-width="1.5"/>
+      <rect x="385" y="80" width="76" height="56" fill="#E0F0EA" stroke="#0D7C63" stroke-width="1.5"/>
+      <text x="93" y="113" text-anchor="middle" fill="#14202E" font-size="12">celda</text>
+      <text x="203" y="113" text-anchor="middle" fill="#14202E" font-size="12">celda</text>
+      <text x="313" y="113" text-anchor="middle" fill="#14202E" font-size="12">celda</text>
+      <text x="423" y="113" text-anchor="middle" fill="#14202E" font-size="12">celda</text>
+      <path d="M133 108 H163" stroke="#D4356B" stroke-width="2" marker-end="url(#fl3)"/>
+      <path d="M243 108 H273" stroke="#D4356B" stroke-width="2" marker-end="url(#fl3)"/>
+      <path d="M353 108 H383" stroke="#D4356B" stroke-width="2" marker-end="url(#fl3)"/>
+      <text x="148" y="100" text-anchor="middle" fill="#D4356B">h</text>
+      <text x="258" y="100" text-anchor="middle" fill="#D4356B">h</text>
+      <text x="368" y="100" text-anchor="middle" fill="#D4356B">h</text>
+      <path d="M93 178 V140" stroke="#7A8896" stroke-width="1.5" marker-end="url(#fl3b)"/>
+      <path d="M203 178 V140" stroke="#7A8896" stroke-width="1.5" marker-end="url(#fl3b)"/>
+      <path d="M313 178 V140" stroke="#7A8896" stroke-width="1.5" marker-end="url(#fl3b)"/>
+      <path d="M423 178 V140" stroke="#7A8896" stroke-width="1.5" marker-end="url(#fl3b)"/>
+      <text x="93" y="196" text-anchor="middle" fill="#7A8896">lunes</text>
+      <text x="203" y="196" text-anchor="middle" fill="#7A8896">martes</text>
+      <text x="313" y="196" text-anchor="middle" fill="#7A8896">miérc.</text>
+      <text x="423" y="196" text-anchor="middle" fill="#7A8896">jueves</text>
+      <text x="260" y="220" text-anchor="middle" fill="#7A8896">la secuencia entra de uno en uno, en orden</text>
+      <path d="M423 76 V42" stroke="#14202E" stroke-width="1.5" marker-end="url(#fl3c)"/>
+      <text x="423" y="32" text-anchor="middle" fill="#14202E">predicción del viernes</text>
+      <text x="93" y="66" text-anchor="middle" fill="#B4B2A9">mismos pesos</text>
+      <text x="203" y="66" text-anchor="middle" fill="#B4B2A9">mismos pesos</text>
+      <text x="313" y="66" text-anchor="middle" fill="#B4B2A9">mismos pesos</text>
+      </g>
+      <defs>
+        <marker id="fl3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#D4356B" stroke-width="1.5" stroke-linecap="round"/></marker>
+        <marker id="fl3b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#7A8896" stroke-width="1.5" stroke-linecap="round"/></marker>
+        <marker id="fl3c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#14202E" stroke-width="1.5" stroke-linecap="round"/></marker>
+      </defs>
+    </svg>
+    <figcaption>No son cuatro celdas: es <strong>la misma celda</strong> dibujada cuatro veces. Igual que el kernel de la CNN se reutilizaba por toda la imagen, aquí los mismos pesos se reutilizan en cada instante. Compartir pesos, otra vez.</figcaption>
+  </figure>
+
+  <h3 id="h-s16u3-2">El problema: la memoria se desvanece</h3>
+  <p>Si el estado se multiplica por <code>W_h</code> en cada paso, tras 50 pasos ha pasado por 50 multiplicaciones. Si esos multiplicadores son menores que 1, la información inicial se aplasta hacia cero: es el <strong>vanishing gradient</strong>. La red recuerda lo de hace tres pasos, pero lo de hace cincuenta se ha evaporado.</p>
+
+  <h3 id="h-s16u3-3">LSTM y GRU: listones que deciden qué guardar</h3>
+  <p>La solución es añadir <strong>puertas</strong> (<em>gates</em>). Y una puerta es, otra vez, exactamente lo mismo: una suma ponderada con su listón y una sigmoide que devuelve un número entre 0 y 1, que funciona como un grifo.</p>
+
+  <table>
+    <thead><tr><th>Puerta</th><th>La pregunta que responde</th></tr></thead>
+    <tbody>
+      <tr><td>forget gate</td><td>de lo que recuerdo, ¿qué porcentaje tiro?</td></tr>
+      <tr><td>input gate</td><td>de lo que acaba de entrar, ¿qué porcentaje guardo?</td></tr>
+      <tr><td>output gate</td><td>de lo que sé, ¿qué porcentaje enseño ahora?</td></tr>
+    </tbody>
+  </table>
+
+  <p>Cada puerta tiene sus propios pesos y su propio bias, y se aprenden con el mismo backpropagation. Una <strong>GRU</strong> es la versión con dos puertas en vez de tres: menos parámetros, entrena más rápido, suele ir casi igual de bien. En la práctica: <strong>empieza por GRU o LSTM, no por <code>SimpleRNN</code></strong>.</p>
+
+  <h3 id="h-s16u3-4">La parte que de verdad cuesta: preparar los datos</h3>
+  <p>Aquí es donde se atasca todo el mundo en este sprint, y no es por la red. Keras exige que los datos lleguen en 3 dimensiones:</p>
+
+  <div class="formula">
+X.shape = (<span class="peso-tok">samples</span>, <span class="liston-tok">timesteps</span>, <span class="n">features</span>)
+             ↑            ↑            ↑
+      cuántas       cuántos      cuántas variables
+      ventanas      días mira    mides cada día
+                    cada una
+
+ventas de 1 tienda, ventanas de 7 días, 500 ventanas → (500, 7, 1)
+  </div>
+
+  <p>Convertir una columna de un DataFrame en eso se llama <strong>ventaneo</strong> (<em>windowing</em>), y es simplemente ir cortando trozos consecutivos:</p>
+
+  <pre><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> crear_ventanas(serie, pasos):
+    X, y = [], []
+    <span class="k">for</span> i <span class="k">in</span> range(len(serie) - pasos):
+        X.append(serie[i : i+pasos])    <span class="c"># los 7 días anteriores</span>
+        y.append(serie[i+pasos])        <span class="c"># el día siguiente</span>
+    <span class="k">return</span> np.array(X), np.array(y)
+
+X, y = crear_ventanas(valores, pasos=<span class="n">7</span>)
+X = X.reshape(X.shape[<span class="n">0</span>], X.shape[<span class="n">1</span>], <span class="n">1</span>)   <span class="c"># añadir la dimensión features</span>
+<span class="k">print</span>(X.shape)   <span class="c"># (n, 7, 1)</span></pre>
+
+  <div class="nota aviso">
+    <span class="etiqueta">Tres reglas de las series temporales que no se negocian</span>
+    <p><strong>1. Nada de <code>shuffle</code> ni de <code>train_test_split</code> aleatorio.</strong> El test tiene que ser el <em>futuro</em>: corta por fecha, <code>X[:n]</code> para entrenar y <code>X[n:]</code> para test. Si mezclas, entrenas con datos posteriores a los que predices y el resultado será fantástico y falso.</p>
+    <p><strong>2. El scaler se ajusta solo con train.</strong> Si haces <code>fit</code> con toda la serie, el mínimo y el máximo del futuro se cuelan en el entrenamiento.</p>
+    <p><strong>3. Escala siempre.</strong> Las RNN son especialmente sensibles: con valores sin escalar el estado oculto se satura y deja de aprender.</p>
+  </div>
+
+  <pre><span class="k">from</span> tensorflow.keras.models <span class="k">import</span> Sequential
+<span class="k">from</span> tensorflow.keras.layers <span class="k">import</span> LSTM, Dense, Dropout
+
+modelo = Sequential([
+    LSTM(<span class="n">64</span>, activation=<span class="s">"tanh"</span>,
+         return_sequences=<span class="k">True</span>,          <span class="c"># saca h de CADA paso</span>
+         input_shape=(<span class="n">7</span>, <span class="n">1</span>)),           <span class="c"># (timesteps, features)</span>
+    Dropout(<span class="n">0.2</span>),
+    LSTM(<span class="n">32</span>),                            <span class="c"># solo el último h</span>
+    Dense(<span class="n">1</span>)                             <span class="c"># regresión: sin activación</span>
+])
+
+modelo.compile(optimizer=<span class="s">"adam"</span>, loss=<span class="s">"mse"</span>, metrics=[<span class="s">"mae"</span>])
+modelo.fit(X_train, y_train, epochs=<span class="n">50</span>, batch_size=<span class="n">32</span>,
+           validation_data=(X_val, y_val), shuffle=<span class="k">False</span>)</pre>
+
+  <p><code>return_sequences=True</code> es obligatorio si encima va otra capa recurrente: la de arriba necesita una secuencia completa para recorrerla, no un único número. En la última capa recurrente se pone <code>False</code> (el valor por defecto) porque ya solo quieres el resumen final.</p>
+
+  <div class="nota">
+    <span class="etiqueta">Comprobación de realidad</span>
+    <p>Antes de celebrar nada, compara tu modelo con la predicción más tonta posible: <em>«mañana será igual que hoy»</em>. Muchísimos modelos de series aprenden exactamente eso y lo disimulan. Si tu LSTM no le gana a esa línea base, no está aportando nada.</p>
+  </div>
+</section>
+<nav class="paginacion"><a class="pag-ant" href="#pg-s16u2"><span>Anterior</span>Aprovechar listones que ya están bien puestos</a><a class="pag-sig" href="#pg-mapa"><span>Siguiente</span>El mapa completo en una tabla</a></nav>
+</div>
+<div class="pagina" id="pg-mapa">
+
+<section class="mapa" id="mapa">
+  <h2>El mapa completo en una tabla</h2>
+  <p>Todo lo anterior es la misma operación con distinta organización de las entradas.</p>
+  <table>
+    <thead><tr><th>Capa</th><th>Qué multiplica y suma</th><th>El truco que añade</th></tr></thead>
+    <tbody>
+      <tr><td>Dense</td><td>todas las entradas, cada una con su peso</td><td>ninguno: el caso base</td></tr>
+      <tr><td>Conv2D</td><td>una ventanita de 3×3 píxeles</td><td>reutiliza los mismos pesos por toda la imagen</td></tr>
+      <tr><td>SimpleRNN</td><td>la entrada de ahora + su propia salida anterior</td><td>reutiliza los mismos pesos en cada instante</td></tr>
+      <tr><td>LSTM / GRU</td><td>lo mismo, más varias puertas</td><td>puertas que deciden qué recordar y qué tirar</td></tr>
+    </tbody>
+  </table>
+  <p style="margin:22px 0 0;font-size:18px;color:#EAF0F4">Cuando llegues a los Transformers, la pregunta que tendrás que hacerte es la misma: <em>¿qué multiplica, qué suma, y con qué listón compara?</em></p>
+</section>
+<nav class="paginacion"><a class="pag-ant" href="#pg-s16u3"><span>Anterior</span>El mismo listón, pero que se acuerda de lo anterior</a><a class="pag-sig" href="#pg-indice"><span>Has llegado al final</span>Volver al índice</a></nav>
+</div>
+</main>
+
+<script>
+/* ================= Laboratorio 01 · perceptrón a mano ================= */
+const PING = [
+  [39.1,181,0],[39.5,186,0],[40.3,195,0],[36.7,193,0],[39.3,190,0],[38.9,181,0],[39.2,195,0],
+  [34.1,193,0],[42.0,190,0],[37.8,186,0],[37.8,180,0],[41.1,182,0],[38.6,191,0],[34.6,198,0],
+  [46.1,211,1],[50.0,230,1],[48.7,210,1],[50.0,218,1],[47.6,218,1],[46.5,217,1],[45.4,211,1],
+  [46.7,209,1],[43.3,208,1],[46.8,215,1],[40.9,214,1],[49.0,216,1],[45.5,220,1],[48.4,222,1]
+];
+const VERDE="#0D7C63", AMBAR="#B87A0C", ROSA="#D4356B", GRIS="#7A8896";
+const px = b => 70 + (b-32)/20*400;
+const py = f => 280 - (f-175)/60*250;
+const nx = b => (b-42)/6;
+const ny = f => (f-205)/15;
+
+const svgP = document.getElementById("p-svg");
+const mandos = {w1:document.getElementById("w1"), w2:document.getElementById("w2"), bb:document.getElementById("bb")};
+
+function dibujarPerceptron(){
+  const w1=+mandos.w1.value, w2=+mandos.w2.value, b=+mandos.bb.value;
+  document.getElementById("w1o").textContent=w1.toFixed(1);
+  document.getElementById("w2o").textContent=w2.toFixed(1);
+  document.getElementById("bbo").textContent=b.toFixed(1);
+
+  let s = '<defs><clipPath id="rec"><rect x="70" y="30" width="400" height="250"/></clipPath></defs>';
+  s += '<rect x="70" y="30" width="400" height="250" fill="#F8F9FA" stroke="#CBD4DA"/>';
+  for(let b2=35;b2<=50;b2+=5) s += `<line x1="${px(b2)}" y1="30" x2="${px(b2)}" y2="280" stroke="#E4E9EC"/><text x="${px(b2)}" y="298" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="${GRIS}">${b2}</text>`;
+  for(let f=180;f<=230;f+=10) s += `<line x1="70" y1="${py(f)}" x2="470" y2="${py(f)}" stroke="#E4E9EC"/><text x="62" y="${py(f)+4}" text-anchor="end" font-family="IBM Plex Mono" font-size="10" fill="${GRIS}">${f}</text>`;
+  s += `<text x="270" y="318" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="${GRIS}">bill_length_mm →</text>`;
+  s += `<text x="70" y="20" font-family="IBM Plex Mono" font-size="11" fill="${GRIS}">flipper_length_mm ↑</text>`;
+
+  // la frontera: w1·nx + w2·ny + b = 0
+  if(Math.abs(w2) > 0.05){
+    const yEn = v => (-(w1*nx(v)+b)/w2)*15+205;
+    s += `<line x1="${px(32)}" y1="${py(yEn(32))}" x2="${px(52)}" y2="${py(yEn(52))}" stroke="${ROSA}" stroke-width="2.5" clip-path="url(#rec)"/>`;
+  } else if(Math.abs(w1) > 0.05){
+    const bx = (-b/w1)*6+42;
+    s += `<line x1="${px(bx)}" y1="30" x2="${px(bx)}" y2="280" stroke="${ROSA}" stroke-width="2.5" clip-path="url(#rec)"/>`;
+  }
+
+  let ok=0;
+  for(const [bill,flip,clase] of PING){
+    const z = w1*nx(bill) + w2*ny(flip) + b;
+    const pred = z>0 ? 1 : 0;
+    const acierta = pred===clase;
+    if(acierta) ok++;
+    const color = clase===1 ? AMBAR : VERDE;
+    s += acierta
+      ? `<circle cx="${px(bill)}" cy="${py(flip)}" r="6" fill="${color}" opacity="0.85"/>`
+      : `<circle cx="${px(bill)}" cy="${py(flip)}" r="7" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="3 2"/><circle cx="${px(bill)}" cy="${py(flip)}" r="2" fill="${ROSA}"/>`;
+  }
+  s += `<circle cx="392" cy="48" r="6" fill="${VERDE}" opacity="0.85"/><text x="404" y="52" font-family="IBM Plex Mono" font-size="11" fill="#14202E">Adelie</text>`;
+  s += `<circle cx="392" cy="70" r="6" fill="${AMBAR}" opacity="0.85"/><text x="404" y="74" font-family="IBM Plex Mono" font-size="11" fill="#14202E">Gentoo</text>`;
+  svgP.innerHTML = s;
+
+  const pct = Math.round(ok/PING.length*100);
+  document.getElementById("p-acc").textContent = pct+"%";
+  document.getElementById("p-n").textContent = ok+" / "+PING.length;
+  document.getElementById("p-f").textContent = `${w1.toFixed(1)}·pico + ${w2.toFixed(1)}·aleta ${b>=0?"+":"−"} ${Math.abs(b).toFixed(1)} > 0`;
+  document.getElementById("p-estado").textContent =
+    pct===100 ? "separadas del todo" : pct>=90 ? "casi" : pct>=70 ? "vas mejorando" : "aún se mezclan";
+}
+Object.values(mandos).forEach(m => m.addEventListener("input", dibujarPerceptron));
+
+const PRESETS = {mal:[0.5,-1.2,0.3], ok:[1.4,1.0,-0.2], "solo-pico":[2.0,0,-0.5]};
+document.querySelectorAll("[data-p]").forEach(btn => btn.addEventListener("click", () => {
+  const [a,b,c] = PRESETS[btn.dataset.p];
+  mandos.w1.value=a; mandos.w2.value=b; mandos.bb.value=c;
+  document.querySelectorAll("[data-p]").forEach(o => o.setAttribute("aria-pressed", o===btn ? "true":"false"));
+  dibujarPerceptron();
+}));
+dibujarPerceptron();
+
+/* ================= Laboratorio 02 · convolución ================= */
+const IMG = [];
+for(let r=0;r<8;r++){
+  const fila=[];
+  for(let c=0;c<8;c++){
+    let v=30;
+    if(r===5||r===6) v=200;
+    if(c===2||c===3) v=220;
+    fila.push(v);
+  }
+  IMG.push(fila);
+}
+const KERNELS = {
+  vert:  {k:[[1,0,-1],[2,0,-2],[1,0,-1]], t:"Se enciende donde el gris cambia de izquierda a derecha. La franja vertical se marca en sus dos bordes; las zonas planas dan 0."},
+  horiz: {k:[[1,2,1],[0,0,0],[-1,-2,-1]], t:"El mismo filtro girado 90°. Ahora ignora la franja vertical y detecta el borde de la franja horizontal."},
+  blur:  {k:[[0.11,0.11,0.11],[0.11,0.11,0.11],[0.11,0.11,0.11]], t:"Nueve pesos iguales: cada píxel pasa a ser la media de su vecindario. Suaviza y difumina los bordes."},
+  sharp: {k:[[0,-1,0],[-1,5,-1],[0,-1,0]], t:"Refuerza el centro y resta a los vecinos: exagera las diferencias locales y realza el detalle."}
+};
+let kernelActual = KERNELS.vert.k.map(f=>f.slice());
+
+const inDiv=document.getElementById("conv-in"), outDiv=document.getElementById("conv-out"), kDiv=document.getElementById("conv-k");
+inDiv.style.gridTemplateColumns="repeat(8,auto)";
+outDiv.style.gridTemplateColumns="repeat(6,auto)";
+
+function gris(v){ const g=Math.round(v); return `rgb(${g},${g},${g})`; }
+
+function pintarEntrada(){
+  inDiv.innerHTML="";
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+    const d=document.createElement("div");
+    d.className="celda"; d.dataset.r=r; d.dataset.c=c;
+    d.style.background=gris(IMG[r][c]);
+    d.style.color=IMG[r][c]>128?"#14202E":"#EDEFF1";
+    d.textContent=IMG[r][c];
+    inDiv.appendChild(d);
+  }
+}
+
+function convolucionar(){
+  const salida=[];
+  for(let r=0;r<6;r++){
+    const fila=[];
+    for(let c=0;c<6;c++){
+      let suma=0;
+      for(let i=0;i<3;i++) for(let j=0;j<3;j++) suma += IMG[r+i][c+j]*kernelActual[i][j];
+      fila.push(suma);
+    }
+    salida.push(fila);
+  }
+  return salida;
+}
+
+function pintarSalida(){
+  const sal=convolucionar();
+  let maxAbs=1;
+  sal.forEach(f=>f.forEach(v=>{ if(Math.abs(v)>maxAbs) maxAbs=Math.abs(v); }));
+  outDiv.innerHTML="";
+  for(let r=0;r<6;r++) for(let c=0;c<6;c++){
+    const v=sal[r][c], t=Math.abs(v)/maxAbs;
+    const d=document.createElement("div");
+    d.className="celda"; d.dataset.r=r; d.dataset.c=c;
+    d.style.background = v>=0
+      ? `rgba(13,124,99,${(0.08+t*0.85).toFixed(2)})`
+      : `rgba(212,53,107,${(0.08+t*0.85).toFixed(2)})`;
+    d.style.color = t>0.5 ? "#fff" : "#14202E";
+    d.textContent = Math.round(v);
+    d.addEventListener("mouseenter", ()=>explicarCelda(r,c,v));
+    d.addEventListener("click", ()=>explicarCelda(r,c,v));
+    outDiv.appendChild(d);
+  }
+}
+
+function explicarCelda(r,c,v){
+  document.querySelectorAll("#conv-in .celda").forEach(e=>e.classList.remove("foco"));
+  document.querySelectorAll("#conv-out .celda").forEach(e=>e.classList.remove("activa"));
+  for(let i=0;i<3;i++) for(let j=0;j<3;j++){
+    const e=inDiv.querySelector(`[data-r="${r+i}"][data-c="${c+j}"]`);
+    if(e) e.classList.add("foco");
+  }
+  outDiv.querySelector(`[data-r="${r}"][data-c="${c}"]`).classList.add("activa");
+  let txt="";
+  for(let i=0;i<3;i++){
+    const trozos=[];
+    for(let j=0;j<3;j++){
+      const k=kernelActual[i][j];
+      trozos.push(`${String(IMG[r+i][c+j]).padStart(3)}×${k<0?"":" "}${k}`);
+    }
+    txt += "  "+trozos.join("  +  ")+(i<2?"  +":"")+"\n";
+  }
+  document.getElementById("conv-cuentas").innerHTML =
+    `<span style="color:#7E96A8">salida[${r}][${c}] =</span>\n${txt}  <span class="res">= ${Math.round(v)}</span>`;
+  document.getElementById("c-estado").textContent = `casilla [${r}][${c}] = ${Math.round(v)}`;
+}
+
+function pintarKernel(){
+  kDiv.innerHTML="";
+  for(let i=0;i<3;i++) for(let j=0;j<3;j++){
+    const inp=document.createElement("input");
+    inp.type="number"; inp.step="0.1"; inp.value=kernelActual[i][j];
+    inp.setAttribute("aria-label",`peso fila ${i+1} columna ${j+1}`);
+    inp.addEventListener("change",()=>{
+      const v=parseFloat(inp.value);
+      kernelActual[i][j]=isNaN(v)?0:v;
+      if(isNaN(v)) inp.value=0;
+      pintarSalida();
+      document.getElementById("c-explica").textContent="Filtro modificado a mano. Estos son los nueve números que, en una red de verdad, ajusta el entrenamiento.";
+    });
+    kDiv.appendChild(inp);
+  }
+}
+
+document.querySelectorAll("[data-k]").forEach(btn => btn.addEventListener("click", ()=>{
+  const def=KERNELS[btn.dataset.k];
+  kernelActual=def.k.map(f=>f.slice());
+  document.querySelectorAll("[data-k]").forEach(o=>o.setAttribute("aria-pressed", o===btn?"true":"false"));
+  document.getElementById("c-explica").textContent=def.t;
+  pintarKernel(); pintarSalida();
+}));
+
+pintarEntrada(); pintarKernel(); pintarSalida();
+document.getElementById("c-explica").textContent = KERNELS.vert.t;
+
+
+/* ================= Navegación por páginas ================= */
+const avance = document.getElementById("avance");
+const enlacesRegla = [...document.querySelectorAll(".barra a")];
+
+function mostrar(hash, hacerScroll){
+  let destino = null, pagina = null;
+  if(hash && hash.startsWith("#h-")){
+    destino = document.querySelector(hash);
+    pagina = destino ? destino.closest(".pagina") : null;
+  } else if(hash){
+    pagina = document.querySelector(hash);
+  }
+  if(!pagina) pagina = document.getElementById("pg-indice");
+
+  document.querySelectorAll(".pagina").forEach(p => p.classList.toggle("activa", p === pagina));
+  enlacesRegla.forEach(a => a.setAttribute("aria-current",
+    a.getAttribute("href") === "#" + pagina.id ? "true" : "false"));
+
+  const activo = enlacesRegla.find(a => a.getAttribute("aria-current") === "true");
+  if(activo) activo.scrollIntoView({block:"nearest", inline:"nearest"});
+
+  if(hacerScroll !== false){
+    if(destino){
+      const y = destino.getBoundingClientRect().top + window.scrollY - 82;
+      window.scrollTo({top: y, behavior: "auto"});
+    } else {
+      window.scrollTo({top: 0, behavior: "auto"});
+    }
+  }
+  document.title = (pagina.querySelector("h2")?.textContent || "El listón") + " · Deep Learning";
+}
+
+addEventListener("hashchange", () => mostrar(location.hash, true));
+mostrar(location.hash, false);
+
+function actualizarAvance(){
+  const total = Math.max(1, document.body.scrollHeight - innerHeight);
+  avance.style.width = (Math.min(1, scrollY/total) * 100) + "%";
+}
+addEventListener("scroll", actualizarAvance, {passive:true});
+actualizarAvance();
+</script>
+</body>
+</html>
