@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheatsheet: Transfer Learning y Fine-Tuning</title>
+<style>
+:root { --texto:#E8E6DF; --suave:#A19F96; --borde:#3D3C38; --fondo:#1B1A17;
+        --tarjeta:#232220; --codigo:#26251F; --acento:#AFA9EC; }
+* { box-sizing:border-box; }
+body { margin:0; padding:48px 24px 96px; background:var(--fondo); color:var(--texto);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.7; }
+main { max-width:840px; margin:0 auto; }
+h1 { font-size:30px; font-weight:500; margin:0 0 8px; color:#F5F3EC; }
+h2 { font-size:22px; font-weight:500; margin:56px 0 16px; padding-bottom:8px;
+     border-bottom:1px solid var(--borde); color:#F5F3EC; }
+h3 { font-size:17px; font-weight:500; margin:32px 0 12px; color:var(--acento); }
+p, li { font-size:16px; }
+a { color:#85B7EB; }
+hr { border:none; border-top:1px solid var(--borde); margin:40px 0; }
+code { background:var(--codigo); padding:2px 6px; border-radius:4px; font-size:14px; color:#EDD9B8;
+       font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+pre { background:var(--codigo); padding:16px 20px; border-radius:8px; overflow-x:auto;
+      border:1px solid var(--borde); }
+pre code { background:none; padding:0; font-size:13.5px; line-height:1.6; color:#DCD9CF; }
+table { border-collapse:collapse; width:100%; margin:20px 0; font-size:15px; }
+th, td { border:1px solid var(--borde); padding:8px 12px; text-align:left; vertical-align:top; }
+th { background:var(--codigo); font-weight:500; color:#F5F3EC; }
+strong { font-weight:500; color:#F5F3EC; }
+blockquote { border-left:3px solid var(--borde); margin:20px 0; padding:4px 0 4px 20px; color:var(--suave); }
+</style>
+</head>
+<body>
+<main>
+<h1>Cheatsheet: Transfer Learning y Fine-Tuning (Keras)</h1>
+<p>Guion para reutilizar una CNN preentrenada en ImageNet sobre tu propio dataset, comparándola contra una CNN ad-hoc.</p>
+<hr />
+
+<h2>0. Transfer learning vs fine-tuning: la diferencia real</h2>
+<p>Ambos parten exactamente del mismo código: cargar el modelo base, quitarle la cabeza (<code>include_top=False</code>) y ponerle una tuya. La única diferencia está en una línea:</p>
+<pre><code class="language-python"># Transfer learning: el cuerpo se queda como está
+for layer in base_model.layers:
+    layer.trainable = False
+
+# Fine-tuning: se omite ese bucle (o se descongela después de un primer entrenamiento)
+</code></pre>
+<table>
+<thead><tr><th></th><th>Transfer learning</th><th>Fine-tuning</th></tr></thead>
+<tbody>
+<tr><td>Qué se entrena</td><td>Solo la cabeza nueva</td><td>Cabeza + cuerpo preentrenado</td></tr>
+<tr><td>Params entrenables</td><td>Pocos (los de tu cabeza)</td><td>Casi todos (millones)</td></tr>
+<tr><td>Velocidad</td><td>Rápido</td><td>Mucho más lento</td></tr>
+<tr><td>Cuándo usarlo</td><td>Dataset pequeño o parecido a ImageNet</td><td>Cuando el transfer se queda corto y tienes datos/tiempo de sobra</td></tr>
+<tr><td>Riesgo</td><td>Techo de accuracy más bajo</td><td>Sobreajuste si el dataset es muy pequeño</td></tr>
+</tbody>
+</table>
+<p><strong>Dato curioso:</strong> aunque pongas <code>trainable=True</code> en todo el modelo, siempre queda un resto de parámetros "non-trainable" (del orden de decenas de miles). Son las medias/varianzas internas de las capas <code>BatchNormalization</code>: nunca se entrenan por gradiente, se actualizan de otra forma durante el <code>fit</code>.</p>
+<hr />
+
+<h2>1. Elegir el modelo preentrenado</h2>
+<table>
+<thead><tr><th>Modelo</th><th>Tamaño mínimo de entrada</th><th>Preprocesado de píxeles</th><th>Cuándo elegirlo</th></tr></thead>
+<tbody>
+<tr><td><strong>MobileNetV2</strong></td><td>32x32</td><td>-1 a 1</td><td>Ordenador poco potente, quieres iterar rápido</td></tr>
+<tr><td><strong>InceptionV3</strong></td><td>75x75</td><td>-1 a 1</td><td>Buen equilibrio precisión/coste si tienes algo de potencia</td></tr>
+<tr><td><strong>VGG-19</strong></td><td>32x32</td><td>Resta la media de ImageNet por canal (no es -1,1 ni 0,1)</td><td>Referencia clásica, más pesado en parámetros</td></tr>
+<tr><td><strong>ResNet50</strong></td><td>32x32</td><td>Resta la media de ImageNet por canal</td><td>Alternativa si los anteriores no cuajan</td></tr>
+</tbody>
+</table>
+<p><strong>El error más caro de esta práctica: usar el preprocesado que no toca.</strong> Cada familia de modelos se entrenó con una normalización distinta en ImageNet. Si le das píxeles en rango 0-255 (o 0-1) a un modelo que espera -1 a 1, no falla con un error — simplemente entrena mal, porque los pesos preentrenados de la primera capa "esperan" ver ciertos rangos de entrada.</p>
+<pre><code class="language-python"># Para MobileNetV2 e InceptionV3
+X_train = (X_train / 127.5) - 1.0
+X_test = (X_test / 127.5) - 1.0
+
+# Para VGG/ResNet, mejor usar la función oficial de Keras en vez de hacerlo a mano:
+from keras.applications.vgg19 import preprocess_input
+X_train = preprocess_input(X_train)
+</code></pre>
+<hr />
+
+<h2>2. Cargar el modelo base sin cabeza</h2>
+<pre><code class="language-python">from keras.applications import InceptionV3
+
+base_model = InceptionV3(include_top=False, weights='imagenet', input_shape=(TAM, TAM, 3))
+</code></pre>
+<p><strong><code>include_top=False</code></strong> le dice a Keras que no incluya la parte final de la red (la que clasifica en las 1000 clases de ImageNet). Te quedas solo con el "cuerpo" — todas las capas convolucionales que extraen bordes, texturas y formas — y le pones tú tu propia cabeza, adaptada a tus clases.</p>
+<hr />
+
+<h2>3. Poner tu cabeza (máx. 2 densas ocultas + salida)</h2>
+<pre><code class="language-python">def prepare_model(base_model=base_model):
+    x = keras.layers.Flatten()(base_model.output)
+    x = keras.layers.Dense(512, activation='relu')(x)
+    x = keras.layers.Dropout(rate=0.5)(x)
+
+    # Binaria: 1 neurona + sigmoid. Multiclase: N neuronas + softmax
+    x = keras.layers.Dense(1, activation='sigmoid')(x)
+
+    model = keras.Model(base_model.input, x)
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    return model
+
+model = prepare_model()
+model.summary()
+</code></pre>
+<table>
+<thead><tr><th>Problema</th><th>Salida</th><th>Loss</th></tr></thead>
+<tbody>
+<tr><td>Binario (2 clases)</td><td><code>Dense(1, activation="sigmoid")</code></td><td><code>binary_crossentropy</code></td></tr>
+<tr><td>Multiclase (N clases)</td><td><code>Dense(N, activation="softmax")</code></td><td><code>sparse_categorical_crossentropy</code> (etiquetas como enteros) o <code>categorical_crossentropy</code> (one-hot)</td></tr>
+</tbody>
+</table>
+<p>Revisa el <code>summary()</code>: en transfer learning, <strong>Trainable params</strong> debe ser solo el tamaño de tu cabeza (unos pocos millones o menos). Si sale igual al total, olvidaste congelar.</p>
+<hr />
+
+<h2>4. Entrenar y evaluar (igual en transfer y fine-tuning)</h2>
+<pre><code class="language-python">early_stopping = keras.callbacks.EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True)
+
+history = model.fit(X_train, y_train,
+                    batch_size=32,
+                    validation_split=0.2,
+                    epochs=30,
+                    callbacks=[early_stopping])
+</code></pre>
+<pre><code class="language-python">from sklearn.metrics import classification_report, ConfusionMatrixDisplay
+
+probabilidades = model.predict(X_test).flatten()
+predicciones = (probabilidades > 0.5).astype(int)
+
+print(classification_report(y_test, predicciones, target_names=["clase0", "clase1"]))
+ConfusionMatrixDisplay.from_predictions(y_test, predicciones, display_labels=["clase0", "clase1"])
+</code></pre>
+<p>Libera memoria entre un entrenamiento y el siguiente (vas a repetir esto varias veces: transfer, fine-tuning, augmentation):</p>
+<pre><code class="language-python">del model
+del history
+gc.collect()
+</code></pre>
+<hr />
+
+<h2>5. Con ImageDataGenerator: la trampa del orden de clases</h2>
+<p>Si usas <code>flow_from_dataframe</code> para el augmentation, Keras construye su propio mapa de clases → índice, <strong>en orden alfabético</strong>, sin preguntarte. Si tú ya habías creado tu propio diccionario a mano, lo más probable es que no coincidan.</p>
+<pre><code class="language-python">train_generator = train_datagen.flow_from_dataframe(
+    train_df, x_col='filename', y_col='category',
+    target_size=(TAM, TAM), class_mode='sparse', batch_size=batch_size
+)
+
+# Este es EL mapa real que usó el generador para entrenar:
+train_generator.class_indices
+</code></pre>
+<p><strong>Síntoma:</strong> el modelo va bien en train y en validación, pero se desploma contra tu <code>X_test</code>/<code>y_test</code> manual (accuracy cercano al azar o incluso peor). No es que el modelo no haya aprendido — es que tu <code>y_test</code> numérico usa un mapa de clases distinto al que usó el generador para entrenar.</p>
+<p><strong>Arreglo:</strong> reconstruye <code>y_test_num</code> usando el mapa del generador, no el tuyo:</p>
+<pre><code class="language-python">y_test_num = np.array([train_generator.class_indices[etiqueta] for etiqueta in y_test])
+</code></pre>
+<hr />
+
+<h2>6. Comparar contra tu CNN ad-hoc</h2>
+<p>El punto de todo el ejercicio no es "conseguir el número más alto", es entender el trade-off. Cosas a mirar, no solo el accuracy global:</p>
+<ul>
+<li><strong>¿Qué clases mejoran y cuáles empeoran?</strong> Un modelo puede ganar en total y aun así ser peor en una clase concreta que tu CNN.</li>
+<li><strong>¿Cuánto ha costado la mejora?</strong> Fine-tuning suele ganar unos puntos más que transfer learning, pero a cambio de mucho más tiempo de entrenamiento (millones de parámetros más que actualizar).</li>
+<li><strong>Matriz de confusión lado a lado.</strong> Busca si los dos modelos confunden las mismas parejas de clases o si cambian los errores.</li>
+</ul>
+<hr />
+
+<h2>Errores frecuentes</h2>
+<table>
+<thead><tr><th>Síntoma</th><th>Causa</th><th>Solución</th></tr></thead>
+<tbody>
+<tr><td>Trainable params = Total params en transfer learning</td><td>Olvidaste el bucle de congelado</td><td><code>for layer in base_model.layers: layer.trainable = False</code></td></tr>
+<tr><td>El modelo entrena raro / no converge bien</td><td>Preprocesado de píxeles equivocado para ese modelo</td><td>Revisa la tabla del punto 1 (-1,1 vs resta de media)</td></tr>
+<tr><td>Va bien en validación, fatal en test manual (con generador)</td><td><code>class_indices</code> del generador ≠ tu mapa manual</td><td>Reconstruye <code>y_test</code> con <code>generator.class_indices</code></td></tr>
+<tr><td>Error de "input shape" al cargar el modelo</td><td>Resolución por debajo del mínimo del modelo</td><td>Revisa la columna "tamaño mínimo" del punto 1</td></tr>
+<tr><td>Fine-tuning no mejora nada respecto a transfer</td><td>Dataset muy pequeño para ajustar tantos parámetros</td><td>Normal — a veces transfer learning ya es suficiente</td></tr>
+<tr><td>Quedan ~30-40K params "non-trainable" tras descongelar todo</td><td>Son las medias/varianzas de BatchNormalization</td><td>Es esperado, no es un fallo</td></tr>
+</tbody>
+</table>
+<hr />
+
+<h2>Guion mínimo</h2>
+<ol>
+<li>Elegir modelo según potencia del ordenador y mirar su tamaño mínimo de entrada</li>
+<li>Cargar datos con el mismo <code>cargar_imagenes</code> de siempre, ajustando <code>TAM</code></li>
+<li>Preprocesar con la normalización correcta para ese modelo (no la que uses siempre)</li>
+<li><strong>Transfer learning:</strong> cargar base + congelar + cabeza (máx. 2 densas + salida) → entrenar → evaluar</li>
+<li><strong>Fine-tuning:</strong> mismo código sin congelar → entrenar (más lento) → evaluar</li>
+<li>Comparar ambos entre sí y contra la CNN ad-hoc: accuracy, report, matriz de confusión</li>
+<li>Extra: repetir transfer learning con <code>ImageDataGenerator</code>, cuidado con <code>class_indices</code></li>
+</ol>
+</main>
+</body>
+</html>
