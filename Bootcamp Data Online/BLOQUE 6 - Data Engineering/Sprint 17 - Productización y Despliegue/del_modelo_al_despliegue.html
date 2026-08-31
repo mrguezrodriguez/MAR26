@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Del modelo al despliegue</title>
+<style>
+  :root{
+    --bg:#14151d;
+    --panel:#1e202c;
+    --panel-2:#282a3a;
+    --ink:#eceefc;
+    --muted:#8b8ea3;
+    --accent:#ffb454;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+    --sans:'Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    padding:30px 16px 60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+  h1{font-size:1.35rem;margin:0 0 4px;}
+  .sub{color:var(--muted);margin:0 0 8px;font-size:.92rem;}
+  .hint{color:var(--muted);font-size:.82rem;margin:0 0 26px;font-style:italic;}
+
+  .pipeline{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+  }
+  .layer{
+    position:relative;
+    padding-left:44px;
+  }
+  .layer:not(:last-child)::before{
+    content:'';
+    position:absolute;
+    left:17px;
+    top:44px;
+    bottom:-8px;
+    width:2px;
+    background:var(--panel-2);
+  }
+  .node{
+    position:absolute;
+    left:0;top:6px;
+    width:36px;height:36px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.05rem;
+    background:var(--panel-2);
+    border:2px solid var(--layer-color, var(--accent));
+    z-index:1;
+  }
+  .card{
+    background:var(--panel);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:10px;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:border-color .15s, background .15s;
+  }
+  .card:hover{border-color:var(--panel-2);background:var(--panel-2);}
+  .card.open{border-color:var(--layer-color, var(--accent));}
+  .card-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .card-title{
+    font-weight:700;
+    font-size:.98rem;
+  }
+  .card-tool{
+    font-family:var(--mono);
+    font-size:.76rem;
+    color:var(--layer-color, var(--accent));
+    background:rgba(255,255,255,.05);
+    padding:2px 9px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .chev{
+    color:var(--muted);
+    font-size:.8rem;
+    transition:transform .15s;
+    flex:0 0 auto;
+  }
+  .card.open .chev{transform:rotate(90deg);}
+  .detail{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .2s ease;
+  }
+  .card.open .detail{max-height:200px;}
+  .detail-inner{
+    padding-top:10px;
+    font-size:.86rem;
+    color:#d3d5ea;
+    line-height:1.55;
+  }
+  .detail-inner b{color:var(--ink);}
+
+  .flow-arrow{
+    text-align:center;
+    color:var(--muted);
+    font-size:.8rem;
+    padding:2px 0 10px 44px;
+  }
+
+  .endpoints{
+    display:flex;
+    justify-content:space-between;
+    margin-top:6px;
+    padding-left:44px;
+    color:var(--muted);
+    font-size:.82rem;
+  }
+
+  .keypoint{
+    margin-top:28px;
+    padding:18px 20px;
+    background:linear-gradient(135deg, rgba(255,180,84,.1), rgba(130,170,255,.06));
+    border-radius:14px;
+    border:1px solid rgba(255,180,84,.22);
+    font-size:.9rem;
+    line-height:1.6;
+    color:#dcdcee;
+  }
+  .keypoint b{color:var(--ink);}
+  code.i{font-family:var(--mono);background:var(--panel-2);padding:1px 6px;border-radius:5px;font-size:.9em;color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Del modelo entrenado al despliegue</h1>
+  <p class="sub">Cada capa, con su herramienta. Toca una para ver qué hace.</p>
+  <p class="hint">👇 el usuario hace una petición arriba, y baja capa por capa hasta llegar al modelo</p>
+
+  <div class="endpoints"><span>🧑 usuario</span></div>
+  <div class="flow-arrow">↓ petición HTTPS</div>
+
+  <div class="pipeline">
+
+    <div class="layer" style="--layer-color:#f6821f;">
+      <div class="node">☁️</div>
+      <div class="card" data-target="d1">
+        <div class="card-top">
+          <div class="card-title">Red y entrega</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="card-tool">Cloudflare</span>
+            <span class="chev">▶</span>
+          </div>
+        </div>
+        <div class="detail" id="d1">
+          <div class="detail-inner">
+            La petición llega primero aquí. Gestiona el <b>dominio</b>, certificado <b>HTTPS</b>, protección contra ataques (DDoS/WAF) y puede filtrar tráfico malicioso antes de que llegue a tu servidor. También puede cachear respuestas para que no todo tenga que llegar hasta el backend.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">↓</div>
+
+    <div class="layer" style="--layer-color:#326ce5;">
+      <div class="node">⚙️</div>
+      <div class="card" data-target="d2">
+        <div class="card-top">
+          <div class="card-title">Orquestación</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="card-tool">Kubernetes</span>
+            <span class="chev">▶</span>
+          </div>
+        </div>
+        <div class="detail" id="d2">
+          <div class="detail-inner">
+            Decide <b>cuántas copias</b> de tu API tener corriendo según la carga, las reinicia si se caen, y reparte el tráfico entre ellas (load balancing). Si tu modelo recibe muchas peticiones a la vez, K8s levanta más contenedores automáticamente.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">↓</div>
+
+    <div class="layer" style="--layer-color:#0db7ed;">
+      <div class="node">📦</div>
+      <div class="card" data-target="d3">
+        <div class="card-top">
+          <div class="card-title">Contenedor</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="card-tool">Docker</span>
+            <span class="chev">▶</span>
+          </div>
+        </div>
+        <div class="detail" id="d3">
+          <div class="detail-inner">
+            Empaqueta tu código, el modelo entrenado y todas las dependencias (Python, librerías) en una <b>imagen</b> que corre igual en cualquier máquina. Es la unidad que Kubernetes mueve, duplica y reinicia.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">↓</div>
+
+    <div class="layer" style="--layer-color:#4b8bbe;">
+      <div class="node">🔌</div>
+      <div class="card" data-target="d4">
+        <div class="card-top">
+          <div class="card-title">Servidor ASGI</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="card-tool">uvicorn</span>
+            <span class="chev">▶</span>
+          </div>
+        </div>
+        <div class="detail" id="d4">
+          <div class="detail-inner">
+            Dentro del contenedor, es lo que realmente <b>ejecuta</b> tu app de FastAPI y la deja escuchando en un puerto. FastAPI por sí solo no "corre" nada — necesita a uvicorn (o gunicorn) para atender peticiones de verdad.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">↓</div>
+
+    <div class="layer" style="--layer-color:#009688;">
+      <div class="node">🐍</div>
+      <div class="card" data-target="d5">
+        <div class="card-top">
+          <div class="card-title">La API</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="card-tool">FastAPI</span>
+            <span class="chev">▶</span>
+          </div>
+        </div>
+        <div class="detail" id="d5">
+          <div class="detail-inner">
+            Aquí es donde escribes tú: define las <b>rutas</b> (<code class="i">@app.post("/predecir")</code>), valida los datos de entrada, llama al modelo y devuelve la predicción en <b>JSON</b>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">↓</div>
+
+    <div class="layer" style="--layer-color:#c3e88d;">
+      <div class="node">🧠</div>
+      <div class="card" data-target="d6">
+        <div class="card-top">
+          <div class="card-title">Modelo entrenado</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="card-tool">.pkl / .h5</span>
+            <span class="chev">▶</span>
+          </div>
+        </div>
+        <div class="detail" id="d6">
+          <div class="detail-inner">
+            Se carga en memoria dentro de la app y hace la <b>predicción</b> con los datos que le llegaron. Esta parte ya la tienes resuelta desde el lado de data.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">↓ (opcional, si necesitas guardar/consultar algo)</div>
+
+    <div class="layer" style="--layer-color:#3ecf8e;">
+      <div class="node">🗄️</div>
+      <div class="card" data-target="d7">
+        <div class="card-top">
+          <div class="card-title">Datos persistentes</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="card-tool">Supabase</span>
+            <span class="chev">▶</span>
+          </div>
+        </div>
+        <div class="detail" id="d7">
+          <div class="detail-inner">
+            Si tu API necesita guardar histórico de predicciones, usuarios o resultados, aquí es donde vive esa base de datos — <b>fuera</b> del contenedor, para que los datos sobrevivan aunque el contenedor se reinicie.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="keypoint">
+    <b>Regla rápida:</b> Docker empaqueta, Kubernetes orquesta, Cloudflare protege y entrega, uvicorn ejecuta, FastAPI define la lógica, y la base de datos guarda lo que necesite sobrevivir entre peticiones. Cada herramienta resuelve un problema distinto — por eso normalmente van todas juntas, no una en lugar de otra.
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      card.classList.toggle('open');
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Del notebook al despliegue</title>
+<style>
+  :root{
+    --bg:#14151d;
+    --panel:#1e202c;
+    --panel-2:#282a3a;
+    --ink:#eceefc;
+    --muted:#8b8ea3;
+    --accent:#ffb454;
+    --accent-2:#82aaff;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+    --sans:'Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    padding:30px 16px 60px;
+  }
+  .wrap{max-width:700px;margin:0 auto;}
+  h1{font-size:1.35rem;margin:0 0 4px;}
+  .sub{color:var(--muted);margin:0 0 30px;font-size:.92rem;}
+  h2{font-size:1.02rem;margin:0 0 16px;color:var(--ink);}
+
+  /* STEPS */
+  .steps{
+    display:flex;
+    flex-direction:column;
+    margin-bottom:44px;
+  }
+  .step{
+    position:relative;
+    padding-left:46px;
+    padding-bottom:22px;
+  }
+  .step:not(:last-child)::before{
+    content:'';
+    position:absolute;
+    left:15px;top:34px;bottom:0;
+    width:2px;
+    background:var(--panel-2);
+  }
+  .num{
+    position:absolute;
+    left:0;top:0;
+    width:32px;height:32px;
+    border-radius:50%;
+    background:var(--panel-2);
+    color:var(--accent);
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:.88rem;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .step-title{
+    font-weight:700;
+    font-size:.98rem;
+    margin-bottom:4px;
+  }
+  .step-desc{
+    color:#c8cae0;
+    font-size:.88rem;
+    line-height:1.55;
+  }
+  .step-desc code{
+    font-family:var(--mono);
+    background:var(--panel-2);
+    padding:1px 6px;
+    border-radius:5px;
+    font-size:.88em;
+    color:var(--accent-2);
+  }
+
+  /* REPO TREE */
+  .repo{
+    background:var(--panel);
+    border-radius:14px;
+    padding:20px 22px;
+  }
+  .tree{
+    font-family:var(--mono);
+    font-size:.86rem;
+    line-height:1.9;
+    white-space:pre;
+    color:#c8cae0;
+  }
+  .tree .dir{color:var(--accent-2);font-weight:700;}
+  .tree .file{color:var(--ink);}
+  .tree .comment{color:var(--muted);font-style:italic;}
+
+  .filecards{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:18px;
+  }
+  .filecard{
+    background:var(--panel-2);
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:.85rem;
+    line-height:1.5;
+  }
+  .filecard b{
+    font-family:var(--mono);
+    color:var(--accent);
+    display:block;
+    margin-bottom:2px;
+  }
+  .filecard span{color:#c8cae0;}
+
+  .keypoint{
+    margin-top:28px;
+    padding:18px 20px;
+    background:linear-gradient(135deg, rgba(255,180,84,.1), rgba(130,170,255,.06));
+    border-radius:14px;
+    border:1px solid rgba(255,180,84,.22);
+    font-size:.9rem;
+    line-height:1.6;
+    color:#dcdcee;
+  }
+  code.i{font-family:var(--mono);background:var(--panel-2);padding:1px 6px;border-radius:5px;font-size:.9em;color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Del notebook al despliegue completo</h1>
+  <p class="sub">Los pasos, y cómo queda organizado el repo al final.</p>
+
+  <h2>📋 Pasos</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <div class="step-title">Exportar el modelo entrenado</div>
+      <div class="step-desc">Desde el notebook, guarda el modelo con <code>pickle</code> o <code>joblib</code> (<code>modelo.pkl</code>). A partir de aquí ya no dependes del notebook.</div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div class="step-title">Crear el proyecto de la API</div>
+      <div class="step-desc"><code>main.py</code> con la app de FastAPI, <code>requirements.txt</code> con las dependencias, y el <code>modelo.pkl</code> junto al código.</div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div class="step-title">Escribir el endpoint de predicción</div>
+      <div class="step-desc">Un <code>@app.post("/predecir")</code> que reciba los datos (validados con Pydantic), cargue el modelo y devuelva la predicción en JSON.</div>
+    </div>
+    <div class="step">
+      <div class="num">4</div>
+      <div class="step-title">Probar en local con uvicorn</div>
+      <div class="step-desc"><code>uvicorn main:app --reload</code> y pruebas el endpoint en <code>/docs</code> antes de tocar nada de despliegue.</div>
+    </div>
+    <div class="step">
+      <div class="num">5</div>
+      <div class="step-title">Dockerizar la app</div>
+      <div class="step-desc">Un <code>Dockerfile</code> que instale dependencias y arranque uvicorn. Construyes la imagen y la pruebas en local con <code>docker run</code>.</div>
+    </div>
+    <div class="step">
+      <div class="num">6</div>
+      <div class="step-title">Subir la imagen a un registro</div>
+      <div class="step-desc">Docker Hub, GitHub Container Registry... para que Kubernetes (o cualquier servidor) pueda descargarla.</div>
+    </div>
+    <div class="step">
+      <div class="num">7</div>
+      <div class="step-title">Desplegar</div>
+      <div class="step-desc">Con Kubernetes: <code>Deployment</code> + <code>Service</code>. Más simple: un contenedor en un VPS o Render/Railway. Cloudflare delante para dominio y HTTPS.</div>
+    </div>
+  </div>
+
+  <h2>📁 Estructura del repo</h2>
+  <div class="repo">
+    <div class="tree"><span class="dir">ml-api/</span>
+├── <span class="file">main.py</span>              <span class="comment"># app de FastAPI y endpoints</span>
+├── <span class="file">modelo.pkl</span>            <span class="comment"># modelo ya entrenado (exportado del notebook)</span>
+├── <span class="file">schemas.py</span>            <span class="comment"># modelos Pydantic para validar el input</span>
+├── <span class="file">requirements.txt</span>      <span class="comment"># fastapi, uvicorn, scikit-learn...</span>
+├── <span class="file">Dockerfile</span>            <span class="comment"># receta para construir la imagen</span>
+├── <span class="file">.dockerignore</span>
+├── <span class="file">.gitignore</span>
+├── <span class="dir">tests/</span>
+│   └── <span class="file">test_api.py</span>       <span class="comment"># tests del endpoint</span>
+└── <span class="dir">k8s/</span>                   <span class="comment"># si despliegas con Kubernetes</span>
+    ├── <span class="file">deployment.yaml</span>
+    └── <span class="file">service.yaml</span></div>
+
+    <div class="filecards">
+      <div class="filecard"><b>main.py</b><span>Crea la app, carga el modelo al arrancar (una sola vez, no en cada petición) y define <code style="color:var(--accent-2)">@app.post("/predecir")</code>.</span></div>
+      <div class="filecard"><b>schemas.py</b><span>Clase Pydantic con los campos que espera el modelo — FastAPI la usa para validar automáticamente lo que llega.</span></div>
+      <div class="filecard"><b>Dockerfile</b><span>Parte de una imagen <code style="color:var(--accent-2)">python:3.12-slim</code>, instala <code style="color:var(--accent-2)">requirements.txt</code>, copia el código y ejecuta <code style="color:var(--accent-2)">uvicorn main:app --host 0.0.0.0</code>.</span></div>
+      <div class="filecard"><b>k8s/</b><span>Solo hace falta si despliegas en Kubernetes. Para un VPS o Render/Railway, con el Dockerfile ya te vale.</span></div>
+    </div>
+  </div>
+
+  <div class="keypoint">
+    El modelo nunca se reentrena dentro de la API — se carga <b>una vez al arrancar</b> el servidor (fuera de la función del endpoint), y cada petición solo hace <code class="i">modelo.predict(...)</code>. Cargarlo dentro del endpoint funcionaría, pero sería lentísimo: lo repetirías en cada petición.
+  </div>
+</div>
+</body>
+</html>
