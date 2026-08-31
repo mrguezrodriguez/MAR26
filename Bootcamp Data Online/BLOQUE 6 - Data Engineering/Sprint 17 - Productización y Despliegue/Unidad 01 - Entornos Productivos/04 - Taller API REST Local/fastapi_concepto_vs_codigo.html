@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>De la idea al código: FastAPI</title>
+<style>
+  :root{
+    --bg:#1a1c25;
+    --panel:#23252f;
+    --panel-2:#2c2f3d;
+    --ink:#e8e9f3;
+    --muted:#8b8fa3;
+    --accent:#c792ea;
+    --get:#82aaff;
+    --post:#c3e88d;
+    --delete:#ff8a80;
+    --home:#ffcb6b;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+    --sans:'Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    padding:30px 18px 60px;
+  }
+  .wrap{max-width:980px;margin:0 auto;}
+  h1{font-size:1.4rem;margin:0 0 4px;}
+  .sub{color:var(--muted);margin:0 0 26px;font-size:.95rem;}
+
+  .legend{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .legend span{
+    font-size:.78rem;
+    font-family:var(--mono);
+    padding:4px 10px;
+    border-radius:999px;
+    background:var(--panel-2);
+  }
+
+  .headers{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-bottom:8px;
+  }
+  .headers div{
+    font-size:.82rem;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    padding:0 4px;
+  }
+
+  .row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-bottom:14px;
+  }
+  .block{
+    background:var(--panel);
+    border-radius:12px;
+    padding:16px 18px;
+    border-left:3px solid transparent;
+  }
+  .block.concept{border-left-color:var(--muted);}
+  .block pre{
+    margin:0;
+    font-family:var(--mono);
+    font-size:.85rem;
+    line-height:1.65;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .kw{color:var(--accent);}
+  .fn{color:#89ddff;}
+  .str{color:var(--post);}
+  .com{color:var(--muted);font-style:italic;}
+  .deco{color:var(--home);}
+
+  .tagrow{margin-bottom:6px;}
+  .tag{
+    font-family:var(--mono);
+    font-size:.72rem;
+    padding:2px 8px;
+    border-radius:6px;
+    font-weight:700;
+  }
+  .tag.get{background:rgba(130,170,255,.15);color:var(--get);}
+  .tag.post{background:rgba(195,232,141,.15);color:var(--post);}
+  .tag.delete{background:rgba(255,138,128,.15);color:var(--delete);}
+  .tag.home{background:rgba(255,203,107,.15);color:var(--home);}
+
+  .link-note{
+    grid-column:1 / -1;
+    font-size:.85rem;
+    color:var(--muted);
+    padding:0 4px 8px;
+  }
+  .link-note b{color:var(--ink);}
+
+  .keypoint{
+    margin-top:30px;
+    padding:20px 22px;
+    background:linear-gradient(135deg, rgba(199,146,234,.12), rgba(130,170,255,.08));
+    border-radius:14px;
+    border:1px solid rgba(199,146,234,.25);
+  }
+  .keypoint h3{margin:0 0 8px;font-size:1rem;}
+  .keypoint p{margin:0 0 8px;color:#dcdcee;font-size:.93rem;line-height:1.6;}
+  .keypoint p:last-child{margin-bottom:0;}
+  code.i{font-family:var(--mono);background:var(--panel-2);padding:1px 6px;border-radius:5px;font-size:.9em;}
+
+  @media(max-width:700px){
+    .headers,.row{grid-template-columns:1fr;}
+    .headers div:last-child{margin-top:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>De la idea al código real</h1>
+  <p class="sub">Las mismas cuatro operaciones, en pseudocódigo conceptual y en FastAPI de verdad.</p>
+
+  <div class="headers">
+    <div>💭 Concepto (pseudocódigo)</div>
+    <div>🐍 Cómo se escribe en FastAPI</div>
+  </div>
+
+  <!-- GET -->
+  <div class="tagrow"><span class="tag get">GET</span></div>
+  <div class="row">
+    <div class="block concept"><pre><span class="kw">def</span> <span class="fn">get</span>(*args):
+    petición args http -&gt; servidor &lt;- json</pre></div>
+    <div class="block"><pre><span class="deco">@app.get</span>(<span class="str">"/pokemon/{nombre}"</span>)
+<span class="kw">def</span> <span class="fn">get_pokemon</span>(nombre: str):
+    <span class="kw">return</span> pokedex.get(nombre, <span class="str">{"error": "no encontrado"}</span>)</pre></div>
+  </div>
+  <div class="link-note">El "<i>petición args http</i>" es literalmente lo que hace <code class="i">@app.get</code>: recibe la petición HTTP y te entrega <code class="i">nombre</code> ya listo como argumento.</div>
+
+  <!-- POST -->
+  <div class="tagrow"><span class="tag post">POST</span></div>
+  <div class="row">
+    <div class="block concept"><pre><span class="kw">def</span> <span class="fn">post</span>(*args):
+    petición args http -&gt; servidor &lt;- json</pre></div>
+    <div class="block"><pre><span class="deco">@app.post</span>(<span class="str">"/pokemon"</span>)
+<span class="kw">def</span> <span class="fn">post_pokemon</span>(nombre: str, tipo: str):
+    pokedex[nombre] = <span class="str">{"tipo": tipo}</span>
+    <span class="kw">return</span> <span class="str">{"mensaje": f"{nombre} añadido"}</span></pre></div>
+  </div>
+  <div class="link-note">Igual que <code class="i">get</code>, pero aquí los <code class="i">args</code> vienen en el <b>cuerpo</b> de la petición: son los datos que quieres crear/guardar.</div>
+
+  <!-- DELETE -->
+  <div class="tagrow"><span class="tag delete">DELETE</span></div>
+  <div class="row">
+    <div class="block concept"><pre><span class="kw">def</span> <span class="fn">delete</span>(*args):
+    petición args http -&gt; servidor &lt;- json</pre></div>
+    <div class="block"><pre><span class="deco">@app.delete</span>(<span class="str">"/pokemon/{nombre}"</span>)
+<span class="kw">def</span> <span class="fn">delete_pokemon</span>(nombre: str):
+    pokedex.pop(nombre, <span class="kw">None</span>)
+    <span class="kw">return</span> <span class="str">{"mensaje": f"{nombre} eliminado"}</span></pre></div>
+  </div>
+  <div class="link-note">Mismo patrón otra vez: identifica el recurso por <code class="i">nombre</code>, lo borra, devuelve confirmación en json.</div>
+
+  <!-- HOME -->
+  <div class="tagrow"><span class="tag home">HOME</span></div>
+  <div class="row">
+    <div class="block concept"><pre><span class="kw">def</span> <span class="fn">home</span>(url, protocol):
+    <span class="kw">return</span>{<span class="str">"mensaje"</span>}</pre></div>
+    <div class="block"><pre><span class="deco">@app.get</span>(<span class="str">"/"</span>)
+<span class="kw">def</span> <span class="fn">home</span>():
+    <span class="kw">return</span> <span class="str">{"mensaje": "Bienvenido a la Pokedex API"}</span></pre></div>
+  </div>
+  <div class="link-note"><code class="i">home</code> es solo un <code class="i">GET</code> a la ruta raíz <code class="i">"/"</code> — el <code class="i">url</code> y <code class="i">protocol</code> del concepto ya están implícitos en la petición que llega.</div>
+
+  <div class="keypoint">
+    <h3>Dónde está el wrapper aquí</h3>
+    <p>
+      El bloque de tu profe (<code class="i">petición args http -&gt; servidor &lt;- json</code>) es exactamente lo que hace <code class="i">@app.get</code>, <code class="i">@app.post</code> y <code class="i">@app.delete</code> por debajo:
+      cada uno es un <b>decorador</b> que envuelve tu función (<code class="i">home</code>, <code class="i">get_pokemon</code>...) para encargarse de la parte repetitiva — recibir la petición HTTP, extraer los argumentos, y convertir lo que devuelvas en JSON.
+    </p>
+    <p>
+      Tú nunca escribes ese "petición -&gt; servidor -&gt; json" a mano: solo escribes la función con la lógica que te importa (buscar, guardar, borrar), y el decorador de FastAPI hace el resto — igual que <code class="i">@validar_argumentos</code> hacía el resto por <code class="i">suma</code>.
+    </p>
+  </div>
+</div>
+</body>
+</html>

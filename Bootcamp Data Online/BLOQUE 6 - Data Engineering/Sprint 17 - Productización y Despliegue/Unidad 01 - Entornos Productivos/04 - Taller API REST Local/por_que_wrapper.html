@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>¿Por qué un wrapper y no una función normal?</title>
+<style>
+  :root{
+    --bg: #1e1b2e;
+    --panel: #272341;
+    --panel-2: #302b52;
+    --ink: #f1eefc;
+    --muted: #a89fc9;
+    --accent: #ffb454;
+    --accent-2: #6ee7b7;
+    --bad: #ff7a90;
+    --good: #6ee7b7;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --sans: 'Segoe UI', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    padding:32px 20px 60px;
+    line-height:1.55;
+  }
+  .wrap{max-width:820px;margin:0 auto;}
+  h1{
+    font-size:1.5rem;
+    margin:0 0 6px;
+    font-weight:700;
+  }
+  .sub{color:var(--muted);margin:0 0 32px;font-size:.98rem;}
+  .toggle{
+    display:flex;
+    gap:8px;
+    margin-bottom:28px;
+    background:var(--panel);
+    padding:6px;
+    border-radius:12px;
+  }
+  .toggle button{
+    flex:1;
+    padding:10px 14px;
+    border:none;
+    border-radius:9px;
+    background:transparent;
+    color:var(--muted);
+    font-family:var(--sans);
+    font-size:.92rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .2s, color .2s;
+  }
+  .toggle button.active{
+    background:var(--accent);
+    color:#2a1c05;
+  }
+  .scene{display:none;}
+  .scene.active{display:block;}
+
+  .card{
+    background:var(--panel);
+    border-radius:14px;
+    padding:20px 22px;
+    margin-bottom:18px;
+  }
+  .card h2{
+    font-size:1.02rem;
+    margin:0 0 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .tag{
+    font-size:.72rem;
+    font-weight:700;
+    padding:2px 9px;
+    border-radius:999px;
+    letter-spacing:.02em;
+  }
+  .tag.bad{background:rgba(255,122,144,.15);color:var(--bad);}
+  .tag.good{background:rgba(110,231,183,.15);color:var(--good);}
+
+  .flow{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+  }
+  .step{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:10px 0;
+    position:relative;
+  }
+  .step:not(:last-child)::after{
+    content:'';
+    position:absolute;
+    left:15px;
+    top:38px;
+    bottom:-10px;
+    width:2px;
+    background:var(--panel-2);
+  }
+  .dot{
+    flex:0 0 auto;
+    width:32px;height:32px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);
+    font-size:.82rem;
+    font-weight:700;
+    z-index:1;
+  }
+  .dot.you{background:var(--panel-2);color:var(--muted);}
+  .dot.call{background:rgba(255,180,84,.18);color:var(--accent);}
+  .dot.check{background:rgba(110,231,183,.18);color:var(--good);}
+  .dot.skip{background:rgba(255,122,144,.18);color:var(--bad);}
+
+  .step-body{padding-top:4px;}
+  .step-body code{
+    font-family:var(--mono);
+    background:var(--panel-2);
+    padding:2px 7px;
+    border-radius:6px;
+    font-size:.87rem;
+  }
+  .step-body .note{color:var(--muted);font-size:.87rem;margin-top:2px;}
+
+  .callsite{
+    background:var(--panel-2);
+    border-radius:10px;
+    padding:12px 14px;
+    font-family:var(--mono);
+    font-size:.85rem;
+    margin-top:10px;
+    color:var(--muted);
+  }
+  .callsite .risky{color:var(--bad);}
+
+  .verdict{
+    border-radius:12px;
+    padding:16px 18px;
+    font-size:.94rem;
+  }
+  .verdict.bad{background:rgba(255,122,144,.1);border:1px solid rgba(255,122,144,.3);}
+  .verdict.good{background:rgba(110,231,183,.1);border:1px solid rgba(110,231,183,.3);}
+  .verdict b{display:block;margin-bottom:4px;}
+
+  .keypoint{
+    margin-top:28px;
+    padding:20px 22px;
+    background:linear-gradient(135deg, rgba(255,180,84,.12), rgba(110,231,183,.08));
+    border-radius:14px;
+    border:1px solid rgba(255,180,84,.25);
+  }
+  .keypoint h3{margin:0 0 8px;font-size:1rem;}
+  .keypoint p{margin:0;color:#ded9f5;font-size:.94rem;}
+
+  code.inline{
+    font-family:var(--mono);
+    background:var(--panel-2);
+    padding:1px 6px;
+    border-radius:5px;
+    font-size:.9em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>¿Por qué un wrapper y no una función normal?</h1>
+  <p class="sub">Compara qué pasa si validas "a mano" vs. si usas un decorador.</p>
+
+  <div class="toggle">
+    <button class="active" data-target="normal">Función normal</button>
+    <button data-target="decorador">Decorador (wrapper)</button>
+  </div>
+
+  <!-- ESCENARIO 1: función normal -->
+  <div class="scene active" id="normal">
+
+    <div class="card">
+      <h2>Cómo lo escribes <span class="tag bad">manual</span></h2>
+      <div class="flow">
+        <div class="step">
+          <div class="dot you">1</div>
+          <div class="step-body">
+            Defines <code>validar(a, b)</code> por un lado y <code>suma(a, b)</code> por otro. Son dos funciones totalmente independientes — nada las conecta.
+          </div>
+        </div>
+        <div class="step">
+          <div class="dot you">2</div>
+          <div class="step-body">
+            Cada vez que quieras usar <code>suma</code> de forma segura, <b>tú</b> tienes que acordarte de llamar primero a <code>validar</code>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Qué pasa en el resto del código <span class="tag bad">el problema</span></h2>
+      <div class="callsite">
+suma(3, 5)              <span style="color:var(--muted)"># en tu notebook, línea 40</span><br>
+validar(3, 5); suma(3, 5)   <span style="color:var(--muted)"># en otro archivo</span><br>
+<span class="risky">suma(3, "5")</span>            <span style="color:var(--muted)"># aquí alguien se olvidó de validar → boom</span>
+      </div>
+      <div class="verdict bad" style="margin-top:14px;">
+        <b>El fallo:</b>
+        <code class="inline">suma</code> sigue siendo <code class="inline">suma</code>, sin protección. La validación solo existe donde tú, a mano, decidas escribir la llamada extra. Si alguien —incluido tú mismo, dentro de tres semanas— llama a <code class="inline">suma()</code> directamente y se olvida del paso de validar, no hay ningún error: simplemente no se valida nada.
+      </div>
+    </div>
+  </div>
+
+  <!-- ESCENARIO 2: decorador -->
+  <div class="scene" id="decorador">
+
+    <div class="card">
+      <h2>Cómo lo escribes <span class="tag good">automático</span></h2>
+      <div class="flow">
+        <div class="step">
+          <div class="dot you">1</div>
+          <div class="step-body">
+            Escribes <code>@validar_argumentos</code> encima de <code>def suma(a, b):</code>
+          </div>
+        </div>
+        <div class="step">
+          <div class="dot call">2</div>
+          <div class="step-body">
+            Python ejecuta <code>suma = validar_argumentos(suma)</code> automáticamente. El nombre <code>suma</code> deja de apuntar a tu función original y pasa a apuntar al <code>wrapper</code>.
+            <div class="note">Esto ocurre <b>una sola vez</b>, al definir la función — no cada vez que la llamas.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Qué pasa en el resto del código <span class="tag good">la clave</span></h2>
+      <div class="callsite">
+suma(3, 5)      <span style="color:var(--muted)"># en tu notebook</span><br>
+suma(3, 5)      <span style="color:var(--muted)"># en otro archivo</span><br>
+suma(3, "5")    <span style="color:var(--muted)"># en cualquier otro sitio</span>
+      </div>
+      <div class="flow" style="margin-top:16px;">
+        <div class="step">
+          <div class="dot check">✓</div>
+          <div class="step-body">
+            Cada una de esas llamadas <b>en realidad</b> ejecuta <code>wrapper(...)</code>, aunque tú escribas <code>suma(...)</code>.
+          </div>
+        </div>
+        <div class="step">
+          <div class="dot check">✓</div>
+          <div class="step-body">
+            El <code>wrapper</code> revisa los argumentos <b>antes</b> de dejar pasar a la función original.
+          </div>
+        </div>
+        <div class="step">
+          <div class="dot skip">✕</div>
+          <div class="step-body">
+            Si algo falla, corta ahí — <code>suma</code> real nunca llega a ejecutarse. No hace falta que nadie se acuerde de nada.
+          </div>
+        </div>
+      </div>
+      <div class="verdict good" style="margin-top:14px;">
+        <b>La diferencia real:</b>
+        con el decorador, la protección viaja <i>pegada al nombre</i> <code class="inline">suma</code>. Da igual quién la llame, desde dónde, o si se acuerdan de validar — es imposible usar <code class="inline">suma</code> sin pasar por el filtro, porque ya no existe una forma de llamarla que se salte el <code class="inline">wrapper</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="keypoint">
+    <h3>La idea en una frase</h3>
+    <p>
+      Una función normal para validar solo te ayuda si <b>te acuerdas de llamarla</b>.
+      El wrapper del decorador <b>sustituye</b> el nombre de la función original, así que la validación queda incorporada dentro de <code class="inline">suma</code> misma — no es un paso extra que puedas olvidar, es parte de lo que <code class="inline">suma</code> es ahora.
+    </p>
+  </div>
+</div>
+
+<script>
+  const buttons = document.querySelectorAll('.toggle button');
+  buttons.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      buttons.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
+      document.getElementById(btn.dataset.target).classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
